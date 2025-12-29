@@ -1,0 +1,168 @@
+===============================================
+🚨 BLANK PAGE FIX - QUICK GUIDE
+===============================================
+
+Your site: https://yuran.taekwondoanz.com/
+
+STEP 1: UPLOAD THE CHECKER SCRIPT
+----------------------------------
+1. Upload the file: public/check-deployment.php to your cPanel
+2. Visit: https://yuran.taekwondoanz.com/check-deployment.php
+3. Follow the instructions shown
+4. DELETE the file after checking!
+
+
+STEP 2: MOST COMMON ISSUE - DOCUMENT ROOT
+------------------------------------------
+✅ In cPanel:
+   - Go to: Domains → Manage Domain
+   - Find: yuran.taekwondoanz.com
+   - Set Document Root to: /home/USERNAME/FOLDER/public
+   
+   Example: /home/taekwondoanz/public_html/yuran/public
+   
+⚠️ CRITICAL: Must point to /public folder, NOT the root!
+
+
+STEP 3: BUILD ASSETS (ALREADY DONE!)
+-------------------------------------
+✅ Assets have been built in: public/build/
+   - Make sure to upload the entire public/build/ folder to cPanel
+   - This contains all CSS and JavaScript files
+
+
+STEP 4: CREATE .ENV FILE ON CPANEL
+-----------------------------------
+1. Go to File Manager in cPanel
+2. Navigate to your Laravel root (NOT public folder)
+3. Copy .env.example to .env
+4. Edit .env and set:
+
+   APP_NAME="Taekwondo A&Z"
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_URL=https://yuran.taekwondoanz.com
+   
+   DB_CONNECTION=mysql
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_DATABASE=your_database_name
+   DB_USERNAME=your_database_user
+   DB_PASSWORD=your_database_password
+
+
+STEP 5: GENERATE APP KEY
+-------------------------
+Option A - SSH (if available):
+   php artisan key:generate
+
+Option B - Run locally and copy:
+   1. On your PC: php artisan key:generate --show
+   2. Copy the key shown
+   3. Paste in cPanel .env file as: APP_KEY=base64:xxxxx
+
+
+STEP 6: SET FILE PERMISSIONS
+-----------------------------
+In cPanel File Manager:
+   1. Right-click "storage" folder → Permissions → 755
+      ✅ Check "Recurse into subdirectories"
+   2. Right-click "bootstrap/cache" → Permissions → 755
+      ✅ Check "Recurse into subdirectories"
+
+
+STEP 7: CHECK PHP VERSION
+--------------------------
+In cPanel:
+   - Go to: MultiPHP Manager or Select PHP Version
+   - Set to: PHP 8.2 or 8.3 (NOT 7.x!)
+   - Enable these extensions:
+     ✅ mbstring
+     ✅ openssl
+     ✅ pdo
+     ✅ pdo_mysql
+     ✅ tokenizer
+     ✅ xml
+     ✅ ctype
+     ✅ json
+     ✅ bcmath
+     ✅ fileinfo
+
+
+STEP 8: RUN MIGRATIONS (if SSH available)
+------------------------------------------
+ssh into your server, then:
+   cd /home/USERNAME/FOLDER
+   php artisan migrate --force
+   php artisan storage:link
+   php artisan config:clear
+   php artisan cache:clear
+   php artisan optimize
+
+
+STEP 9: ENABLE DEBUG TO SEE ERRORS
+-----------------------------------
+If still blank, temporarily enable debug:
+   
+   In .env file, change:
+   APP_DEBUG=true
+   
+   Then visit your site - you'll see the actual error!
+   
+   ⚠️ Turn it back to false after fixing:
+   APP_DEBUG=false
+
+
+STEP 10: CHECK ERROR LOGS
+--------------------------
+In cPanel:
+   - Go to: Errors → Error Log
+   - Look for recent errors
+   - This will tell you exactly what's wrong
+
+
+===============================================
+📋 CHECKLIST - DID YOU DO ALL OF THESE?
+===============================================
+[ ] Document root points to /public folder
+[ ] .env file exists and configured
+[ ] APP_KEY generated
+[ ] Database created and credentials correct
+[ ] PHP version is 8.2 or higher
+[ ] storage/ folder permissions set to 755
+[ ] bootstrap/cache/ permissions set to 755
+[ ] public/build/ folder uploaded
+[ ] .htaccess exists in public/ folder
+[ ] Composer dependencies installed (vendor/ folder)
+
+
+===============================================
+🆘 STILL NOT WORKING?
+===============================================
+
+1. Visit: https://yuran.taekwondoanz.com/check-deployment.php
+   (Upload the check-deployment.php file first!)
+
+2. Enable APP_DEBUG=true in .env to see errors
+
+3. Check cPanel Error Logs
+
+4. Verify document root is correct (most common issue!)
+
+5. Make sure you uploaded ALL files including:
+   - vendor/ folder (or run composer install via SSH)
+   - public/build/ folder
+   - .htaccess in public/
+
+
+===============================================
+📞 NEED MORE HELP?
+===============================================
+
+Send me:
+1. Screenshot of the error (after enabling APP_DEBUG=true)
+2. Screenshot of cPanel Error Log
+3. Screenshot of your domain settings (document root)
+4. Results from check-deployment.php
+
+===============================================
