@@ -25,7 +25,6 @@ Thumbs.db
 taekwondo.zip
 taekwondo-cpanel-deployment-*.zip
 create-deployment-package.ps1
-*.md
 *.txt
 *.ps1 
 *.zip
