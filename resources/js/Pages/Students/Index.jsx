@@ -2,10 +2,12 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
-export default function Index({ auth, students, filters }) {
+export default function Index({ auth, students, filters, stats }) {
     const [search, setSearch] = useState(filters.search || '');
     const [kategori, setKategori] = useState(filters.kategori || '');
     const [selectedIds, setSelectedIds] = useState([]);
+
+
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -54,7 +56,7 @@ export default function Index({ auth, students, filters }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-bold text-2xl text-gray-800 leading-tight">Pengurusan Pelajar</h2>}
+            header={<h2 className="font-bold text-2xl text-gray-800 leading-tight">Pengurusan Peserta</h2>}
         >
             <Head title="Pengurusan Pelajar" />
 
@@ -64,8 +66,8 @@ export default function Index({ auth, students, filters }) {
                     {/* Header Section */}
                     <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                         <div>
-                            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Senarai Pelajar</h1>
-                            <p className="text-gray-500 mt-1">Urus maklumat pelajar dan pembayaran yuran.</p>
+                            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Senarai Peserta</h1>
+                            <p className="text-gray-500 mt-1">Urus maklumat peserta dan pembayaran yuran.</p>
                         </div>
                         <div className="flex gap-3 w-full md:w-auto">
                             {selectedIds.length > 0 && (
@@ -82,10 +84,48 @@ export default function Index({ auth, students, filters }) {
                                 className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-xl transition duration-200 shadow-lg hover:shadow-blue-500/30 w-full md:w-auto"
                             >
                                 <span>➕</span>
-                                <span>Pelajar Baru</span>
+                                <span>Peserta Baru</span>
                             </Link>
                         </div>
                     </div>
+
+                    {/* Statistics Cards */}
+                    {stats && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            {/* Total Students */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
+                                <div className="p-4 bg-blue-50 rounded-xl text-blue-600">
+                                    <span className="text-3xl">👥</span>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">Jumlah Peserta</p>
+                                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                                </div>
+                            </div>
+
+                            {/* Paid Students */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
+                                <div className="p-4 bg-green-50 rounded-xl text-green-600">
+                                    <span className="text-3xl">✅</span>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">Selesai Bayaran (12 Bulan)</p>
+                                    <p className="text-2xl font-bold text-gray-900">{stats.paid}</p>
+                                </div>
+                            </div>
+
+                            {/* Pending Payments */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
+                                <div className="p-4 bg-amber-50 rounded-xl text-amber-600">
+                                    <span className="text-3xl">⏳</span>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">Bayaran Tertunggak</p>
+                                    <p className="text-2xl font-bold text-gray-900">{stats.pending}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Search and Filter Card */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
@@ -98,7 +138,7 @@ export default function Index({ auth, students, filters }) {
                                     </div>
                                     <input
                                         type="text"
-                                        placeholder="Cari nama, no. siri, penjaga..."
+                                        placeholder="Cari nama, no. keahlian, penjaga..."
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         className="pl-10 block w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition duration-200"
@@ -142,8 +182,8 @@ export default function Index({ auth, students, filters }) {
                                                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 h-5 w-5"
                                             />
                                         </th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">No. Siri</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Pelajar</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">No. Keahlian</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Peserta</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Penjaga</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Kategori</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status Bayaran</th>

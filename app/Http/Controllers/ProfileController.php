@@ -37,6 +37,14 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        // Sync children students to update Guardian Name (Nama Penjaga)
+        if ($request->user()->children()->exists()) {
+             $studentService = new \App\Services\StudentService();
+             foreach ($request->user()->children as $child) {
+                 $studentService->syncChildToStudent($child);
+             }
+        }
+
         return Redirect::route('profile.edit');
     }
 

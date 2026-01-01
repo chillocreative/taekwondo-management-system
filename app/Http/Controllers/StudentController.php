@@ -32,9 +32,17 @@ class StudentController extends Controller
 
         $students = $query->paginate(10)->withQueryString();
 
+        // Calculate statistics
+        $stats = [
+            'total' => Student::count(),
+            'paid' => Student::where('status_bayaran', '>=', 12)->count(),
+            'pending' => Student::where('status_bayaran', '<', 12)->count(),
+        ];
+
         return Inertia::render('Students/Index', [
             'students' => $students,
             'filters' => $request->only(['search', 'kategori']),
+            'stats' => $stats,
         ]);
     }
 

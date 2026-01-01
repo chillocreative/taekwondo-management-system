@@ -16,12 +16,18 @@ class StudentPayment extends Model
         'quantity',
         'amount',
         'total',
+        'receipt_number',
+        'transaction_ref',
+        'payment_method',
+        'status',
+        'payment_date',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
         'amount' => 'decimal:2',
         'total' => 'decimal:2',
+        'payment_date' => 'datetime',
     ];
 
     /**

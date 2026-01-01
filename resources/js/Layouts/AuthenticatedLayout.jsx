@@ -37,6 +37,17 @@ export default function AuthenticatedLayout({ header, children }) {
                 ],
             },
             {
+                name: 'Kewangan',
+                icon: '💰',
+                submenu: [
+                    {
+                        name: 'Senarai Pembayaran',
+                        route: 'admin.payments.index',
+                        active: route().current('admin.payments.*'),
+                    },
+                ],
+            },
+            {
                 name: 'Tetapan',
                 icon: '🔧',
                 submenu: [
@@ -44,6 +55,11 @@ export default function AuthenticatedLayout({ header, children }) {
                         name: 'Pembayaran',
                         route: 'settings.payment',
                         active: route().current('settings.payment'),
+                    },
+                    {
+                        name: 'Kelulusan Pembayaran',
+                        route: 'admin.pending-payments',
+                        active: route().current('admin.pending-payments'),
                     },
                 ],
             },
@@ -60,7 +76,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
         const userMenu = [
             {
-                name: 'Nama Anak',
+                name: 'Nama Peserta',
                 icon: '👨‍👩‍👧‍👦',
                 route: 'children.index',
                 active: route().current('children.*'),

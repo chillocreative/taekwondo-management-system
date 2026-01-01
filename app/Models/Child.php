@@ -12,16 +12,29 @@ class Child extends Model
     protected $fillable = [
         'parent_id',
         'student_id',
+        'training_center_id',
         'name',
         'date_of_birth',
         'ic_number',
         'belt_level',
         'is_active',
+        'from_other_club',
+        'tm_number',
+        'belt_certificate',
+        'payment_completed',
+        'payment_method',
+        'registration_fee',
+        'payment_date',
+        'payment_reference',
     ];
 
     protected $casts = [
         'date_of_birth' => 'date',
         'is_active' => 'boolean',
+        'from_other_club' => 'boolean',
+        'payment_completed' => 'boolean',
+        'payment_date' => 'datetime',
+        'registration_fee' => 'decimal:2',
     ];
 
     /**
@@ -30,6 +43,14 @@ class Child extends Model
     public function parent()
     {
         return $this->belongsTo(User::class, 'parent_id');
+    }
+
+    /**
+     * Get the training center of this child
+     */
+    public function trainingCenter()
+    {
+        return $this->belongsTo(TrainingCenter::class);
     }
 
     /**
