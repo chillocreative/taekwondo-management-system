@@ -82,6 +82,12 @@ export default function AuthenticatedLayout({ header, children }) {
                 active: route().current('children.*'),
             },
             {
+                name: 'Kehadiran',
+                icon: '📋',
+                route: 'attendance.index',
+                active: route().current('attendance.*'),
+            },
+            {
                 name: 'Yuran',
                 icon: '💰',
                 route: 'fees.index',
