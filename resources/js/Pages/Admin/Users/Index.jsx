@@ -201,7 +201,6 @@ export default function UsersIndex({ auth, users, trainingCenters, filters, flas
                                         <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Telefon</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Email</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Peranan</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Pusat Latihan</th>
                                         <th className="px-6 py-4 text-right text-xs font-bold text-zinc-500 uppercase tracking-wider">Tindakan</th>
                                     </tr>
                                 </thead>
@@ -220,9 +219,6 @@ export default function UsersIndex({ auth, users, trainingCenters, filters, flas
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     {getRoleBadge(user.role)}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-600">
-                                                    {user.training_center?.name || '-'}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <div className="flex justify-end gap-3">
@@ -244,7 +240,7 @@ export default function UsersIndex({ auth, users, trainingCenters, filters, flas
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="6" className="px-6 py-16 text-center text-zinc-400">
+                                            <td colSpan="5" className="px-6 py-16 text-center text-zinc-400">
                                                 <p className="font-medium">Tiada pengguna dijumpai.</p>
                                             </td>
                                         </tr>
@@ -267,8 +263,8 @@ export default function UsersIndex({ auth, users, trainingCenters, filters, flas
                                                 onClick={() => link.url && router.get(link.url)}
                                                 disabled={!link.url}
                                                 className={`px-3 py-1 border rounded text-sm ${link.active
-                                                        ? 'bg-black text-white border-black'
-                                                        : 'bg-white text-zinc-700 border-zinc-300 hover:bg-zinc-50'
+                                                    ? 'bg-black text-white border-black'
+                                                    : 'bg-white text-zinc-700 border-zinc-300 hover:bg-zinc-50'
                                                     } ${!link.url && 'opacity-50 cursor-not-allowed'}`}
                                                 dangerouslySetInnerHTML={{ __html: link.label }}
                                             />
