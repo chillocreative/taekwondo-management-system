@@ -3,7 +3,8 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import Toast from '@/Components/Toast';
 
-export default function CoachAttendanceIndex({ auth, trainingCenter, students, date, flash }) {
+export default function CoachAttendanceIndex({ auth, trainingCenter, students, date }) {
+    const { flash = {} } = usePage().props;
     const [selectedDate, setSelectedDate] = useState(date);
     const [attendances, setAttendances] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);

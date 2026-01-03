@@ -70,7 +70,8 @@ class AttendanceController extends Controller
                     'status' => $attendance ? $attendance->status : null,
                     'notes' => $attendance ? $attendance->notes : '',
                 ];
-            });
+            })
+            ->values(); // Ensure it serializes as an array, not object (prevents frontend crash)
 
         return Inertia::render('Coach/Attendance/Show', [
             'trainingCenter' => $trainingCenter,
