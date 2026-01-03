@@ -11,6 +11,8 @@ class Attendance extends Model
 
     protected $fillable = [
         'student_id',
+        'coach_id',
+        'training_center_id',
         'attendance_date',
         'status',
         'notes',
@@ -26,5 +28,21 @@ class Attendance extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+
+    /**
+     * Get the coach who marked the attendance
+     */
+    public function coach()
+    {
+        return $this->belongsTo(User::class, 'coach_id');
+    }
+
+    /**
+     * Get the training center where attendance was taken
+     */
+    public function trainingCenter()
+    {
+        return $this->belongsTo(TrainingCenter::class);
     }
 }
