@@ -83,6 +83,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/payments', [App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('admin.payments.index');
 });
 
-// Temporary Seed Payment Route - REMOVED
+// Temporary Migrate Route
+Route::get('/migrate', function () {
+    Artisan::call('migrate', ['--force' => true]);
+    return nl2br(Artisan::output());
+});
 
 require __DIR__.'/auth.php';

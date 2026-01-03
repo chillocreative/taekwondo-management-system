@@ -123,6 +123,14 @@ class Student extends Model
     }
 
     /**
+     * Get the attendance records for the student
+     */
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
      * Scope for searching
      */
     public function scopeSearch($query, $search)
