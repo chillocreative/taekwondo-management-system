@@ -80,7 +80,7 @@ function ParentView({ childrenData }) {
     if (!childrenData || childrenData.length === 0) {
         return (
             <div className="text-center p-12 bg-white rounded-xl border border-dashed border-zinc-300">
-                <p className="text-zinc-500">Tiada rekod anak dijumpai.</p>
+                <p className="text-zinc-500">Tiada rekod peserta dijumpai. Sila tambah peserta terlebih dahulu di menu "Nama Peserta".</p>
             </div>
         );
     }

@@ -39,7 +39,7 @@ export default function FeesIndex({ auth, feesData }) {
 
                     {feesData.length === 0 ? (
                         <div className="bg-white p-8 rounded-xl border border-zinc-200 text-center shadow-sm">
-                            <p className="text-zinc-500">Tiada rekod anak dijumpai. Sila tambah anak anda terlebih dahulu di menu "Nama Peserta".</p>
+                            <p className="text-zinc-500">Tiada rekod peserta dijumpai. Sila tambah peserta terlebih dahulu di menu "Nama Peserta".</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
