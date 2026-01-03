@@ -23,37 +23,38 @@ class AttendanceController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        // Pass training center if assigned, otherwise null
-        $trainingCenter = $user->training_center_id 
-            ? TrainingCenter::find($user->training_center_id) 
-            : null;
+        // Fetch ALL training centers for the coach to choose from
+        $trainingCenters = TrainingCenter::all();
 
         return Inertia::render('Coach/Attendance/Select', [
-            'trainingCenter' => $trainingCenter,
+            'trainingCenters' => $trainingCenters,
         ]);
     }
 
     /**
-     * Step 2: Show the attendance sheet for the assigned center.
+     * Step 2: Show the attendance sheet for the selected center.
      */
     public function show(Request $request)
     {
         $user = auth()->user();
 
-        // Ensure user has a training center assigned
-        if ($user->role !== 'coach' || !$user->training_center_id) {
-            // Instead of abort, redirect back to selection page to show the friendly error
-            return redirect()->route('coach.attendance.index');
+        if ($user->role !== 'coach') {
+            abort(403, 'Akses ditolak.');
         }
 
+        $centerId = $request->input('center_id');
         $date = $request->input('date', Carbon::today()->toDateString());
+
+        if (!$centerId) {
+            return redirect()->route('coach.attendance.index')->with('error', 'Sila pilih pusat latihan.');
+        }
         
-        // Fetch the assigned training center
-        $trainingCenter = TrainingCenter::findOrFail($user->training_center_id);
+        // Fetch the selected training center
+        $trainingCenter = TrainingCenter::findOrFail($centerId);
 
         // Fetch students belonging to this training center
-        $students = Student::whereHas('child', function ($query) use ($user) {
-                $query->where('training_center_id', $user->training_center_id)
+        $students = Student::whereHas('child', function ($query) use ($centerId) {
+                $query->where('training_center_id', $centerId)
                       ->where('is_active', true);
             })
             ->with(['child', 'attendances' => function ($query) use ($date) {
@@ -85,6 +86,7 @@ class AttendanceController extends Controller
     {
         $request->validate([
             'date' => 'required|date',
+            'center_id' => 'required|exists:training_centers,id',
             'attendances' => 'required|array',
             'attendances.*.student_id' => 'required|exists:students,id',
             'attendances.*.status' => 'required|in:hadir,tidak_hadir,sakit,cuti',
@@ -93,6 +95,7 @@ class AttendanceController extends Controller
 
         $user = auth()->user();
         $date = $request->input('date');
+        $centerId = $request->input('center_id');
 
          // Security: Ensure coach can only edit *today* (optional, or allow past edits?)
          // Requirement says "Edit attendance on the same day". "View past attendance records in read-only mode"
@@ -101,11 +104,6 @@ class AttendanceController extends Controller
          // Let's implement strict validation here.
          
         if (!Carbon::parse($date)->isToday() && $request->input('force') !== true) {
-             // We can allow edits if 'force' is present or just strict. 
-             // Requirement: "View past attendance records in read-only mode".
-             // So, strictly block changes to past dates is safer.
-             // BUT, what if they missed yesterday? Usually specialized admins fix that.
-             // Let's stick to the requirement: "Edit attendance on the same day".
              if (Carbon::parse($date)->lt(Carbon::today())) {
                  return back()->with('error', 'Anda hanya boleh mengemaskini kehadiran untuk hari ini.');
              }
@@ -122,7 +120,7 @@ class AttendanceController extends Controller
                     'status' => $data['status'],
                     'notes' => $data['notes'] ?? null,
                     'coach_id' => $user->id,
-                    'training_center_id' => $user->training_center_id,
+                    'training_center_id' => $centerId,
                 ]
             );
         }

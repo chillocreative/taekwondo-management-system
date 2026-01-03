@@ -39,7 +39,10 @@ export default function CoachAttendanceIndex({ auth, trainingCenter, students, d
     const handleDateChange = (e) => {
         const newDate = e.target.value;
         setSelectedDate(newDate);
-        router.get(route('coach.attendance.show'), { date: newDate }, { preserveState: true, preserveScroll: true });
+        router.get(route('coach.attendance.show'), {
+            date: newDate,
+            center_id: trainingCenter.id
+        }, { preserveState: true, preserveScroll: true });
     };
 
     const handleStatusChange = (studentId, status) => {
@@ -68,6 +71,7 @@ export default function CoachAttendanceIndex({ auth, trainingCenter, students, d
 
         router.post(route('coach.attendance.store'), {
             date: selectedDate,
+            center_id: trainingCenter.id,
             attendances: payload
         }, {
             onFinish: () => setIsSubmitting(false),
