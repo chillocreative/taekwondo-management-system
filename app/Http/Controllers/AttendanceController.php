@@ -125,4 +125,63 @@ class AttendanceController extends Controller
 
         return back()->with('success', 'Kehadiran berjaya disimpan untuk ' . count($validated['attendances']) . ' peserta.');
     }
+
+    /**
+     * Admin attendance monitoring - view all attendance records
+     */
+    public function adminIndex(Request $request)
+    {
+        $query = Attendance::with(['student'])
+            ->orderBy('attendance_date', 'desc');
+
+        // Filter by date range
+        if ($request->filled('start_date')) {
+            $query->where('attendance_date', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->where('attendance_date', '<=', $request->end_date);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by student name or no_siri
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('student', function($q) use ($search) {
+                $q->where('nama_pelajar', 'like', "%{$search}%")
+                  ->orWhere('no_siri', 'like', "%{$search}%");
+            });
+        }
+
+        $attendances = $query->paginate(50)->through(function($attendance) {
+            return [
+                'id' => $attendance->id,
+                'student_id' => $attendance->student_id,
+                'student_name' => $attendance->student->nama_pelajar ?? '-',
+                'student_no_siri' => $attendance->student->no_siri ?? '-',
+                'attendance_date' => $attendance->attendance_date,
+                'status' => $attendance->status,
+                'notes' => $attendance->notes,
+                'created_at' => $attendance->created_at,
+            ];
+        });
+
+        // Get summary statistics
+        $stats = [
+            'total' => Attendance::count(),
+            'hadir' => Attendance::where('status', 'hadir')->count(),
+            'tidak_hadir' => Attendance::where('status', 'tidak_hadir')->count(),
+            'sakit' => Attendance::where('status', 'sakit')->count(),
+            'cuti' => Attendance::where('status', 'cuti')->count(),
+        ];
+
+        return Inertia::render('Admin/Attendance/Index', [
+            'attendances' => $attendances,
+            'stats' => $stats,
+            'filters' => $request->only(['search', 'status', 'start_date', 'end_date']),
+        ]);
+    }
 }

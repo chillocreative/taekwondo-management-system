@@ -34,6 +34,11 @@ export default function AuthenticatedLayout({ header, children }) {
                         route: 'students.index',
                         active: route().current('students.*'),
                     },
+                    {
+                        name: 'Kehadiran',
+                        route: 'admin.attendance.index',
+                        active: route().current('admin.attendance.*'),
+                    },
                 ],
             },
             {
