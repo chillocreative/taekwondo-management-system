@@ -26,8 +26,8 @@ export default function OfflinePayment({ auth, child, yearlyFee, ageCategory }) 
 
     const handleDownloadQR = () => {
         const link = document.createElement('a');
-        link.href = '/images/duitnow-qr.png';
-        link.download = 'Taekwondo-ANZ-DuitNow-QR.png';
+        link.href = '/images/qrcode.jpeg';
+        link.download = 'Taekwondo-ANZ-DuitNow-QR.jpeg';
         link.click();
     };
 
@@ -73,7 +73,7 @@ export default function OfflinePayment({ auth, child, yearlyFee, ageCategory }) 
                                 <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-8 text-center">
                                     <div className="bg-white rounded-xl p-6 inline-block">
                                         <img
-                                            src="/images/duitnow-qr.png"
+                                            src="/images/qrcode.jpeg"
                                             alt="DuitNow QR Code"
                                             className="w-80 h-auto mx-auto"
                                         />
