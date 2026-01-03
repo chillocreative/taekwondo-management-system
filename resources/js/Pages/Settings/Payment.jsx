@@ -1,9 +1,20 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Toast from '@/Components/Toast';
 import { Head, useForm, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function PaymentSettings({ auth, settings, flash }) {
     const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    // Show toast when flash messages are present
+    useEffect(() => {
+        if (flash?.success) {
+            setToast({ message: flash.success, type: 'success' });
+        } else if (flash?.error) {
+            setToast({ message: flash.error, type: 'error' });
+        }
+    }, [flash]);
 
     const { data, setData, post, processing, errors } = useForm({
         provider: settings?.provider || 'toyyibpay',
@@ -48,20 +59,17 @@ export default function PaymentSettings({ auth, settings, flash }) {
         >
             <Head title="Payment Settings" />
 
+            {/* Toast Notification */}
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
+            )}
+
             <div className="py-6 sm:py-12 bg-zinc-50 min-h-screen">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6">
-
-                    {/* Flash Messages */}
-                    {flash?.success && (
-                        <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-                            {flash.success}
-                        </div>
-                    )}
-                    {flash?.error && (
-                        <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
-                            {flash.error}
-                        </div>
-                    )}
 
                     {/* Main Settings Card */}
                     <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6 mb-6">
