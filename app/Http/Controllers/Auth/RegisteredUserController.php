@@ -21,11 +21,7 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        $trainingCenters = TrainingCenter::active()->get(['id', 'name', 'address']);
-        
-        return Inertia::render('Auth/Register', [
-            'trainingCenters' => $trainingCenters,
-        ]);
+        return Inertia::render('Auth/Register');
     }
 
     /**
@@ -38,14 +34,14 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:20|unique:'.User::class,
-            'training_center_id' => 'required|exists:training_centers,id',
+            'address' => 'nullable|string|max:500',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'phone_number' => $request->phone_number,
-            'training_center_id' => $request->training_center_id,
+            'address' => $request->address,
             'password' => Hash::make($request->password),
             'role' => 'user', // Default role for new registrations
         ]);

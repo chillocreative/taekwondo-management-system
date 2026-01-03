@@ -16,6 +16,7 @@ export default function UpdateProfileInformation({
         useForm({
             name: user.name,
             phone_number: user.phone_number,
+            address: user.address || '',
             email: user.email,
         });
 
@@ -68,6 +69,21 @@ export default function UpdateProfileInformation({
                     />
 
                     <InputError className="mt-2" message={errors.phone_number} />
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="address" value="Alamat" />
+
+                    <textarea
+                        id="address"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        value={data.address}
+                        onChange={(e) => setData('address', e.target.value)}
+                        rows="3"
+                        placeholder="Masukkan alamat lengkap..."
+                    />
+
+                    <InputError className="mt-2" message={errors.address} />
                 </div>
 
                 <div>

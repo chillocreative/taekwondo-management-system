@@ -5,11 +5,11 @@ import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function Register({ trainingCenters }) {
+export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         phone_number: '',
-        training_center_id: '',
+        address: '',
         password: '',
         password_confirmation: '',
     });
@@ -63,25 +63,19 @@ export default function Register({ trainingCenters }) {
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="training_center_id" value="Pusat Latihan" />
+                    <InputLabel htmlFor="address" value="Alamat" />
 
-                    <select
-                        id="training_center_id"
-                        name="training_center_id"
-                        value={data.training_center_id}
-                        onChange={(e) => setData('training_center_id', e.target.value)}
+                    <textarea
+                        id="address"
+                        name="address"
+                        value={data.address}
                         className="mt-1 block w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                        required
-                    >
-                        <option value="">- Sila Pilih Pusat Latihan -</option>
-                        {trainingCenters.map((center) => (
-                            <option key={center.id} value={center.id}>
-                                {center.name}
-                            </option>
-                        ))}
-                    </select>
+                        onChange={(e) => setData('address', e.target.value)}
+                        rows="3"
+                        placeholder="Masukkan alamat lengkap..."
+                    />
 
-                    <InputError message={errors.training_center_id} className="mt-2" />
+                    <InputError message={errors.address} className="mt-2" />
                 </div>
 
                 <div className="mt-4">
