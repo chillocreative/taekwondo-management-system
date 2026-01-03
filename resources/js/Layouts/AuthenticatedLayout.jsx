@@ -89,6 +89,12 @@ export default function AuthenticatedLayout({ header, children }) {
                 route: 'students.index',
                 active: route().current('students.*'),
             },
+            {
+                name: 'Kehadiran',
+                icon: '📋',
+                route: 'coach.attendance.index',
+                active: route().current('coach.attendance.*'),
+            },
         ];
 
         const userMenu = [
