@@ -93,4 +93,28 @@ Route::get('/migrate', function () {
     return nl2br(Artisan::output());
 });
 
+// Temporary Cache Clear Route
+Route::get('/clear-cache', function () {
+    $output = '';
+    
+    // Clear route cache
+    Artisan::call('route:clear');
+    $output .= "Route cache cleared!\n";
+    
+    // Clear config cache
+    Artisan::call('config:clear');
+    $output .= "Config cache cleared!\n";
+    
+    // Clear view cache
+    Artisan::call('view:clear');
+    $output .= "View cache cleared!\n";
+    
+    // Clear application cache
+    Artisan::call('cache:clear');
+    $output .= "Application cache cleared!\n";
+    
+    return nl2br($output . "\nAll caches cleared successfully!");
+});
+
 require __DIR__.'/auth.php';
+
