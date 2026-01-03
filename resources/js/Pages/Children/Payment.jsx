@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 
-export default function Payment({ auth, child }) {
+export default function Payment({ auth, child, yearlyFee, ageCategory }) {
     const handleOnlinePayment = () => {
         window.location.href = route('children.payment.online', child.id);
     };
@@ -15,7 +15,7 @@ export default function Payment({ auth, child }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-zinc-800 leading-tight">Pembayaran Yuran Pendaftaran</h2>}
+            header={<h2 className="font-semibold text-xl text-zinc-800 leading-tight">Pembayaran Yuran Tahunan</h2>}
         >
             <Head title="Pembayaran" />
 
@@ -42,8 +42,8 @@ export default function Payment({ auth, child }) {
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-sm text-zinc-500">Yuran Pendaftaran</p>
-                                        <p className="text-2xl font-bold text-blue-600">RM 50.00</p>
+                                        <p className="text-sm text-zinc-500">Yuran Tahunan ({ageCategory})</p>
+                                        <p className="text-2xl font-bold text-blue-600">RM {parseFloat(yearlyFee).toFixed(2)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -52,7 +52,7 @@ export default function Payment({ auth, child }) {
                             <div>
                                 <h3 className="text-xl font-bold text-zinc-900 mb-4">Pilih Kaedah Pembayaran</h3>
                                 <p className="text-sm text-zinc-600 mb-6">
-                                    Sila pilih kaedah pembayaran yang sesuai untuk yuran pendaftaran peserta.
+                                    Sila pilih kaedah pembayaran yang sesuai untuk yuran tahunan peserta.
                                 </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

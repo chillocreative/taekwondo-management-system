@@ -74,6 +74,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/payment/create-category', [App\Http\Controllers\PaymentSettingController::class, 'createCategory'])->name('settings.payment.create-category');
     Route::post('/settings/payment/test-connection', [App\Http\Controllers\PaymentSettingController::class, 'testConnection'])->name('settings.payment.test');
     
+    // Fee Settings (Admin only)
+    Route::get('/settings/fees', [App\Http\Controllers\FeeSettingController::class, 'index'])->name('settings.fees.index');
+    Route::post('/settings/fees', [App\Http\Controllers\FeeSettingController::class, 'update'])->name('settings.fees.update');
+    
     // Admin - Pending Payment Approvals
     Route::get('/admin/pending-payments', [App\Http\Controllers\Admin\PendingPaymentController::class, 'index'])->name('admin.pending-payments');
     Route::post('/admin/pending-payments/{child}/approve', [App\Http\Controllers\Admin\PendingPaymentController::class, 'approve'])->name('admin.pending-payments.approve');

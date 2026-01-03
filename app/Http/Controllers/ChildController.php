@@ -135,8 +135,22 @@ class ChildController extends Controller
                 ->with('error', 'Peserta ini sudah membuat pembayaran.');
         }
 
+        // Calculate yearly fee based on age
+        $feeSettings = \App\Models\FeeSetting::current();
+        
+        if ($child->date_of_birth) {
+            $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+            $age = \Carbon\Carbon::parse($child->date_of_birth)->age;
+            $ageCategory = $age < 18 ? 'Bawah 18 tahun' : '18 tahun ke atas';
+        } else {
+            $yearlyFee = $feeSettings->yearly_fee_below_18;
+            $ageCategory = 'Bawah 18 tahun';
+        }
+
         return Inertia::render('Children/Payment', [
             'child' => $child->load('trainingCenter'),
+            'yearlyFee' => $yearlyFee,
+            'ageCategory' => $ageCategory,
         ]);
     }
 
@@ -156,16 +170,26 @@ class ChildController extends Controller
                 ->with('error', 'Peserta ini sudah membuat pembayaran.');
         }
 
-        // Get registration fee from settings or use default
-        $registrationFee = 50.00; // Default fee, can be from settings
+        // Calculate yearly fee based on age
+        $feeSettings = \App\Models\FeeSetting::current();
+        
+        if ($child->date_of_birth) {
+            $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+            $age = \Carbon\Carbon::parse($child->date_of_birth)->age;
+            $ageCategory = $age < 18 ? 'Bawah 18 tahun' : '18 tahun ke atas';
+        } else {
+            // Default to below 18 if no DOB
+            $yearlyFee = $feeSettings->yearly_fee_below_18;
+            $ageCategory = 'Bawah 18 tahun (tiada tarikh lahir)';
+        }
 
         // Create ToyyibPay bill
         $toyyibPay = new \App\Services\ToyyibPayService();
         
         $billData = [
-            'billName' => 'Yuran Pendaftaran - ' . $child->name,
-            'billDescription' => 'Yuran pendaftaran peserta taekwondo',
-            'billAmount' => $registrationFee,
+            'billName' => 'Yuran Tahunan - ' . $child->name,
+            'billDescription' => 'Yuran tahunan peserta taekwondo (' . $ageCategory . ')',
+            'billAmount' => $yearlyFee,
             'billReturnUrl' => route('children.payment.callback'),
             'billCallbackUrl' => route('children.payment.callback.post'),
             'billExternalReferenceNo' => 'CHILD-' . $child->id . '-' . time(),
@@ -179,7 +203,7 @@ class ChildController extends Controller
         if ($result['success']) {
             // Update child with payment reference
             $child->update([
-                'registration_fee' => $registrationFee,
+                'registration_fee' => $yearlyFee,
                 'payment_reference' => $result['billCode'],
             ]);
 
@@ -207,10 +231,19 @@ class ChildController extends Controller
                 ->with('error', 'Peserta ini sudah membuat pembayaran.');
         }
 
+        // Calculate yearly fee based on age
+        $feeSettings = \App\Models\FeeSetting::current();
+        
+        if ($child->date_of_birth) {
+            $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+        } else {
+            $yearlyFee = $feeSettings->yearly_fee_below_18;
+        }
+
         // Mark as offline payment pending
         $child->update([
             'payment_method' => 'offline',
-            'registration_fee' => 50.00, // Default fee
+            'registration_fee' => $yearlyFee,
             'payment_reference' => 'OFFLINE-' . $child->id . '-' . time(),
         ]);
 
