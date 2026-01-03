@@ -108,10 +108,8 @@ class PaymentSettingController extends Controller
         $settings = PaymentSetting::getActive();
 
         if (!$settings) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No active payment settings found.',
-            ]);
+            return redirect()->route('settings.payment')
+                ->with('error', 'No active payment settings found. Please configure and activate payment settings first.');
         }
 
         // Test by creating a test category
@@ -121,6 +119,12 @@ class PaymentSettingController extends Controller
             'Test category for connection verification'
         );
 
-        return response()->json($result);
+        if ($result['success'] ?? false) {
+            return redirect()->route('settings.payment')
+                ->with('success', 'Connection test successful! ToyyibPay API is working correctly.');
+        }
+
+        return redirect()->route('settings.payment')
+            ->with('error', 'Connection test failed: ' . ($result['message'] ?? 'Unknown error'));
     }
 }

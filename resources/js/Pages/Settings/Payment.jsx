@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
 
-export default function PaymentSettings({ auth, settings }) {
+export default function PaymentSettings({ auth, settings, flash }) {
     const [showCategoryModal, setShowCategoryModal] = useState(false);
 
     const { data, setData, post, processing, errors } = useForm({
@@ -34,14 +34,7 @@ export default function PaymentSettings({ auth, settings }) {
     };
 
     const testConnection = () => {
-        router.post(route('settings.payment.test'), {}, {
-            onSuccess: (page) => {
-                alert('Connection test successful!');
-            },
-            onError: () => {
-                alert('Connection test failed!');
-            },
-        });
+        router.post(route('settings.payment.test'));
     };
 
     return (
@@ -57,6 +50,18 @@ export default function PaymentSettings({ auth, settings }) {
 
             <div className="py-6 sm:py-12 bg-zinc-50 min-h-screen">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6">
+
+                    {/* Flash Messages */}
+                    {flash?.success && (
+                        <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+                            {flash.success}
+                        </div>
+                    )}
+                    {flash?.error && (
+                        <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                            {flash.error}
+                        </div>
+                    )}
 
                     {/* Main Settings Card */}
                     <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6 mb-6">
