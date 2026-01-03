@@ -13,15 +13,37 @@ use Carbon\Carbon;
 class AttendanceController extends Controller
 {
     /**
-     * Display the attendance page for the coach.
+     * Step 1: Display the "Select Training Center" page.
      */
     public function index(Request $request)
     {
         $user = auth()->user();
         
-        // Ensure user is a coach and has a training center assigned
+        if ($user->role !== 'coach') {
+            abort(403, 'Akses ditolak.');
+        }
+
+        // Pass training center if assigned, otherwise null
+        $trainingCenter = $user->training_center_id 
+            ? TrainingCenter::find($user->training_center_id) 
+            : null;
+
+        return Inertia::render('Coach/Attendance/Select', [
+            'trainingCenter' => $trainingCenter,
+        ]);
+    }
+
+    /**
+     * Step 2: Show the attendance sheet for the assigned center.
+     */
+    public function show(Request $request)
+    {
+        $user = auth()->user();
+
+        // Ensure user has a training center assigned
         if ($user->role !== 'coach' || !$user->training_center_id) {
-            abort(403, 'Anda tidak mempunyai akses ke pusat latihan ini.');
+            // Instead of abort, redirect back to selection page to show the friendly error
+            return redirect()->route('coach.attendance.index');
         }
 
         $date = $request->input('date', Carbon::today()->toDateString());
@@ -30,7 +52,6 @@ class AttendanceController extends Controller
         $trainingCenter = TrainingCenter::findOrFail($user->training_center_id);
 
         // Fetch students belonging to this training center
-        // We filter students via their Child profile's training_center_id
         $students = Student::whereHas('child', function ($query) use ($user) {
                 $query->where('training_center_id', $user->training_center_id)
                       ->where('is_active', true);
@@ -40,19 +61,17 @@ class AttendanceController extends Controller
             }])
             ->get()
             ->map(function ($student) {
-                // Get the attendance record for the selected date if it exists
                 $attendance = $student->attendances->first();
-                
                 return [
                     'id' => $student->id,
-                    'name' => $student->child->name, // Name from Child profile
+                    'name' => $student->child->name,
                     'no_siri' => $student->no_siri,
-                    'status' => $attendance ? $attendance->status : null, // null means Not Marked Yet
+                    'status' => $attendance ? $attendance->status : null,
                     'notes' => $attendance ? $attendance->notes : '',
                 ];
             });
 
-        return Inertia::render('Coach/Attendance/Index', [
+        return Inertia::render('Coach/Attendance/Show', [
             'trainingCenter' => $trainingCenter,
             'students' => $students,
             'date' => $date,
