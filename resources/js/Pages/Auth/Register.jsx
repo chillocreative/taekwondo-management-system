@@ -12,6 +12,7 @@ export default function Register() {
         address: '',
         password: '',
         password_confirmation: '',
+        agreement: false,
     });
 
     const submit = (e) => {
@@ -118,6 +119,22 @@ export default function Register() {
                         message={errors.password_confirmation}
                         className="mt-2"
                     />
+                </div>
+
+                <div className="mt-6">
+                    <label className="flex items-start">
+                        <input
+                            type="checkbox"
+                            checked={data.agreement}
+                            onChange={(e) => setData('agreement', e.target.checked)}
+                            className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            required
+                        />
+                        <span className="ml-3 text-sm text-gray-700 leading-relaxed">
+                            Saya seperti nama di atas dengan ini membernarkan anak saya menyertai Kelab Taekwondo A&Z (TM/WTF). Saya tidak akan menyalahkan mana-mana pihak sekiranya berlaku sebarang kemalangan atau kecederaan semasa latihan mahupun semasa apa-apa aktiviti yang dianjurkan oleh pihak kelab.
+                        </span>
+                    </label>
+                    <InputError message={errors.agreement} className="mt-2" />
                 </div>
 
                 <div className="mt-6 flex items-center justify-between">
