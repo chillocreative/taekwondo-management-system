@@ -126,5 +126,15 @@ Route::get('/clear-cache', function () {
     return nl2br($output . "\nAll caches cleared successfully!");
 });
 
+// Storage Link Route (for cPanel)
+Route::get('/storage-link', function () {
+    try {
+        Artisan::call('storage:link');
+        return 'Storage link created successfully! ' . Artisan::output();
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+});
+
 require __DIR__.'/auth.php';
 
