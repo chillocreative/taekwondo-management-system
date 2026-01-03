@@ -25,11 +25,6 @@ export default function AuthenticatedLayout({ header, children }) {
                 icon: '⚙️',
                 submenu: [
                     {
-                        name: 'Pusat Latihan',
-                        route: 'training-centers.index',
-                        active: route().current('training-centers.*'),
-                    },
-                    {
                         name: 'Pelajar',
                         route: 'students.index',
                         active: route().current('students.*'),
@@ -38,6 +33,16 @@ export default function AuthenticatedLayout({ header, children }) {
                         name: 'Kehadiran',
                         route: 'admin.attendance.index',
                         active: route().current('admin.attendance.*'),
+                    },
+                    {
+                        name: 'Pusat Latihan',
+                        route: 'training-centers.index',
+                        active: route().current('training-centers.*'),
+                    },
+                    {
+                        name: 'Pengguna Sistem',
+                        route: 'admin.users.index',
+                        active: route().current('admin.users.*'),
                     },
                 ],
             },
