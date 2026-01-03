@@ -158,7 +158,7 @@ export default function Login({ status, canResetPassword }) {
                             <div className="space-y-1 text-xs">
                                 <div className="flex items-center gap-1">
                                     <span className="text-gray-600">Tel:</span>
-                                    <code className="bg-white px-2 py-0.5 rounded text-purple-700 font-mono">0112345678</code>
+                                    <code className="bg-white px-2 py-0.5 rounded text-purple-700 font-mono">01122334455</code>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <span className="text-gray-600">Pass:</span>

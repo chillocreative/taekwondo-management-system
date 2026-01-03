@@ -20,7 +20,8 @@ class AttendanceController extends Controller
         // IF PARENT (USER): Show their children's attendance history
         if ($user->role === 'user') {
             $children = $user->children()->with(['student.attendances' => function($query) {
-                $query->orderBy('attendance_date', 'desc')->limit(30);
+                $query->whereYear('attendance_date', date('Y'))
+                      ->orderBy('attendance_date', 'desc');
             }])->get()->map(function($child) {
                 return [
                     'id' => $child->id,
