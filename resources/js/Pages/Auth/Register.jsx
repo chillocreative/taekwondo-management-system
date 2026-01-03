@@ -131,7 +131,7 @@ export default function Register() {
                             required
                         />
                         <span className="ml-3 text-sm text-gray-700 leading-relaxed">
-                            Saya seperti nama di atas dengan ini membernarkan anak saya menyertai Kelab Taekwondo A&Z (TM/WTF). Saya tidak akan menyalahkan mana-mana pihak sekiranya berlaku sebarang kemalangan atau kecederaan semasa latihan mahupun semasa apa-apa aktiviti yang dianjurkan oleh pihak kelab.
+                            Saya seperti nama di atas dengan ini bersetuju / membenarkan anak saya menyertai Kelab Taekwondo A&Z (TM/WTF). Saya tidak akan menyalahkan mana-mana pihak sekiranya berlaku sebarang kemalangan atau kecederaan semasa latihan mahupun semasa apa-apa aktiviti yang dianjurkan oleh pihak kelab.
                         </span>
                     </label>
                     <InputError message={errors.agreement} className="mt-2" />
