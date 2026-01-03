@@ -143,27 +143,30 @@ class FeeController extends Controller
         $payment->save();
 
         // Initiate ToyyibPay
-        $billCode = $this->toyyibPayService->createBill(
-            config('services.toyyibpay.category_code'),
-            'Yuran ' . $request->month,
-            'Pembayaran yuran untuk ' . $child->name . ' (' . $child->student->no_siri . ')',
-            $request->amount * 100, // In cents
-            route('fees.payment.return'),
-            route('fees.payment.callback'),
-            1, // Bill to 1 person?
-            $child->parent->email,
-            $child->parent->phone_number
-        );
+        $result = $this->toyyibPayService->createBill([
+            'billName' => 'Yuran ' . $request->month,
+            'billDescription' => 'Pembayaran yuran untuk ' . $child->name . ' (' . $child->student->no_siri . ')',
+            'billAmount' => $request->amount, // Service will convert to cents
+            'billReturnUrl' => route('fees.payment.return'),
+            'billCallbackUrl' => route('fees.payment.callback'),
+            'billTo' => $child->parent->name ?? '',
+            'billEmail' => $child->parent->email ?? '',
+            'billPhone' => $child->parent->phone_number ?? '',
+            'billExternalReferenceNo' => 'FEE-' . $payment->id,
+        ]);
         
-        if ($billCode) {
-            $payment->transaction_ref = $billCode;
+        if ($result['success'] ?? false) {
+            $payment->transaction_ref = $result['billCode'];
             $payment->payment_method = 'online';
             $payment->save();
 
-            return Inertia::location('https://dev.toyyibpay.com/' . $billCode); 
+            return Inertia::location($result['paymentUrl']); 
         }
 
-        return back()->with('error', 'Gagal menghubungi gerbang pembayaran.');
+        // If ToyyibPay fails, log the error and allow manual payment
+        Log::error('ToyyibPay createBill failed', $result);
+        
+        return back()->with('error', 'Gagal menghubungi gerbang pembayaran. Sila cuba lagi atau hubungi pentadbir.');
     }
 
     public function paymentReturn(Request $request)
