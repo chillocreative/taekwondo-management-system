@@ -57,6 +57,11 @@ export default function AuthenticatedLayout({ header, children }) {
                         active: route().current('settings.payment'),
                     },
                     {
+                        name: 'Yuran',
+                        route: 'settings.fees.index',
+                        active: route().current('settings.fees.*'),
+                    },
+                    {
                         name: 'Kelulusan Pembayaran',
                         route: 'admin.pending-payments',
                         active: route().current('admin.pending-payments'),
