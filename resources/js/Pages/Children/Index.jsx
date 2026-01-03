@@ -248,6 +248,10 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                                 </div>
                                                             )}
                                                         </div>
+                                                    ) : child.payment_method === 'offline' && child.payment_reference ? (
+                                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                                                            Menunggu Pengesahan
+                                                        </span>
                                                     ) : (
                                                         <span className="px-2 py-1 text-xs font-medium rounded-full bg-amber-50 text-amber-600 border border-amber-100">
                                                             Belum Bayar
