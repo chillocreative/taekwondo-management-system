@@ -49,6 +49,9 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
+        // Create notification for admin
+        \App\Models\Notification::createRegistrationNotification($user);
+
         Auth::login($user);
 
         return redirect(route('dashboard', absolute: false));

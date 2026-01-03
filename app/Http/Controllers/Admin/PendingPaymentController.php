@@ -45,6 +45,9 @@ class PendingPaymentController extends Controller
         $studentService = new \App\Services\StudentService();
         $studentService->syncChildToStudent($child);
 
+        // Create notification for admin
+        \App\Models\Notification::createPaymentPaidNotification($child);
+
         return redirect()->back()
             ->with('success', 'Pembayaran telah diluluskan dan peserta telah diaktifkan.');
     }

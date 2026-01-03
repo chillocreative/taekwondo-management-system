@@ -1,0 +1,53 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Notification;
+use Illuminate\Http\Request;
+
+class NotificationController extends Controller
+{
+    /**
+     * Get unread notifications for admin
+     */
+    public function index()
+    {
+        $notifications = Notification::where('is_read', false)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($notification) {
+                return [
+                    'id' => $notification->id,
+                    'type' => $notification->type,
+                    'title' => $notification->title,
+                    'message' => $notification->message,
+                    'time' => $notification->time_ago,
+                    'created_at' => $notification->created_at->toISOString(),
+                ];
+            });
+
+        return response()->json($notifications);
+    }
+
+    /**
+     * Mark all notifications as read
+     */
+    public function markAllRead()
+    {
+        Notification::where('is_read', false)->update(['is_read' => true]);
+        
+        return response()->json(['message' => 'All notifications marked as read']);
+    }
+
+    /**
+     * Mark single notification as read
+     */
+    public function markAsRead($id)
+    {
+        $notification = Notification::findOrFail($id);
+        $notification->update(['is_read' => true]);
+        
+        return response()->json(['message' => 'Notification marked as read']);
+    }
+}

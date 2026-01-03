@@ -123,33 +123,41 @@ export default function AuthenticatedLayout({ header, children }) {
 
     const menuItems = getMenuItems();
 
-    // Load sample notifications (in production, this would fetch from API)
+    // Fetch real notifications from API
     useEffect(() => {
         if (user.role === 'admin') {
-            // Sample notifications for demonstration
-            const sampleNotifications = [
-                {
-                    type: 'registration',
-                    title: 'Pendaftaran Baharu',
-                    message: 'Ahmad bin Ali telah mendaftar sebagai pengguna baharu',
-                    time: '5 minit yang lalu'
-                },
-                {
-                    type: 'payment_paid',
-                    title: 'Pembayaran Diterima',
-                    message: 'Siti binti Abu telah membuat pembayaran yuran tahunan',
-                    time: '1 jam yang lalu'
-                },
-                {
-                    type: 'payment_due',
-                    message: '3 peserta mempunyai yuran tertunggak',
-                    time: '2 jam yang lalu'
-                },
-            ];
-            // Uncomment to show sample notifications
-            // setNotifications(sampleNotifications);
+            fetchNotifications();
+            // Poll for new notifications every 30 seconds
+            const interval = setInterval(fetchNotifications, 30000);
+            return () => clearInterval(interval);
         }
     }, [user.role]);
+
+    const fetchNotifications = async () => {
+        try {
+            const response = await fetch('/api/notifications');
+            const data = await response.json();
+            setNotifications(data);
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+        }
+    };
+
+    const handleMarkAllRead = async () => {
+        try {
+            await fetch('/api/notifications/mark-all-read', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+            });
+            setNotifications([]);
+            setShowNotifications(false);
+        } catch (error) {
+            console.error('Error marking notifications as read:', error);
+        }
+    };
 
     const toggleSubmenu = (menuName) => {
         setOpenSubmenu(openSubmenu === menuName ? null : menuName);
@@ -369,7 +377,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 <h3 className="font-bold text-zinc-900">Notifikasi</h3>
                                                 {notifications.length > 0 && (
                                                     <button
-                                                        onClick={() => setNotifications([])}
+                                                        onClick={handleMarkAllRead}
                                                         className="text-xs text-blue-600 hover:text-blue-800 font-medium"
                                                     >
                                                         Tandakan Semua Dibaca
