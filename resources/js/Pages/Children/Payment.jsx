@@ -7,9 +7,7 @@ export default function Payment({ auth, child, yearlyFee, ageCategory }) {
     };
 
     const handleOfflinePayment = () => {
-        if (confirm('Adakah anda pasti mahu membuat pembayaran offline? Sila tunggu kelulusan admin selepas membuat pembayaran.')) {
-            router.post(route('children.payment.offline', child.id));
-        }
+        window.location.href = route('children.payment.offline', child.id);
     };
 
     return (

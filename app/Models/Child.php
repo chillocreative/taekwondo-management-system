@@ -26,6 +26,7 @@ class Child extends Model
         'registration_fee',
         'payment_date',
         'payment_reference',
+        'payment_slip',
     ];
 
     protected $casts = [

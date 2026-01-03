@@ -216,9 +216,9 @@ class ChildController extends Controller
     }
 
     /**
-     * Request offline payment (pending admin approval)
+     * Show offline payment page with QR code
      */
-    public function requestOfflinePayment(Child $child)
+    public function showOfflinePayment(Child $child)
     {
         // Ensure the child belongs to the authenticated user
         if ($child->parent_id !== Auth::id()) {
@@ -236,19 +236,62 @@ class ChildController extends Controller
         
         if ($child->date_of_birth) {
             $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+            $age = \Carbon\Carbon::parse($child->date_of_birth)->age;
+            $ageCategory = $age < 18 ? 'Bawah 18 tahun' : '18 tahun ke atas';
+        } else {
+            $yearlyFee = $feeSettings->yearly_fee_below_18;
+            $ageCategory = 'Bawah 18 tahun';
+        }
+
+        return Inertia::render('Children/OfflinePayment', [
+            'child' => $child->load('trainingCenter'),
+            'yearlyFee' => $yearlyFee,
+            'ageCategory' => $ageCategory,
+        ]);
+    }
+
+    /**
+     * Submit offline payment with slip upload
+     */
+    public function submitOfflinePayment(Request $request, Child $child)
+    {
+        // Ensure the child belongs to the authenticated user
+        if ($child->parent_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Check if already paid
+        if ($child->payment_completed) {
+            return redirect()->route('children.index')
+                ->with('error', 'Peserta ini sudah membuat pembayaran.');
+        }
+
+        $request->validate([
+            'payment_slip' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB max
+        ]);
+
+        // Calculate yearly fee based on age
+        $feeSettings = \App\Models\FeeSetting::current();
+        
+        if ($child->date_of_birth) {
+            $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
         } else {
             $yearlyFee = $feeSettings->yearly_fee_below_18;
         }
+
+        // Handle file upload
+        $path = $request->file('payment_slip')->store('payment_slips', 'public');
 
         // Mark as offline payment pending
         $child->update([
             'payment_method' => 'offline',
             'registration_fee' => $yearlyFee,
             'payment_reference' => 'OFFLINE-' . $child->id . '-' . time(),
+            'payment_slip' => $path,
         ]);
 
         return redirect()->route('children.index')
-            ->with('success', 'Permohonan pembayaran offline telah dihantar. Sila tunggu kelulusan admin.');
+            ->with('success', 'Resit pembayaran telah dihantar. Sila tunggu kelulusan admin.');
     }
 
     /**

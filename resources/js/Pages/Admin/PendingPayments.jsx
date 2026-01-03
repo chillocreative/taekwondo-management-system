@@ -71,6 +71,7 @@ export default function PendingPayments({ auth, pendingPayments, flash }) {
                                         <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Ibu Bapa / Penjaga</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Pusat Latihan</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Amaun</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Resit</th>
                                         <th className="px-6 py-4 text-right text-xs font-bold text-zinc-500 uppercase tracking-wider">Tindakan</th>
                                     </tr>
                                 </thead>
@@ -99,6 +100,24 @@ export default function PendingPayments({ auth, pendingPayments, flash }) {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-zinc-900">
                                                     RM {parseFloat(payment.registration_fee || 50).toFixed(2)}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                    {payment.payment_slip ? (
+                                                        <a
+                                                            href={`/storage/${payment.payment_slip}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                            </svg>
+                                                            Lihat
+                                                        </a>
+                                                    ) : (
+                                                        <span className="text-zinc-400 text-xs">Tiada resit</span>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <div className="flex justify-end gap-3">
