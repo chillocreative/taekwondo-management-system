@@ -182,17 +182,6 @@ export default function PaymentSettings({ auth, settings }) {
                             </div>
                         </form>
                     </div>
-
-                    {/* Info Card */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-                        <h4 className="font-bold text-blue-900 mb-2">📘 Setup Guide</h4>
-                        <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
-                            <li>Register an account at <a href="https://dev.toyyibpay.com" target="_blank" className="underline">dev.toyyibpay.com</a> (sandbox) or <a href="https://toyyibpay.com" target="_blank" className="underline">toyyibpay.com</a> (production)</li>
-                            <li>Get your User Secret Key from account settings</li>
-                            <li>Create a Category using the "Create Category" button above</li>
-                            <li>Enable the payment gateway when ready</li>
-                        </ol>
-                    </div>
                 </div>
             </div>
 
