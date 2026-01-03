@@ -15,15 +15,41 @@ class AttendanceController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
+
+        // IF PARENT (USER): Show their children's attendance history
+        if ($user->role === 'user') {
+            $children = $user->children()->with(['student.attendances' => function($query) {
+                $query->orderBy('attendance_date', 'desc')->limit(30);
+            }])->get()->map(function($child) {
+                return [
+                    'id' => $child->id,
+                    'name' => $child->name,
+                    'student_id' => $child->student?->id,
+                    'no_keahlian' => $child->student?->no_siri ?? '-',
+                    'attendances' => $child->student?->attendances ?? [],
+                    'stats' => [
+                        'total_classes' => $child->student?->attendances()->count() ?? 0,
+                        'present' => $child->student?->attendances()->where('status', 'hadir')->count() ?? 0,
+                    ]
+                ];
+            });
+
+            return Inertia::render('Attendance/Index', [
+                'isParent' => true,
+                'children' => $children,
+            ]);
+        }
+
+        // IF ADMIN/COACH: Show class attendance for specific date
         $selectedDate = $request->input('date', Carbon::today()->toDateString());
         
-        // Get all active students with their attendance for the selected date
-        $students = Student::with(['child', 'attendances' => function($query) use ($selectedDate) {
+        $students = Student::with(['attendances' => function($query) use ($selectedDate) {
             $query->where('attendance_date', $selectedDate);
         }])
         ->orderBy('no_siri')
         ->get()
-        ->map(function($student) use ($selectedDate) {
+        ->map(function($student) {
             $attendance = $student->attendances->first();
             
             return [
@@ -38,6 +64,7 @@ class AttendanceController extends Controller
         });
 
         return Inertia::render('Attendance/Index', [
+            'isParent' => false,
             'students' => $students,
             'selectedDate' => $selectedDate,
         ]);
