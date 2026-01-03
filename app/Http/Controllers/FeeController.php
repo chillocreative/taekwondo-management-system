@@ -27,74 +27,31 @@ class FeeController extends Controller
     {
         $user = auth()->user();
         
-        // Eager load student and their payments
-        $children = $user->children()->with(['student.payments'])->get();
+        // Eager load monthly payments
+        $children = $user->children()->with(['monthlyPayments' => function($query) {
+            $query->where('year', Carbon::now()->year)
+                  ->orderBy('month');
+        }])->get();
 
-        $months = [];
-        $malayMonths = [
-            1 => 'JANUARI', 2 => 'FEBRUARI', 3 => 'MAC', 4 => 'APRIL', 
-            5 => 'MEI', 6 => 'JUN', 7 => 'JULAI', 8 => 'OGOS', 
-            9 => 'SEPTEMBER', 10 => 'OKTOBER', 11 => 'NOVEMBER', 12 => 'DISEMBER'
-        ];
+        $feesData = $children->map(function ($child) {
+            // Generate monthly payments if they don't exist
+            if ($child->monthlyPayments->count() === 0) {
+                \App\Models\MonthlyPayment::generateForChild($child);
+                $child->load('monthlyPayments');
+            }
 
-        // Let's generate for full year 2026
-        for ($i = 1; $i <= 12; $i++) {
-            $months[] = [
-                'month_name' => $malayMonths[$i] . ' 2026',
-                'month_date' => Carbon::create(2026, $i, 1),
-            ];
-        }
-
-        $feesData = $children->map(function ($child) use ($months) {
-            $fees = collect($months)->map(function ($monthItem) use ($child) {
-                // Default status
-                $status = 'Belum Dibayar';
-                $canPay = false;
-                $hasReceipt = false;
-                $paymentTotal = 0;
-                $paymentId = null;
-
-                // Check if child has a linked student record
-                if ($child->student) {
-                    // Check for payment matching the month string
-                    $payment = $child->student->payments->first(function ($p) use ($monthItem) {
-                        return strtoupper($p->month) === $monthItem['month_name'] && $p->status === 'paid';
-                    });
-
-                    if ($payment) {
-                        $status = 'Sudah Bayar';
-                        $hasReceipt = true;
-                        $paymentTotal = $payment->total;
-                        $paymentId = $payment->id;
-                    } else {
-                        // Check if pending?
-                         $pending = $child->student->payments->first(function ($p) use ($monthItem) {
-                            return strtoupper($p->month) === $monthItem['month_name'] && $p->status === 'pending';
-                        });
-                        
-                        if ($pending) {
-                            $status = 'Sedang Semak'; // Or allow re-pay if failed?
-                            // For simplicity, allow repay if pending for too long? Or just show Pending.
-                            // Let's allow pay for now, assuming new flow
-                            $canPay = true; 
-                        } else {
-                            $canPay = true;
-                        }
-
-                        $paymentTotal = $child->student->monthly_fee;
-                    }
-                } else {
-                    $status = 'Tiada Rekod Pelajar';
-                }
-
+            $fees = $child->monthlyPayments->map(function ($monthlyPayment) {
                 return [
-                    'month' => $monthItem['month_name'],
-                    'status' => $status,
-                    'can_pay' => $canPay,
-                    'has_receipt' => $hasReceipt,
-                    'amount' => $paymentTotal,
-                    'payment_id' => $paymentId,
-                    'child_id' => $child->id // Needed for payload
+                    'id' => $monthlyPayment->id,
+                    'month' => $monthlyPayment->month_name . ' ' . $monthlyPayment->year,
+                    'status' => $monthlyPayment->status,
+                    'is_paid' => $monthlyPayment->is_paid,
+                    'is_overdue' => $monthlyPayment->isOverdue(),
+                    'amount' => $monthlyPayment->amount,
+                    'due_date' => $monthlyPayment->due_date->format('d/m/Y'),
+                    'paid_date' => $monthlyPayment->paid_date?->format('d/m/Y'),
+                    'can_pay' => !$monthlyPayment->is_paid,
+                    'child_id' => $monthlyPayment->child_id,
                 ];
             });
 

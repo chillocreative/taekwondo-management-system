@@ -63,6 +63,14 @@ class Child extends Model
     }
 
     /**
+     * Get monthly payments for this child
+     */
+    public function monthlyPayments()
+    {
+        return $this->hasMany(MonthlyPayment::class);
+    }
+
+    /**
      * Get the belt level in Bahasa Malaysia
      */
     public function getBeltLevelMalayAttribute(): string

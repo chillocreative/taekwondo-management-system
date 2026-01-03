@@ -70,57 +70,51 @@ export default function FeesIndex({ auth, feesData }) {
                                             <table className="min-w-full divide-y divide-zinc-200">
                                                 <thead className="bg-white">
                                                     <tr>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider w-1/3">
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                                                             Yuran Bulan
                                                         </th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider w-1/3">
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                                                            Tarikh Akhir
+                                                        </th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                                                             Status
                                                         </th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider w-1/3">
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                                                             Tindakan
                                                         </th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="bg-white divide-y divide-zinc-200">
                                                     {child.fees.map((fee, index) => (
-                                                        <tr key={index} className="hover:bg-zinc-50 transition-colors">
+                                                        <tr key={index} className={`hover:bg-zinc-50 transition-colors ${fee.is_overdue ? 'bg-red-50' : ''}`}>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-zinc-900">
                                                                 {fee.month}
                                                             </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-600">
+                                                                {fee.due_date}
+                                                            </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                                <span className={`px-3 py-1 text-xs font-medium rounded-full ${fee.status === 'Sudah Bayar'
-                                                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                                                    : fee.status === 'Tiada Rekod Pelajar'
-                                                                        ? 'bg-gray-100 text-gray-500 border border-gray-200'
-                                                                        : 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                                <span className={`px-3 py-1 text-xs font-medium rounded-full ${fee.status === 'Sudah Dibayar'
+                                                                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                                                        : fee.status === 'Tertunggak'
+                                                                            ? 'bg-red-50 text-red-600 border border-red-200'
+                                                                            : 'bg-amber-50 text-amber-600 border border-amber-100'
                                                                     }`}>
                                                                     {fee.status}
                                                                 </span>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                                {fee.has_receipt ? (
-                                                                    <div className="flex gap-3">
-                                                                        <a
-                                                                            href={route('receipts.stream', fee.payment_id)}
-                                                                            target="_blank"
-                                                                            className="text-blue-600 hover:text-blue-900 hover:underline flex items-center gap-1"
-                                                                        >
-                                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                                                            Lihat
-                                                                        </a>
-                                                                        <a
-                                                                            href={route('receipts.download', fee.payment_id)}
-                                                                            target="_blank"
-                                                                            className="text-emerald-600 hover:text-emerald-900 hover:underline flex items-center gap-1"
-                                                                        >
-                                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                                                                            Resit
-                                                                        </a>
-                                                                    </div>
+                                                                {fee.is_paid ? (
+                                                                    <span className="text-emerald-600 text-xs">
+                                                                        ✓ Dibayar {fee.paid_date}
+                                                                    </span>
                                                                 ) : fee.can_pay ? (
                                                                     <button
                                                                         onClick={() => handlePay(child.id, fee.month, fee.amount)}
-                                                                        className="px-4 py-2 bg-black text-white text-xs font-bold rounded-lg hover:bg-zinc-800 transition-colors shadow-sm"
+                                                                        className={`px-4 py-2 text-white text-xs font-bold rounded-lg transition-colors shadow-sm ${fee.is_overdue
+                                                                                ? 'bg-red-600 hover:bg-red-700'
+                                                                                : 'bg-black hover:bg-zinc-800'
+                                                                            }`}
                                                                     >
                                                                         BAYAR
                                                                     </button>
