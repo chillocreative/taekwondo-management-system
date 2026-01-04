@@ -84,6 +84,9 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        console.log('=== FORM SUBMITTED ===');
+        console.log('Current form data:', data);
+        console.log('Editing child:', editingChild);
 
         // Transform function to clean up data
         const transformData = (formData) => {
