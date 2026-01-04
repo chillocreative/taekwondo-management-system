@@ -130,9 +130,12 @@ export default function Index({ auth, students, filters, stats }) {
                                         students.data.map((student) => (
                                             <tr key={student.id} className="hover:bg-blue-50/50 transition duration-150 group">
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className="text-sm font-bold text-blue-600">
+                                                    <Link
+                                                        href={route('coach.students.show', student.id)}
+                                                        className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline"
+                                                    >
                                                         {student.no_siri}
-                                                    </span>
+                                                    </Link>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">{student.nama_pelajar}</div>
