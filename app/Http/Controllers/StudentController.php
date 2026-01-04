@@ -17,6 +17,11 @@ class StudentController extends Controller
     {
         $query = Student::query();
 
+        // Only show students that have a linked child with completed payment
+        $query->whereHas('child', function($q) {
+            $q->where('payment_completed', true);
+        });
+
         // Apply search
         if ($request->has('search')) {
             $query->search($request->search);
@@ -32,11 +37,17 @@ class StudentController extends Controller
 
         $students = $query->paginate(10)->withQueryString();
 
-        // Calculate statistics
+        // Calculate statistics (only for students with completed payment)
         $stats = [
-            'total' => Student::count(),
-            'paid' => Student::where('status_bayaran', '>=', 12)->count(),
-            'pending' => Student::where('status_bayaran', '<', 12)->count(),
+            'total' => Student::whereHas('child', function($q) {
+                $q->where('payment_completed', true);
+            })->count(),
+            'paid' => Student::whereHas('child', function($q) {
+                $q->where('payment_completed', true);
+            })->where('status_bayaran', '>=', 12)->count(),
+            'pending' => Student::whereHas('child', function($q) {
+                $q->where('payment_completed', true);
+            })->where('status_bayaran', '<', 12)->count(),
         ];
 
         return Inertia::render('Students/Index', [
