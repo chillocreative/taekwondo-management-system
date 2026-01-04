@@ -87,10 +87,14 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
 
         if (editingChild) {
             put(route('children.update', editingChild.id), {
+                preserveScroll: true,
+                forceFormData: true,
                 onSuccess: () => closeModal(),
             });
         } else {
             post(route('children.store'), {
+                preserveScroll: true,
+                forceFormData: true,
                 onSuccess: () => closeModal(),
             });
         }
