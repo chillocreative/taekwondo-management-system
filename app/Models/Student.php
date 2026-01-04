@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\FeeSetting;
 
 class Student extends Model
 {
@@ -58,11 +59,17 @@ class Student extends Model
     ];
 
     /**
-     * Get the monthly fee based on category
+     * Get the monthly fee based on category from settings
      */
-    public function getMonthlyFeeAttribute(): int
+    public function getMonthlyFeeAttribute(): float
     {
-        return $this->kategori === 'kanak-kanak' ? 30 : 50;
+        $feeSetting = FeeSetting::current();
+        
+        // Map kategori to age-based fee setting
+        // 'kanak-kanak' maps to below_18, 'dewasa' maps to above_18
+        return $this->kategori === 'kanak-kanak' 
+            ? (float) $feeSetting->monthly_fee_below_18 
+            : (float) $feeSetting->monthly_fee_above_18;
     }
 
     /**
