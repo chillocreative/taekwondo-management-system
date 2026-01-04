@@ -15,7 +15,6 @@ export default function UsersIndex({ auth, users, trainingCenters, filters, flas
         email: '',
         address: '',
         role: 'user',
-        training_center_id: '',
         password: '',
         password_confirmation: '',
     });
@@ -51,7 +50,6 @@ export default function UsersIndex({ auth, users, trainingCenters, filters, flas
             email: '',
             address: '',
             role: 'user',
-            training_center_id: '',
             password: '',
             password_confirmation: '',
         });
@@ -66,7 +64,6 @@ export default function UsersIndex({ auth, users, trainingCenters, filters, flas
             email: user.email || '',
             address: user.address || '',
             role: user.role,
-            training_center_id: user.training_center?.id || '',
         });
         setShowModal(true);
     };
@@ -336,19 +333,6 @@ export default function UsersIndex({ auth, users, trainingCenters, filters, flas
                                     <option value="user">Pengguna</option>
                                     <option value="coach">Jurulatih</option>
                                     <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-zinc-700 mb-1">Pusat Latihan</label>
-                                <select
-                                    value={formData.training_center_id}
-                                    onChange={(e) => setFormData({ ...formData, training_center_id: e.target.value })}
-                                    className="w-full rounded-lg border-zinc-300 focus:border-blue-500 focus:ring-blue-500"
-                                >
-                                    <option value="">- Tiada -</option>
-                                    {trainingCenters.map((center) => (
-                                        <option key={center.id} value={center.id}>{center.name}</option>
-                                    ))}
                                 </select>
                             </div>
                             {!editingUser && (
