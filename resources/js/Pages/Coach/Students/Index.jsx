@@ -14,9 +14,9 @@ export default function Index({ auth, students, filters, stats }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-bold text-2xl text-gray-800 leading-tight">Senarai Pelajar</h2>}
+            header={<h2 className="font-bold text-2xl text-gray-800 leading-tight">Senarai Peserta</h2>}
         >
-            <Head title="Senarai Pelajar" />
+            <Head title="Senarai Peserta" />
 
             <div className="py-12 bg-gray-50 min-h-screen">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -24,12 +24,9 @@ export default function Index({ auth, students, filters, stats }) {
                     {/* Header Section */}
                     <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                         <div>
-                            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Senarai Pelajar</h1>
-                            <p className="text-gray-500 mt-1">Lihat maklumat pelajar dan status pembayaran.</p>
+                            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Senarai Peserta</h1>
+                            <p className="text-gray-500 mt-1">Lihat maklumat peserta dan status pembayaran.</p>
                         </div>
-                        <span className="bg-blue-100 text-blue-800 text-sm font-medium px-4 py-2 rounded-lg">
-                            👁️ Mod Lihat Sahaja
-                        </span>
                     </div>
 
                     {/* Statistics Cards */}
@@ -41,7 +38,7 @@ export default function Index({ auth, students, filters, stats }) {
                                     <span className="text-3xl">👥</span>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">Jumlah Pelajar</p>
+                                    <p className="text-sm font-medium text-gray-500">Jumlah Peserta</p>
                                     <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
                                 </div>
                             </div>
@@ -118,7 +115,7 @@ export default function Index({ auth, students, filters, stats }) {
                                 <thead className="bg-gray-50/50">
                                     <tr>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">No. Keahlian</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Pelajar</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Peserta</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Penjaga</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Kategori</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status Bayaran</th>
@@ -178,7 +175,7 @@ export default function Index({ auth, students, filters, stats }) {
                                             <td colSpan="6" className="px-6 py-12 text-center">
                                                 <div className="flex flex-col items-center justify-center text-gray-500">
                                                     <span className="text-4xl mb-3">🔍</span>
-                                                    <p className="text-lg font-medium">Tiada rekod pelajar dijumpai.</p>
+                                                    <p className="text-lg font-medium">Tiada rekod peserta dijumpai.</p>
                                                     <p className="text-sm">Cuba ubah carian atau tapis kategori anda.</p>
                                                 </div>
                                             </td>

@@ -16,21 +16,16 @@ export default function Show({ auth, student, readOnly = true }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Maklumat Pelajar</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Maklumat Peserta</h2>}
         >
-            <Head title={`Maklumat Pelajar - ${student.nama_pelajar}`} />
+            <Head title={`Maklumat Peserta - ${student.nama_pelajar}`} />
 
             <div className="py-12">
                 <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-bold text-gray-800">Maklumat Pelajar</h2>
-                                {readOnly && (
-                                    <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded">
-                                        👁️ Mod Lihat Sahaja
-                                    </span>
-                                )}
+                                <h2 className="text-2xl font-bold text-gray-800">Maklumat Peserta</h2>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -39,7 +34,7 @@ export default function Show({ auth, student, readOnly = true }) {
                                     <p className="text-lg font-semibold">{student.no_siri}</p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-lg">
-                                    <p className="text-sm text-gray-600 mb-1">Nama Pelajar</p>
+                                    <p className="text-sm text-gray-600 mb-1">Nama Peserta</p>
                                     <p className="text-lg font-semibold">{student.nama_pelajar}</p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-lg">
