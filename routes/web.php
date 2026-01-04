@@ -104,6 +104,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/coach/attendance', [App\Http\Controllers\Coach\AttendanceController::class, 'index'])->name('coach.attendance.index');
     Route::get('/coach/attendance/sheet', [App\Http\Controllers\Coach\AttendanceController::class, 'show'])->name('coach.attendance.show');
     Route::post('/coach/attendance', [App\Http\Controllers\Coach\AttendanceController::class, 'store'])->name('coach.attendance.store');
+    
+    // Coach Students (Read-only)
+    Route::get('/coach/students', [App\Http\Controllers\Coach\StudentController::class, 'index'])->name('coach.students.index');
+    Route::get('/coach/students/{student}', [App\Http\Controllers\Coach\StudentController::class, 'show'])->name('coach.students.show');
 });
 
 // Temporary Migrate Route

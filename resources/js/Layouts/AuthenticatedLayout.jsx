@@ -86,8 +86,8 @@ export default function AuthenticatedLayout({ header, children }) {
             {
                 name: 'Pelajar',
                 icon: '👥',
-                route: 'students.index',
-                active: route().current('students.*'),
+                route: 'coach.students.index',
+                active: route().current('coach.students.*'),
             },
             {
                 name: 'Kehadiran',
