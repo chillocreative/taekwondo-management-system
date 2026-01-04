@@ -85,17 +85,46 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        // Transform function to clean up data
+        const transformData = (formData) => {
+            // Convert empty strings to null for optional fields
+            const cleaned = { ...formData };
+            if (cleaned.training_center_id === '') {
+                cleaned.training_center_id = null;
+            }
+            if (cleaned.ic_number === '') {
+                cleaned.ic_number = null;
+            }
+            if (cleaned.date_of_birth === '') {
+                cleaned.date_of_birth = null;
+            }
+            if (cleaned.tm_number === '') {
+                cleaned.tm_number = null;
+            }
+
+            console.log('Submitting data:', cleaned);
+            return cleaned;
+        };
+
         if (editingChild) {
             put(route('children.update', editingChild.id), {
                 preserveScroll: true,
                 forceFormData: true,
+                transform: transformData,
                 onSuccess: () => closeModal(),
+                onError: (errors) => {
+                    console.error('Validation errors:', errors);
+                },
             });
         } else {
             post(route('children.store'), {
                 preserveScroll: true,
                 forceFormData: true,
+                transform: transformData,
                 onSuccess: () => closeModal(),
+                onError: (errors) => {
+                    console.error('Validation errors:', errors);
+                },
             });
         }
     };
