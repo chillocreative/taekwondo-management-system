@@ -286,6 +286,17 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <div className="flex justify-end gap-2">
+                                                        {child.belt_certificate && (
+                                                            <a
+                                                                href={`/storage/${child.belt_certificate}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="px-3 py-1.5 text-xs border border-green-300 bg-green-50 rounded-lg text-green-700 hover:bg-green-100 transition-colors"
+                                                                title="Lihat Sijil"
+                                                            >
+                                                                📄 Sijil
+                                                            </a>
+                                                        )}
                                                         <button
                                                             onClick={() => openModal(child)}
                                                             className="px-3 py-1.5 text-xs border border-zinc-300 rounded-lg text-zinc-700 hover:bg-zinc-50 transition-colors"
@@ -509,6 +520,28 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                             <label className="block text-sm font-medium text-zinc-700 mb-2">
                                                 Upload sijil ujian tali pinggang terkini
                                             </label>
+
+                                            {/* Show existing certificate if editing */}
+                                            {editingChild && editingChild.belt_certificate && (
+                                                <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-green-600">📄</span>
+                                                            <span className="text-sm text-green-700 font-medium">Sijil Sedia Ada</span>
+                                                        </div>
+                                                        <a
+                                                            href={`/storage/${editingChild.belt_certificate}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                                                        >
+                                                            Lihat Sijil
+                                                        </a>
+                                                    </div>
+                                                    <p className="text-xs text-green-600 mt-1">Upload fail baru untuk menggantikan sijil sedia ada</p>
+                                                </div>
+                                            )}
+
                                             <input
                                                 type="file"
                                                 onChange={(e) => setData('belt_certificate', e.target.files[0])}

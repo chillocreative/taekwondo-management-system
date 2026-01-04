@@ -105,7 +105,7 @@ class StudentController extends Controller
      */
     public function show(Student $student)
     {
-        $student->load('payments');
+        $student->load(['payments', 'child']);
         $student->append('total_payment');
         
         return Inertia::render('Students/Show', [

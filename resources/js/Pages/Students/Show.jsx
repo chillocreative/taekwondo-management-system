@@ -63,6 +63,24 @@ export default function Show({ auth, student }) {
                                     <p className="text-sm text-gray-600 mb-1">Alamat</p>
                                     <p className="text-lg font-semibold">{student.alamat}</p>
                                 </div>
+                                {student.child && student.child.belt_certificate && (
+                                    <div className="bg-green-50 border border-green-200 p-4 rounded-lg md:col-span-2">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm text-green-700 font-medium mb-1">📄 Sijil Tali Pinggang</p>
+                                                <p className="text-xs text-green-600">Sijil ujian tali pinggang telah dimuat naik</p>
+                                            </div>
+                                            <a
+                                                href={`/storage/${student.child.belt_certificate}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                                            >
+                                                Lihat Sijil
+                                            </a>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <p className="text-sm text-gray-600 mb-1">Kategori</p>
                                     <p className="text-lg font-semibold">
