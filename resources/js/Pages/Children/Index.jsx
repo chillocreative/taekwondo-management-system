@@ -175,18 +175,8 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
     };
 
     const handlePayment = (id) => {
-        try {
-            const url = route('children.payment.online', id);
-            alert('Generated URL: ' + url);
-            window.location.href = url;
-        } catch (error) {
-            alert('Error generating URL: ' + error.message);
-            console.error('Payment Error:', error);
-            // Fallback manually if route() fails
-            const fallbackUrl = '/children/' + id + '/payment/online';
-            alert('Trying fallback URL: ' + fallbackUrl);
-            window.location.href = fallbackUrl;
-        }
+        // Redirect directly to online payment (ToyyibPay)
+        window.location.href = route('children.payment.online', id);
     };
 
     const getBeltLevelLabel = (value) => {

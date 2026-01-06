@@ -251,8 +251,14 @@ class ChildController extends Controller
             return redirect($result['paymentUrl']);
         }
 
+        // Log the error for debugging
+        \Illuminate\Support\Facades\Log::error('ToyyibPay Error for Child ID ' . $child->id, [
+            'result' => $result,
+            'billData' => $billData
+        ]);
+
         return redirect()->route('children.index')
-            ->with('error', 'Gagal memulakan pembayaran. Sila cuba lagi.');
+            ->with(['error' => 'Gagal memulakan pembayaran: ' . ($result['message'] ?? 'Ralat tidak diketahui')]);
     }
 
     /**
