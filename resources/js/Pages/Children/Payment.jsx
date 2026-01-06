@@ -6,10 +6,6 @@ export default function Payment({ auth, child, yearlyFee, ageCategory }) {
         window.location.href = route('children.payment.online', child.id);
     };
 
-    const handleOfflinePayment = () => {
-        window.location.href = route('children.payment.offline', child.id);
-    };
-
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -53,7 +49,7 @@ export default function Payment({ auth, child, yearlyFee, ageCategory }) {
                                     Sila pilih kaedah pembayaran yang sesuai untuk yuran tahunan peserta.
                                 </p>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="max-w-md mx-auto">
                                     {/* Online Payment */}
                                     <div className="border-2 border-blue-200 rounded-xl p-6 hover:border-blue-400 transition-colors cursor-pointer bg-blue-50"
                                         onClick={handleOnlinePayment}>
@@ -77,33 +73,6 @@ export default function Payment({ auth, child, yearlyFee, ageCategory }) {
                                                 className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                                             >
                                                 Teruskan ke ToyyibPay
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Offline Payment */}
-                                    <div className="border-2 border-zinc-200 rounded-xl p-6 hover:border-zinc-400 transition-colors cursor-pointer"
-                                        onClick={handleOfflinePayment}>
-                                        <div className="flex flex-col items-center text-center">
-                                            <div className="w-16 h-16 bg-zinc-600 rounded-full flex items-center justify-center mb-4">
-                                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                </svg>
-                                            </div>
-                                            <h4 className="text-lg font-bold text-zinc-900 mb-2">Bayar Offline</h4>
-                                            <p className="text-sm text-zinc-600 mb-4">
-                                                Pembayaran tunai atau pindahan bank
-                                            </p>
-                                            <ul className="text-xs text-zinc-500 mb-4 space-y-1 text-left w-full">
-                                                <li>⏳ Menunggu kelulusan admin</li>
-                                                <li>⏳ Proses manual</li>
-                                                <li>⏳ Sila hubungi admin</li>
-                                            </ul>
-                                            <button
-                                                onClick={handleOfflinePayment}
-                                                className="w-full px-6 py-3 bg-zinc-600 text-white rounded-lg hover:bg-zinc-700 transition-colors font-medium"
-                                            >
-                                                Hantar Permohonan
                                             </button>
                                         </div>
                                     </div>

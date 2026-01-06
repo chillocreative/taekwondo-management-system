@@ -6,16 +6,37 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChild, setEditingChild] = useState(null);
 
+    const states = [
+        "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan",
+        "Pahang", "Perak", "Perlis", "Pulau Pinang", "Sabah",
+        "Sarawak", "Selangor", "Terengganu", "Wilayah Persekutuan (Kuala Lumpur)",
+        "Wilayah Persekutuan (Labuan)", "Wilayah Persekutuan (Putrajaya)"
+    ];
+
     const { data, setData, post, put, delete: destroy, processing, errors, reset } = useForm({
         training_center_id: '',
         name: '',
         date_of_birth: '',
+        age: '',
         ic_number: '',
         belt_level: 'white',
         is_active: true,
         from_other_club: false,
         tm_number: '',
         belt_certificate: null,
+        guardian_name: '',
+        guardian_occupation: '',
+        guardian_ic_number: '',
+        guardian_age: '',
+        guardian_phone: '',
+        phone_number: '',
+        address: '',
+        postcode: '',
+        city: '',
+        state: '',
+        school_name: '',
+        school_class: '',
+        disclaimer_accepted: false,
     });
 
     const beltLevels = [
@@ -68,7 +89,33 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                 from_other_club: child.from_other_club || false,
                 tm_number: child.tm_number || '',
                 belt_certificate: null,
+                guardian_name: child.guardian_name || '',
+                guardian_occupation: child.guardian_occupation || '',
+                guardian_ic_number: child.guardian_ic_number || '',
+                guardian_age: child.guardian_age || '',
+                guardian_phone: child.guardian_phone || '',
+                phone_number: child.phone_number || '',
+                address: child.address || '',
+                postcode: child.postcode || '',
+                city: child.city || '',
+                state: child.state || '',
+                school_name: child.school_name || '',
+                school_class: child.school_class || '',
+                disclaimer_accepted: true,
             });
+
+            // Calculate child age on load
+            if (child.ic_number) {
+                const value = child.ic_number.replace(/\D/g, '').slice(0, 12);
+                if (value.length >= 2) {
+                    const year = parseInt(value.substring(0, 2));
+                    const currentYear = new Date().getFullYear();
+                    const currentYearLastTwo = currentYear % 100;
+                    const fullYear = year > currentYearLastTwo ? 1900 + year : 2000 + year;
+                    const age = currentYear - fullYear;
+                    setData(prev => ({ ...prev, age: age }));
+                }
+            }
         } else {
             setEditingChild(null);
             reset();
@@ -84,6 +131,12 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        if (!data.disclaimer_accepted) {
+            alert('Sila tanda kotak pengesahan sebelum menghantar borang.');
+            return;
+        }
+
         console.log('=== FORM SUBMITTED ===');
         console.log('Current form data:', data);
         console.log('Editing child:', editingChild);
@@ -129,8 +182,8 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
     };
 
     const handlePayment = (id) => {
-        // Redirect to payment page
-        window.location.href = route('children.payment', id);
+        // Redirect directly to online payment (ToyyibPay)
+        window.location.href = route('children.payment.online', id);
     };
 
     const getBeltLevelLabel = (value) => {
@@ -332,244 +385,475 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                         </h3>
 
                         <form onSubmit={handleSubmit}>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                        Nama
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                    />
-                                    {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-                                </div>
+                            <div className="space-y-6">
+                                {/* MAKLUMAT WARIS */}
+                                <div className="space-y-4">
+                                    <h4 className="font-bold text-zinc-900 border-b border-zinc-200 pb-2">MAKLUMAT WARIS</h4>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                        Pusat Latihan
-                                    </label>
-                                    <select
-                                        value={data.training_center_id}
-                                        onChange={(e) => setData('training_center_id', e.target.value)}
-                                        className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
-                                    >
-                                        <option value="">Pilih Pusat Latihan</option>
-                                        {trainingCenters.map((center) => (
-                                            <option key={center.id} value={center.id}>
-                                                {center.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.training_center_id && <p className="text-red-500 text-xs mt-1">{errors.training_center_id}</p>}
-                                </div>
+                                    {/* Nama Waris */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                            Nama Waris
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.guardian_name}
+                                            onChange={(e) => setData('guardian_name', e.target.value.toUpperCase())}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                            required
+                                        />
+                                        {errors.guardian_name && <p className="text-red-500 text-xs mt-1">{errors.guardian_name}</p>}
+                                    </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                        No. Kad Pengenalan
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={data.ic_number}
-                                        onChange={(e) => {
-                                            const value = e.target.value.replace(/\D/g, '').slice(0, 12);
-                                            let dob = data.date_of_birth;
+                                    {/* Pekerjaan */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                            Pekerjaan
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.guardian_occupation}
+                                            onChange={(e) => setData('guardian_occupation', e.target.value.toUpperCase())}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                        />
+                                    </div>
 
-                                            // Auto-populate date of birth from IC number (YYMMDD format)
-                                            if (value.length >= 6) {
-                                                const year = value.substring(0, 2);
-                                                const month = value.substring(2, 4);
-                                                const day = value.substring(4, 6);
+                                    {/* No Kad Pengenalan Waris */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                            No Kad Pengenalan
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.guardian_ic_number}
+                                            onChange={(e) => {
+                                                const value = e.target.value.replace(/\D/g, '').slice(0, 12);
+                                                let age = data.guardian_age;
 
-                                                const currentYear = new Date().getFullYear();
-                                                const currentYearLastTwo = currentYear % 100;
-                                                const century = parseInt(year) > currentYearLastTwo ? '19' : '20';
-                                                const fullYear = century + year;
-
-                                                const monthNum = parseInt(month);
-                                                const dayNum = parseInt(day);
-
-                                                if (monthNum >= 1 && monthNum <= 12 && dayNum >= 1 && dayNum <= 31) {
-                                                    dob = `${fullYear}-${month}-${day}`;
+                                                if (value.length >= 2) {
+                                                    const year = parseInt(value.substring(0, 2));
+                                                    const currentYear = new Date().getFullYear();
+                                                    const currentYearLastTwo = currentYear % 100;
+                                                    const fullYear = year > currentYearLastTwo ? 1900 + year : 2000 + year;
+                                                    age = currentYear - fullYear;
                                                 }
-                                            }
 
-                                            setData(previousData => ({
-                                                ...previousData,
-                                                ic_number: value,
-                                                date_of_birth: dob
-                                            }));
-                                        }}
-                                        className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Contoh: 120101011234"
-                                        maxLength="12"
-                                        pattern="\d{12}"
-                                    />
-                                    <p className="text-xs text-zinc-500 mt-1">12 digit sahaja, tanpa simbol (Tarikh lahir akan diisi automatik)</p>
-                                    {errors.ic_number && <p className="text-red-500 text-xs mt-1">{errors.ic_number}</p>}
-                                </div>
+                                                setData(prev => ({
+                                                    ...prev,
+                                                    guardian_ic_number: value,
+                                                    guardian_age: age
+                                                }));
+                                            }}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Contoh: 811010011234"
+                                            maxLength="12"
+                                        />
+                                        <p className="text-xs text-zinc-500 mt-1">12 digit sahaja, tanpa simbol (Umur akan dikira automatik)</p>
+                                    </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                        Tarikh Lahir
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={data.date_of_birth}
-                                        onChange={(e) => setData('date_of_birth', e.target.value)}
-                                        className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base bg-zinc-50"
-                                        max={new Date().toISOString().split('T')[0]}
-                                        style={{ colorScheme: 'light' }}
-                                        readOnly
-                                    />
-                                    <p className="text-xs text-zinc-500 mt-1">Diisi automatik dari No. Kad Pengenalan</p>
-                                    {errors.date_of_birth && <p className="text-red-500 text-xs mt-1">{errors.date_of_birth}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                        Kategori
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={(() => {
-                                            if (!data.date_of_birth) return '-';
-                                            const birthDate = new Date(data.date_of_birth);
-                                            const today = new Date();
-                                            let age = today.getFullYear() - birthDate.getFullYear();
-                                            const monthDiff = today.getMonth() - birthDate.getMonth();
-                                            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                                                age--;
-                                            }
-                                            return age < 18 ? 'Pelajar' : 'Dewasa';
-                                        })()}
-                                        className="w-full px-3 py-2 border border-zinc-300 rounded-lg bg-zinc-50 text-zinc-700 font-medium"
-                                        readOnly
-                                    />
-                                    <p className="text-xs text-zinc-500 mt-1">Dikira automatik berdasarkan tarikh lahir</p>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                        Tahap Tali Pinggang
-                                    </label>
-                                    <select
-                                        value={data.belt_level}
-                                        onChange={(e) => setData('belt_level', e.target.value)}
-                                        className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        {beltLevels.map((level) => (
-                                            <option key={level.value} value={level.value}>
-                                                {level.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.belt_level && <p className="text-red-500 text-xs mt-1">{errors.belt_level}</p>}
-                                </div>
-
-                                {/* From Other Club Section */}
-                                <div className="pt-4 border-t border-zinc-200">
-                                    <label className="block text-sm font-medium text-zinc-700 mb-3">
-                                        Adakah anda dari kelab lain?
-                                    </label>
-                                    <div className="flex gap-4">
-                                        <label className="flex items-center">
-                                            <input
-                                                type="radio"
-                                                name="from_other_club"
-                                                checked={data.from_other_club === true}
-                                                onChange={() => setData('from_other_club', true)}
-                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
-                                            />
-                                            <span className="ml-2 text-sm text-zinc-700">Ya</span>
+                                    {/* Umur */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                            Umur
                                         </label>
-                                        <label className="flex items-center">
-                                            <input
-                                                type="radio"
-                                                name="from_other_club"
-                                                checked={data.from_other_club === false}
-                                                onChange={() => setData('from_other_club', false)}
-                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
-                                            />
-                                            <span className="ml-2 text-sm text-zinc-700">Tidak</span>
+                                        <input
+                                            type="number"
+                                            value={data.guardian_age}
+                                            onChange={(e) => setData('guardian_age', e.target.value)}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            readOnly
+                                        />
+                                    </div>
+
+                                    {/* No Telefon Waris */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                            No Telefon
                                         </label>
+                                        <input
+                                            type="tel"
+                                            value={data.guardian_phone}
+                                            onChange={(e) => setData('guardian_phone', e.target.value.replace(/\D/g, '').slice(0, 11))}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Contoh: 0123456789"
+                                            maxLength="11"
+                                        />
+                                        <p className="text-xs text-zinc-500 mt-1">Nombor sahaja, maksimum 11 digit</p>
                                     </div>
                                 </div>
 
-                                {/* Conditional fields when from other club */}
-                                {data.from_other_club && (
-                                    <div className="space-y-4 pl-4 border-l-2 border-blue-200 bg-blue-50 p-4 rounded-r-lg">
+                                {/* Divider */}
+                                <hr className="border-4 border-zinc-100" />
+
+                                {/* MAKLUMAT PESERTA */}
+                                <div className="space-y-4">
+                                    <h4 className="font-bold text-zinc-900 border-b border-zinc-200 pb-2">MAKLUMAT PESERTA</h4>
+
+                                    {/* Nama Penuh */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                            Nama Penuh
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.name}
+                                            onChange={(e) => setData('name', e.target.value.toUpperCase())}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                            required
+                                        />
+                                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                                    </div>
+
+                                    {/* No Kad Pengenalan & Umur & Tarikh Lahir */}
+                                    <div className="grid grid-cols-1 gap-4">
+                                        {/* No Kad Pengenalan & Umur & Tarikh Lahir */}
+                                        <div className="grid grid-cols-1 gap-4">
+                                            <div className="grid grid-cols-4 gap-4">
+                                                <div className="col-span-3">
+                                                    <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                        No Kad Pengenalan
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={data.ic_number}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value.replace(/\D/g, '').slice(0, 12);
+                                                            let dob = data.date_of_birth;
+                                                            let age = data.age;
+
+                                                            if (value.length >= 6) {
+                                                                const year = parseInt(value.substring(0, 2));
+                                                                const month = value.substring(2, 4);
+                                                                const day = value.substring(4, 6);
+
+                                                                // Determine century
+                                                                const currentYear = new Date().getFullYear();
+                                                                const currentYearLastTwo = currentYear % 100;
+                                                                const fullYear = year > currentYearLastTwo ? 1900 + year : 2000 + year;
+
+                                                                if (!isNaN(fullYear) && parseInt(month) >= 1 && parseInt(month) <= 12 && parseInt(day) >= 1 && parseInt(day) <= 31) {
+                                                                    dob = `${fullYear}-${month}-${day}`;
+                                                                    age = currentYear - fullYear;
+                                                                }
+                                                            }
+
+                                                            setData(prev => ({
+                                                                ...prev,
+                                                                ic_number: value,
+                                                                date_of_birth: dob,
+                                                                age: age
+                                                            }));
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                        placeholder="Contoh: 150101011234"
+                                                        maxLength="12"
+                                                    />
+                                                    <p className="text-xs text-zinc-500 mt-1">12 digit sahaja, tanpa simbol</p>
+                                                    {errors.ic_number && <p className="text-red-500 text-xs mt-1">{errors.ic_number}</p>}
+                                                </div>
+                                                <div className="col-span-1">
+                                                    <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                        Umur
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        value={data.age}
+                                                        onChange={(e) => setData('age', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50"
+                                                        readOnly
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                    Tarikh Lahir
+                                                </label>
+                                                <input
+                                                    type="date"
+                                                    value={data.date_of_birth}
+                                                    onChange={(e) => setData('date_of_birth', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50 cursor-not-allowed"
+                                                    readOnly
+                                                />
+                                                <p className="text-xs text-zinc-500 mt-1">automatik mengikut no kad pengenalan</p>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    {/* No Telefon Child */}
+                                    <div>
+                                        <div className="flex justify-between items-center mb-1">
+                                            <label className="block text-sm font-medium text-zinc-700">
+                                                No Telefon
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setData('phone_number', data.guardian_phone);
+                                                        } else {
+                                                            setData('phone_number', '');
+                                                        }
+                                                    }}
+                                                    className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
+                                                />
+                                                <span className="text-xs text-zinc-500">Sama seperti waris</span>
+                                            </label>
+                                        </div>
+                                        <input
+                                            type="tel"
+                                            value={data.phone_number}
+                                            onChange={(e) => setData('phone_number', e.target.value.replace(/\D/g, '').slice(0, 11))}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Contoh: 0123456789"
+                                            maxLength="11"
+                                        />
+                                        <p className="text-xs text-zinc-500 mt-1">Nombor sahaja, maksimum 11 digit</p>
+                                    </div>
+
+                                    {/* Alamat Rumah */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                            Alamat Rumah
+                                        </label>
+                                        <textarea
+                                            rows="2"
+                                            value={data.address}
+                                            onChange={(e) => setData('address', e.target.value.toUpperCase())}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none uppercase"
+                                        ></textarea>
+                                    </div>
+
+                                    {/* Postcode, City, State */}
+                                    <div className="space-y-4">
                                         <div>
                                             <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                                Isikan No. TM
+                                                Poskod
                                             </label>
                                             <input
                                                 type="text"
-                                                value={data.tm_number}
-                                                onChange={(e) => setData('tm_number', e.target.value)}
-                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                                                placeholder="Masukkan No. TM"
+                                                value={data.postcode}
+                                                onChange={(e) => setData('postcode', e.target.value)}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             />
-                                            {errors.tm_number && <p className="text-red-500 text-xs mt-1">{errors.tm_number}</p>}
                                         </div>
-
                                         <div>
-                                            <label className="block text-sm font-medium text-zinc-700 mb-2">
-                                                Upload sijil ujian tali pinggang terkini
+                                            <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                Bandar
                                             </label>
-
-                                            {/* Show existing certificate if editing */}
-                                            {editingChild && editingChild.belt_certificate && (
-                                                <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-green-600">📄</span>
-                                                            <span className="text-sm text-green-700 font-medium">Sijil Sedia Ada</span>
-                                                        </div>
-                                                        <a
-                                                            href={`/storage/${editingChild.belt_certificate}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-                                                        >
-                                                            Lihat Sijil
-                                                        </a>
-                                                    </div>
-                                                    <p className="text-xs text-green-600 mt-1">Upload fail baru untuk menggantikan sijil sedia ada</p>
-                                                </div>
-                                            )}
-
                                             <input
-                                                type="file"
-                                                onChange={(e) => setData('belt_certificate', e.target.files[0])}
-                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                                accept="image/*,.pdf"
+                                                type="text"
+                                                value={data.city}
+                                                onChange={(e) => setData('city', e.target.value.toUpperCase())}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
                                             />
-                                            <p className="text-xs text-zinc-500 mt-1">Format: JPG, PNG, atau PDF (Maks: 2MB)</p>
-                                            {errors.belt_certificate && <p className="text-red-500 text-xs mt-1">{errors.belt_certificate}</p>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                Negeri
+                                            </label>
+                                            <select
+                                                value={data.state}
+                                                onChange={(e) => setData('state', e.target.value)}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            >
+                                                <option value="">Pilih Negeri</option>
+                                                {states.map((state) => (
+                                                    <option key={state} value={state}>
+                                                        {state}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </div>
-                                )}
-                            </div>
 
-                            <div className="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-3">
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    className="px-4 py-2 border border-zinc-300 rounded-lg text-zinc-700 hover:bg-zinc-50 transition-colors"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="px-4 py-2 bg-black text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50"
-                                >
-                                    {processing ? 'Menyimpan...' : 'Simpan'}
-                                </button>
+                                    {/* Nama Sekolah */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                            Nama Sekolah
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.school_name}
+                                            onChange={(e) => setData('school_name', e.target.value.toUpperCase())}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                        />
+                                    </div>
+
+                                    {/* Kelas */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                            Kelas
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.school_class}
+                                            onChange={(e) => setData('school_class', e.target.value.toUpperCase())}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                        />
+                                    </div>
+
+                                    {/* Pusat Latihan */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                            Pusat Latihan
+                                        </label>
+                                        <select
+                                            value={data.training_center_id}
+                                            onChange={(e) => setData('training_center_id', e.target.value)}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            required
+                                        >
+                                            <option value="">Pilih Pusat Latihan</option>
+                                            {trainingCenters.map((center) => (
+                                                <option key={center.id} value={center.id}>
+                                                    {center.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.training_center_id && <p className="text-red-500 text-xs mt-1">{errors.training_center_id}</p>}
+                                    </div>
+
+                                    {/* From Other Club Section */}
+                                    <div className="pt-4 border-t border-zinc-200">
+                                        <label className="block text-sm font-medium text-zinc-700 mb-3">
+                                            Adakah anda dari kelab lain?
+                                        </label>
+                                        <div className="flex gap-4">
+                                            <label className="flex items-center">
+                                                <input
+                                                    type="radio"
+                                                    name="from_other_club"
+                                                    checked={data.from_other_club === true}
+                                                    onChange={() => setData('from_other_club', true)}
+                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
+                                                />
+                                                <span className="ml-2 text-sm text-zinc-700">Ya</span>
+                                            </label>
+                                            <label className="flex items-center">
+                                                <input
+                                                    type="radio"
+                                                    name="from_other_club"
+                                                    checked={data.from_other_club === false}
+                                                    onChange={() => {
+                                                        setData(prev => ({ ...prev, from_other_club: false, belt_level: 'white' }));
+                                                    }}
+                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
+                                                />
+                                                <span className="ml-2 text-sm text-zinc-700">Tidak</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {/* Conditional fields when from other club */}
+                                    {data.from_other_club && (
+                                        <div className="space-y-4 pl-4 border-l-2 border-blue-200 bg-blue-50 p-4 rounded-r-lg">
+                                            {/* Tahap Tali Pinggang */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                    Tahap Tali Pinggang
+                                                </label>
+                                                <select
+                                                    value={data.belt_level}
+                                                    onChange={(e) => setData('belt_level', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                >
+                                                    {beltLevels.map((level) => (
+                                                        <option key={level.value} value={level.value}>
+                                                            {level.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                {errors.belt_level && <p className="text-red-500 text-xs mt-1">{errors.belt_level}</p>}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                    Isikan No. TM
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={data.tm_number}
+                                                    onChange={(e) => setData('tm_number', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                                    placeholder="Masukkan No. TM"
+                                                />
+                                                {errors.tm_number && <p className="text-red-500 text-xs mt-1">{errors.tm_number}</p>}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                                    Upload sijil ujian tali pinggang terkini
+                                                </label>
+
+                                                {editingChild && editingChild.belt_certificate && (
+                                                    <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-green-600">📄</span>
+                                                                <span className="text-sm text-green-700 font-medium">Sijil Sedia Ada</span>
+                                                            </div>
+                                                            <a
+                                                                href={`/storage/${editingChild.belt_certificate}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                                                            >
+                                                                Lihat Sijil
+                                                            </a>
+                                                        </div>
+                                                        <p className="text-xs text-green-600 mt-1">Upload fail baru untuk menggantikan sijil sedia ada</p>
+                                                    </div>
+                                                )}
+
+                                                <input
+                                                    type="file"
+                                                    onChange={(e) => setData('belt_certificate', e.target.files[0])}
+                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                                    accept="image/*,.pdf"
+                                                />
+                                                <p className="text-xs text-zinc-500 mt-1">Format: JPG, PNG, atau PDF (Maks: 2MB)</p>
+                                                {errors.belt_certificate && <p className="text-red-500 text-xs mt-1">{errors.belt_certificate}</p>}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Disclaimer */}
+                                <div className="pt-4 border-t border-zinc-200 bg-gray-50 p-4 rounded-lg">
+                                    <label className="flex items-start gap-3 cursor-pointer">
+                                        <div className="flex-shrink-0 mt-0.5">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.disclaimer_accepted}
+                                                onChange={(e) => setData('disclaimer_accepted', e.target.checked)}
+                                                className="h-5 w-5 text-black focus:ring-zinc-800 border-zinc-300 rounded"
+                                            />
+                                        </div>
+                                        <span className="text-xs sm:text-sm text-zinc-600 leading-snug">
+                                            Saya seperti nama di atas dengan ini membernarkan anak saya menyertai Kelab Taekwondo A&Z (TM/WTF). Saya tidak akan menyalahkan mana-mana pihak sekiranya berlaku sebarang kemalangan atau kecederaan semasa latihan mahupun semasa apa-apa aktiviti yang dianjurkan oleh pihak kelab.
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={closeModal}
+                                        className="px-4 py-2 border border-zinc-300 rounded-lg text-zinc-700 hover:bg-zinc-50 transition-colors"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="px-4 py-2 bg-black text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                                    >
+                                        {processing ? 'Menyimpan...' : 'Simpan'}
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>

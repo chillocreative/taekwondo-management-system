@@ -38,6 +38,18 @@ class ChildController extends Controller
             'from_other_club' => 'boolean',
             'tm_number' => 'nullable|string|max:50',
             'belt_certificate' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'guardian_name' => 'required|string|max:255',
+            'guardian_occupation' => 'nullable|string|max:255',
+            'guardian_ic_number' => 'nullable|string|max:20',
+            'guardian_age' => 'nullable|integer',
+            'guardian_phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'postcode' => 'nullable|string|max:10',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'phone_number' => 'nullable|string|max:20',
+            'school_name' => 'nullable|string|max:255',
+            'school_class' => 'nullable|string|max:50',
         ]);
 
         // Handle file upload
@@ -76,6 +88,18 @@ class ChildController extends Controller
             'from_other_club' => 'boolean',
             'tm_number' => 'nullable|string|max:50',
             'belt_certificate' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'guardian_name' => 'required|string|max:255',
+            'guardian_occupation' => 'nullable|string|max:255',
+            'guardian_ic_number' => 'nullable|string|max:20',
+            'guardian_age' => 'nullable|integer',
+            'guardian_phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'postcode' => 'nullable|string|max:10',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'phone_number' => 'nullable|string|max:20',
+            'school_name' => 'nullable|string|max:255',
+            'school_class' => 'nullable|string|max:50',
         ]);
 
         // Handle file upload
@@ -170,26 +194,53 @@ class ChildController extends Controller
                 ->with('error', 'Peserta ini sudah membuat pembayaran.');
         }
 
-        // Calculate yearly fee based on age
+        // Calculate fees based on age
         $feeSettings = \App\Models\FeeSetting::current();
         
         if ($child->date_of_birth) {
             $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+            $monthlyFee = $feeSettings->getMonthlyFeeByDob($child->date_of_birth);
             $age = \Carbon\Carbon::parse($child->date_of_birth)->age;
             $ageCategory = $age < 18 ? 'Bawah 18 tahun' : '18 tahun ke atas';
         } else {
             // Default to below 18 if no DOB
             $yearlyFee = $feeSettings->yearly_fee_below_18;
+            $monthlyFee = $feeSettings->monthly_fee_below_18;
             $ageCategory = 'Bawah 18 tahun (tiada tarikh lahir)';
         }
+
+        // Calculate total payment: registration fee + monthly fees from registration month to December
+        $registrationMonth = \Carbon\Carbon::parse($child->created_at)->month;
+        $currentYear = \Carbon\Carbon::now()->year;
+        $registrationYear = \Carbon\Carbon::parse($child->created_at)->year;
+        
+        // If registered in current year, calculate months from registration to December
+        if ($registrationYear == $currentYear) {
+            $monthsToCharge = 12 - $registrationMonth + 1; // Include registration month
+        } else {
+            // If registered in previous year, charge full year
+            $monthsToCharge = 12;
+        }
+        
+        $totalMonthlyFees = $monthlyFee * $monthsToCharge;
+        $totalAmount = $yearlyFee + $totalMonthlyFees;
 
         // Create ToyyibPay bill
         $toyyibPay = new \App\Services\ToyyibPayService();
         
+        $billDescription = sprintf(
+            'Yuran Pendaftaran (RM%.2f) + Yuran Bulanan %d bulan (RM%.2f x %d) - %s',
+            $yearlyFee,
+            $monthsToCharge,
+            $monthlyFee,
+            $monthsToCharge,
+            $ageCategory
+        );
+        
         $billData = [
-            'billName' => 'Yuran Tahunan - ' . $child->name,
-            'billDescription' => 'Yuran tahunan peserta taekwondo (' . $ageCategory . ')',
-            'billAmount' => $yearlyFee,
+            'billName' => 'Yuran Taekwondo - ' . $child->name,
+            'billDescription' => $billDescription,
+            'billAmount' => $totalAmount,
             'billReturnUrl' => route('children.payment.callback'),
             'billCallbackUrl' => route('children.payment.callback.post'),
             'billExternalReferenceNo' => 'CHILD-' . $child->id . '-' . time(),
@@ -201,7 +252,7 @@ class ChildController extends Controller
         $result = $toyyibPay->createBill($billData);
 
         if ($result['success']) {
-            // Update child with payment reference
+            // Update child with payment reference and registration fee
             $child->update([
                 'registration_fee' => $yearlyFee,
                 'payment_reference' => $result['billCode'],

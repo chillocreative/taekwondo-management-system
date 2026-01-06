@@ -27,6 +27,18 @@ class Child extends Model
         'payment_date',
         'payment_reference',
         'payment_slip',
+        'guardian_name',
+        'guardian_occupation',
+        'guardian_ic_number',
+        'guardian_age',
+        'guardian_phone',
+        'address',
+        'postcode',
+        'city',
+        'state',
+        'phone_number',
+        'school_name',
+        'school_class',
     ];
 
     protected $casts = [
