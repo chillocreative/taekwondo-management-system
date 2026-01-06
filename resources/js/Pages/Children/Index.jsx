@@ -36,7 +36,6 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
         state: '',
         school_name: '',
         school_class: '',
-        disclaimer_accepted: false,
     });
 
     const beltLevels = [
@@ -101,7 +100,6 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                 state: child.state || '',
                 school_name: child.school_name || '',
                 school_class: child.school_class || '',
-                disclaimer_accepted: true,
             });
 
             // Calculate child age on load
@@ -131,11 +129,6 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        if (!data.disclaimer_accepted) {
-            alert('Sila tanda kotak pengesahan sebelum menghantar borang.');
-            return;
-        }
 
         console.log('=== FORM SUBMITTED ===');
         console.log('Current form data:', data);
@@ -821,22 +814,6 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                     )}
                                 </div>
 
-                                {/* Disclaimer */}
-                                <div className="pt-4 border-t border-zinc-200 bg-gray-50 p-4 rounded-lg">
-                                    <label className="flex items-start gap-3 cursor-pointer">
-                                        <div className="flex-shrink-0 mt-0.5">
-                                            <input
-                                                type="checkbox"
-                                                checked={data.disclaimer_accepted}
-                                                onChange={(e) => setData('disclaimer_accepted', e.target.checked)}
-                                                className="h-5 w-5 text-black focus:ring-zinc-800 border-zinc-300 rounded"
-                                            />
-                                        </div>
-                                        <span className="text-xs sm:text-sm text-zinc-600 leading-snug">
-                                            Saya seperti nama di atas dengan ini membernarkan anak saya menyertai Kelab Taekwondo A&Z (TM/WTF). Saya tidak akan menyalahkan mana-mana pihak sekiranya berlaku sebarang kemalangan atau kecederaan semasa latihan mahupun semasa apa-apa aktiviti yang dianjurkan oleh pihak kelab.
-                                        </span>
-                                    </label>
-                                </div>
 
                                 <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
                                     <button
