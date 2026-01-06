@@ -9,7 +9,6 @@ export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         phone_number: '',
-        address: '',
         password: '',
         password_confirmation: '',
     });
@@ -62,21 +61,6 @@ export default function Register() {
                     <InputError message={errors.phone_number} className="mt-2" />
                 </div>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="address" value="Alamat" />
-
-                    <textarea
-                        id="address"
-                        name="address"
-                        value={data.address}
-                        className="mt-1 block w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                        onChange={(e) => setData('address', e.target.value)}
-                        rows="3"
-                        placeholder="Masukkan alamat lengkap..."
-                    />
-
-                    <InputError message={errors.address} className="mt-2" />
-                </div>
 
                 <div className="mt-4">
                     <InputLabel htmlFor="password" value="Kata Laluan" />
