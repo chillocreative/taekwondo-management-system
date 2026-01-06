@@ -19,18 +19,14 @@ Route::get('/', function () {
 
 use App\Models\Student;
 
-// Temporary Cache Clearing Route
-Route::get('/clear-cache', function() {
-    Artisan::call('cache:clear');
-    Artisan::call('config:clear');
-    Artisan::call('route:clear');
-    Artisan::call('view:clear');
-    Artisan::call('optimize:clear');
-    return 'Cache Cleared! <br> <a href="/children">Go back to Children List</a>';
-});
+
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard', [
+            'studentCount' => Student::count(),
+        ]);
+    })->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
