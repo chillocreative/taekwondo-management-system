@@ -176,6 +176,8 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
 
     const handlePayment = (id) => {
         // Redirect directly to online payment (ToyyibPay)
+        console.log('Payment button clicked for child ID:', id);
+        console.log('Redirecting to:', route('children.payment.online', id));
         window.location.href = route('children.payment.online', id);
     };
 
