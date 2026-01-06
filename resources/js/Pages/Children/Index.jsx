@@ -271,11 +271,6 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                     <div className="text-sm text-zinc-900">
                                                         {child.ic_number || '-'}
                                                     </div>
-                                                    {child.date_of_birth && (
-                                                        <div className="text-xs text-zinc-500">
-                                                            {new Date(child.date_of_birth).toLocaleDateString('ms-MY')}
-                                                        </div>
-                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm text-zinc-900">
