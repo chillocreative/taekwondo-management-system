@@ -211,31 +211,18 @@ class ChildController extends Controller
             $ageCategory = 'Bawah 18 tahun (tiada tarikh lahir)';
         }
 
-        // Calculate total payment: registration fee + monthly fees from registration month to December
-        $registrationMonth = \Carbon\Carbon::parse($child->created_at)->month;
-        $currentYear = \Carbon\Carbon::now()->year;
-        $registrationYear = \Carbon\Carbon::parse($child->created_at)->year;
-        
-        // If registered in current year, calculate months from registration to December
-        if ($registrationYear == $currentYear) {
-            $monthsToCharge = 12 - $registrationMonth + 1; // Include registration month
-        } else {
-            // If registered in previous year, charge full year
-            $monthsToCharge = 12;
-        }
-        
-        $totalMonthlyFees = $monthlyFee * $monthsToCharge;
-        $totalAmount = $yearlyFee + $totalMonthlyFees;
+        // Calculate total payment: Yuran Tahunan + Yuran Bulanan (current month only)
+        $currentMonth = \Carbon\Carbon::now()->format('F'); // e.g., "February"
+        $totalAmount = $yearlyFee + $monthlyFee;
 
         // Create ToyyibPay bill
         $toyyibPay = new \App\Services\ToyyibPayService();
         
         $billDescription = sprintf(
-            'Yuran Pendaftaran (RM%.2f) + Yuran Bulanan %d bulan (RM%.2f x %d) - %s',
+            'Yuran Tahunan (RM%.2f) + Yuran Bulanan %s (RM%.2f) - %s',
             $yearlyFee,
-            $monthsToCharge,
+            $currentMonth,
             $monthlyFee,
-            $monthsToCharge,
             $ageCategory
         );
         
