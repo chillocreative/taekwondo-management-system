@@ -15,15 +15,22 @@ class StudentController extends Controller
      */
     public function index(Request $request)
     {
-        // Eager load child, parent, and monthly payments for current year
+        // Initial query with eager loading
         $query = Student::query()->with(['child.parent', 'child.monthlyPayments' => function($q) {
             $q->where('year', now()->year);
         }]);
 
-        // Only show students that have a linked child with completed payment
-        $query->whereHas('child', function($q) {
-            $q->where('payment_completed', true);
-        });
+        // Filter by Payment Status
+        $statusPembayaran = $request->input('status_pembayaran', 'all');
+        if ($statusPembayaran === 'paid') {
+            $query->whereHas('child', function($q) {
+                $q->where('payment_completed', true);
+            });
+        } elseif ($statusPembayaran === 'pending') {
+            $query->whereHas('child', function($q) {
+                $q->where('payment_completed', false);
+            });
+        }
 
         // Apply search
         if ($request->filled('search')) {
@@ -42,10 +49,10 @@ class StudentController extends Controller
             });
         }
 
-        // Sort by latest update
+        // Sort by latest update (or created_at if pending)
         $query->orderBy('tarikh_kemaskini', 'desc');
 
-        $students = $query->paginate(10)->withQueryString();
+        $students = $query->paginate(15)->withQueryString();
 
         // Calculate dynamic fields
         $students->getCollection()->transform(function ($student) {
@@ -64,15 +71,15 @@ class StudentController extends Controller
 
         // Calculate statistics
         $stats = [
-            'total' => Student::whereHas('child', function($q) {
+            'total' => Student::count(),
+            'total_paid' => Student::whereHas('child', function($q) {
                 $q->where('payment_completed', true);
             })->count(),
-            'total_below_18' => Student::whereHas('child', function($q) {
-                $q->where('payment_completed', true);
-            })->where('kategori', 'kanak-kanak')->count(),
-            'total_above_18' => Student::whereHas('child', function($q) {
-                $q->where('payment_completed', true);
-            })->where('kategori', 'dewasa')->count(),
+            'total_pending_approval' => Student::whereHas('child', function($q) {
+                $q->where('payment_completed', false);
+            })->count(),
+            'total_below_18' => Student::where('kategori', 'kanak-kanak')->count(),
+            'total_above_18' => Student::where('kategori', 'dewasa')->count(),
         ];
         
         $trainingCenters = \App\Models\TrainingCenter::all();
@@ -80,9 +87,44 @@ class StudentController extends Controller
         return Inertia::render('Students/Index', [
             'students' => $students,
             'trainingCenters' => $trainingCenters,
-            'filters' => $request->only(['search', 'kategori', 'training_center_id']),
+            'filters' => $request->only(['search', 'kategori', 'training_center_id', 'status_pembayaran']),
             'stats' => $stats,
         ]);
+    }
+
+    /**
+     * Approve manual/offline payment for a student
+     */
+    public function approvePayment(Student $student)
+    {
+        if (!$student->child) {
+            return back()->with('error', 'Rekod profil tidak dijumpai.');
+        }
+
+        // Calculate fee if not already set (fallback)
+        if (!$student->child->registration_fee) {
+            $feeSettings = \App\Models\FeeSetting::current();
+            $registrationFee = $student->kategori === 'kanak-kanak' 
+                ? $feeSettings->yearly_fee_below_18 
+                : $feeSettings->yearly_fee_above_18;
+        } else {
+            $registrationFee = $student->child->registration_fee;
+        }
+
+        // Update child record
+        $student->child->update([
+            'payment_completed' => true,
+            'payment_method' => $student->child->payment_method ?? 'offline',
+            'payment_date' => now(),
+            'is_active' => true,
+            'registration_fee' => $registrationFee,
+        ]);
+
+        // Sync and ensure monthly records exist
+        $studentService = new \App\Services\StudentService();
+        $studentService->syncChildToStudent($student->child);
+
+        return back()->with('success', "Pendaftaran untuk {$student->nama_pelajar} telah berjaya diluluskan.");
     }
 
     /**

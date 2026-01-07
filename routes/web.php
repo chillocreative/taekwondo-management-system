@@ -31,6 +31,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Student Management Routes
     Route::post('students/bulk-destroy', [StudentController::class, 'bulkDestroy'])
         ->name('students.bulk-destroy');
+    Route::post('students/{student}/approve', [StudentController::class, 'approvePayment'])
+        ->name('students.approve');
     Route::resource('students', StudentController::class);
     
     // Payment Summary Routes

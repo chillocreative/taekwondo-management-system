@@ -6,6 +6,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
     const [search, setSearch] = useState(filters.search || '');
     const [kategori, setKategori] = useState(filters.kategori || '');
     const [trainingCenterId, setTrainingCenterId] = useState(filters.training_center_id || '');
+    const [statusPembayaran, setStatusPembayaran] = useState(filters.status_pembayaran || 'all');
     const [selectedIds, setSelectedIds] = useState([]);
     const isFirstRender = useRef(true);
 
@@ -20,7 +21,8 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
             router.get(route('students.index'), {
                 search,
                 kategori,
-                training_center_id: trainingCenterId
+                training_center_id: trainingCenterId,
+                status_pembayaran: statusPembayaran
             }, {
                 preserveState: true,
                 preserveScroll: true,
@@ -29,7 +31,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [search, kategori, trainingCenterId]);
+    }, [search, kategori, trainingCenterId, statusPembayaran]);
 
     const handleDelete = (id) => {
         if (confirm('Adakah anda pasti untuk memadam rekod ini?')) {
@@ -100,25 +102,36 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
 
                     {/* Statistics Cards */}
                     {stats && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            {/* Total Students */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                            {/* Paid Students */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
-                                <div className="p-4 bg-blue-50 rounded-xl text-blue-600">
-                                    <span className="text-3xl">👥</span>
+                                <div className="p-4 bg-green-50 rounded-xl text-green-600">
+                                    <span className="text-3xl">✅</span>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">Jumlah Peserta</p>
-                                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                                    <p className="text-sm font-medium text-gray-500">Pelajar Berbayar</p>
+                                    <p className="text-2xl font-bold text-gray-900">{stats.total_paid}</p>
+                                </div>
+                            </div>
+
+                            {/* Pending Approval */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4 border-l-4 border-l-rose-500">
+                                <div className="p-4 bg-rose-50 rounded-xl text-rose-600">
+                                    <span className="text-3xl">⏳</span>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">Menunggu Kelulusan</p>
+                                    <p className="text-2xl font-bold text-rose-600 font-black">{stats.total_pending_approval}</p>
                                 </div>
                             </div>
 
                             {/* Under 18 */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
-                                <div className="p-4 bg-green-50 rounded-xl text-green-600">
+                                <div className="p-4 bg-blue-50 rounded-xl text-blue-600">
                                     <span className="text-3xl">👶</span>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">Peserta 18 Tahun Bawah</p>
+                                    <p className="text-sm font-medium text-gray-500">Bawah 18 Tahun</p>
                                     <p className="text-2xl font-bold text-gray-900">{stats.total_below_18}</p>
                                 </div>
                             </div>
@@ -129,7 +142,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                     <span className="text-3xl">🧑</span>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">Peserta 18 Tahun Atas</p>
+                                    <p className="text-sm font-medium text-gray-500">18 Tahun Atas</p>
                                     <p className="text-2xl font-bold text-gray-900">{stats.total_above_18}</p>
                                 </div>
                             </div>
@@ -139,7 +152,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                     {/* Search and Filter Card */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                            <div className="md:col-span-5">
+                            <div className="md:col-span-3">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Carian</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -147,14 +160,14 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                     </div>
                                     <input
                                         type="text"
-                                        placeholder="Cari nama, no. siri, penjaga..."
+                                        placeholder="Cari nama, no. siri..."
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         className="pl-10 block w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition duration-200"
                                     />
                                 </div>
                             </div>
-                            <div className="md:col-span-4">
+                            <div className="md:col-span-3">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Pusat Latihan</label>
                                 <select
                                     value={trainingCenterId}
@@ -179,6 +192,18 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                     <option value="">Semua Kategori</option>
                                     <option value="kanak-kanak">Bawah 18 Tahun</option>
                                     <option value="dewasa">18 Tahun ke atas</option>
+                                </select>
+                            </div>
+                            <div className="md:col-span-3">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Status Pembayaran</label>
+                                <select
+                                    value={statusPembayaran}
+                                    onChange={(e) => setStatusPembayaran(e.target.value)}
+                                    className="block w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition duration-200"
+                                >
+                                    <option value="all">Semua Status</option>
+                                    <option value="paid">Sudah Bayar (Aktif)</option>
+                                    <option value="pending">Menunggu Kelulusan</option>
                                 </select>
                             </div>
                         </div>
@@ -264,24 +289,61 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex flex-col gap-1">
-                                                        <div className="flex items-center">
-                                                            <div className={`h-2.5 w-2.5 rounded-full mr-2 ${student.status_bayaran >= 12 ? 'bg-green-500' :
-                                                                student.status_bayaran >= 6 ? 'bg-yellow-500' :
-                                                                    'bg-red-500'
-                                                                }`}></div>
-                                                            <span className="text-sm font-medium text-gray-700">
-                                                                {student.status_bayaran}/12 bulan
-                                                            </span>
-                                                        </div>
-                                                        {student.yuran_tahunan_paid && (
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 w-fit">
-                                                                ✅ Yuran Tahunan
-                                                            </span>
+                                                        {student.yuran_tahunan_paid ? (
+                                                            <div className="flex flex-col gap-1">
+                                                                <div className="flex items-center">
+                                                                    <div className={`h-2.5 w-2.5 rounded-full mr-2 ${student.status_bayaran >= 12 ? 'bg-green-500' :
+                                                                        student.status_bayaran >= 6 ? 'bg-yellow-500' :
+                                                                            'bg-red-500'
+                                                                        }`}></div>
+                                                                    <span className="text-sm font-medium text-gray-700">
+                                                                        {student.status_bayaran}/12 bulan
+                                                                    </span>
+                                                                </div>
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 w-fit">
+                                                                    ✅ Yuran Tahunan
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex flex-col gap-1">
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-rose-100 text-rose-800 w-fit animate-pulse border border-rose-200">
+                                                                    ⏳ Menunggu Bayaran
+                                                                </span>
+                                                                {student.child?.payment_method === 'offline' && (
+                                                                    <span className="text-[10px] text-amber-600 font-bold uppercase tracking-tighter">
+                                                                        Pembayaran Offline
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <div className="flex justify-end gap-2">
+                                                        {!student.yuran_tahunan_paid && student.child?.payment_slip && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    if (confirm(`Sahkan pembayaran untuk ${student.nama_pelajar}?`)) {
+                                                                        router.post(route('students.approve', student.id));
+                                                                    }
+                                                                }}
+                                                                className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg transition shadow-sm hover:shadow-green-200"
+                                                                title="Luluskan Pendaftaran"
+                                                            >
+                                                                <span>✅</span>
+                                                                <span>Lulus</span>
+                                                            </button>
+                                                        )}
+                                                        {student.child?.payment_slip && (
+                                                            <a
+                                                                href={`/storage/${student.child.payment_slip}`}
+                                                                target="_blank"
+                                                                className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition"
+                                                                title="Lihat Resit"
+                                                            >
+                                                                📄
+                                                            </a>
+                                                        )}
                                                         <Link
                                                             href={route('students.show', student.id)}
                                                             className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
