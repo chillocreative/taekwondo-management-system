@@ -217,6 +217,7 @@ class FeeController extends Controller
                 $payment->payment_date = now();
                 $payment->receipt_number = 'REC-' . now()->format('ym') . '-' . str_pad($payment->id, 4, '0', STR_PAD_LEFT);
                 $payment->save();
+                $this->updateMonthlyPaymentStatus($payment);
 
                 // Notify Admin
                 $studentName = $payment->student->nama_pelajar ?? 'Unknown';
@@ -242,6 +243,7 @@ class FeeController extends Controller
                 $payment->payment_date = now();
                 $payment->receipt_number = 'REC-' . now()->format('ym') . '-' . str_pad($payment->id, 4, '0', STR_PAD_LEFT);
                 $payment->save();
+                $this->updateMonthlyPaymentStatus($payment);
 
                 // Notify Admin
                 $studentName = $payment->student->nama_pelajar ?? 'Unknown';
@@ -268,5 +270,41 @@ class FeeController extends Controller
 
         $pdf = Pdf::loadView('receipts.fee', ['payment' => $payment]);
         return $pdf->download('receipt-' . $payment->receipt_number . '.pdf');
+    }
+
+    private function updateMonthlyPaymentStatus($payment)
+    {
+        $student = $payment->student;
+        if (!$student || !$student->child) return;
+        
+        // Parse "MonthName Year" e.g. "Januari 2026"
+        $parts = explode(' ', $payment->month);
+        if (count($parts) < 2) return;
+        
+        $monthName = $parts[0];
+        $year = $parts[1];
+
+        $months = [
+            'Januari' => 1, 'Februari' => 2, 'Mac' => 3, 'April' => 4,
+            'Mei' => 5, 'Jun' => 6, 'Julai' => 7, 'Ogos' => 8,
+            'September' => 9, 'Oktober' => 10, 'November' => 11, 'Disember' => 12
+        ];
+
+        $month = $months[$monthName] ?? null;
+        if (!$month) return;
+
+        $monthlyPayment = \App\Models\MonthlyPayment::where('child_id', $student->child->id)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
+
+        if ($monthlyPayment) {
+            $monthlyPayment->update([
+                'is_paid' => true,
+                'paid_date' => $payment->payment_date,
+                'payment_method' => $payment->payment_method ?? 'online',
+                'payment_reference' => $payment->transaction_ref,
+            ]);
+        }
     }
 }

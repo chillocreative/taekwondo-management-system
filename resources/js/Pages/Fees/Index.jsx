@@ -1,9 +1,26 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 
 export default function FeesIndex({ auth, feesData }) {
+    const { flash } = usePage().props;
+    const [popupState, setPopupState] = useState({ show: false, type: 'success', message: '' });
     const [expandedChildId, setExpandedChildId] = useState(null);
+
+    useEffect(() => {
+        if (flash?.success) {
+            setPopupState({ show: true, type: 'success', message: flash.success });
+        } else if (flash?.error) {
+            setPopupState({ show: true, type: 'error', message: flash.error });
+        }
+
+        if (flash?.success || flash?.error) {
+            const timer = setTimeout(() => {
+                setPopupState(prev => ({ ...prev, show: false }));
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [flash]);
 
     const handlePay = (childId, month, amount) => {
         if (confirm(`Anda pasti mahu membayar yuran untuk bulan ${month}?`)) {
@@ -151,6 +168,38 @@ export default function FeesIndex({ auth, feesData }) {
                     )}
                 </div>
             </div>
+            {/* Notification Popup */}
+            {popupState.show && (
+                <div className="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none px-4">
+                    <div className={`bg-white rounded-xl shadow-2xl border ${popupState.type === 'success' ? 'border-emerald-100' : 'border-red-100'} p-6 max-w-sm w-full transform transition-all duration-300 pointer-events-auto relative animate-fade-in-up`}>
+                        <button
+                            onClick={() => setPopupState(prev => ({ ...prev, show: false }))}
+                            className="absolute top-2 right-2 text-zinc-400 hover:text-zinc-600 p-1 rounded-full hover:bg-zinc-100 transition-colors"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <div className="flex flex-col items-center text-center">
+                            <div className={`w-16 h-16 ${popupState.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'} rounded-full flex items-center justify-center mb-4`}>
+                                {popupState.type === 'success' ? (
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                )}
+                            </div>
+                            <h3 className="text-xl font-bold text-zinc-900 mb-2">
+                                {popupState.type === 'success' ? 'Pembayaran Berjaya!' : 'Pembayaran Gagal!'}
+                            </h3>
+                            <p className="text-zinc-600">{popupState.message}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }
