@@ -26,17 +26,17 @@ class StudentController extends Controller
         });
 
         // Apply search
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $query->search($request->search);
         }
 
         // Apply category filter
-        if ($request->has('kategori')) {
+        if ($request->filled('kategori')) {
             $query->byCategory($request->kategori);
         }
 
         // Apply training center filter
-        if ($request->has('training_center_id')) {
+        if ($request->filled('training_center_id')) {
             $query->whereHas('child', function($q) use ($request) {
                 $q->where('training_center_id', $request->training_center_id);
             });
