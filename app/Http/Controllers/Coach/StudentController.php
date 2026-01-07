@@ -26,14 +26,9 @@ class StudentController extends Controller
         }]);
 
         // Only show students with completed payment
-        $query->whereHas('child', function($q) use ($user) {
+        $query->whereHas('child', function($q) {
             $q->where('payment_completed', true)
               ->where('is_active', true);
-            
-            // If coach has assigned training center, filter by it
-            if ($user->training_center_id) {
-                $q->where('training_center_id', $user->training_center_id);
-            }
         });
 
         // Apply search
@@ -69,13 +64,9 @@ class StudentController extends Controller
         });
 
         // Calculate statistics
-        $statsQuery = Student::whereHas('child', function($q) use ($user) {
+        $statsQuery = Student::whereHas('child', function($q) {
             $q->where('payment_completed', true)
               ->where('is_active', true);
-            
-            if ($user->training_center_id) {
-                $q->where('training_center_id', $user->training_center_id);
-            }
         });
 
         $stats = [
@@ -103,18 +94,13 @@ class StudentController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        // Verify coach has access to this student
+        // Verify student is active and paid
         $hasAccess = $student->child && 
                      $student->child->payment_completed && 
                      $student->child->is_active;
         
-        if ($user->training_center_id) {
-            $hasAccess = $hasAccess && 
-                        $student->child->training_center_id === $user->training_center_id;
-        }
-
         if (!$hasAccess) {
-            abort(403, 'Anda tidak mempunyai akses ke pelajar ini.');
+            abort(403, 'Rekod pelajar ini belum aktif atau belum berbayar.');
         }
 
         $student->load([
