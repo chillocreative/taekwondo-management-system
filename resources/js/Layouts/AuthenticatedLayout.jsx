@@ -66,6 +66,24 @@ export default function AuthenticatedLayout({ header, children }) {
                 ],
             },
             {
+                name: 'Whatsapp',
+                icon: '💬',
+                route: 'admin.whatsapp',
+                active: route().current('admin.whatsapp'),
+            },
+            {
+                name: 'Grading',
+                icon: '🥋',
+                route: 'admin.grading',
+                active: route().current('admin.grading'),
+            },
+            {
+                name: 'Tournament',
+                icon: '🏆',
+                route: 'admin.tournament',
+                active: route().current('admin.tournament'),
+            },
+            {
                 name: 'Tetapan',
                 icon: '🔧',
                 submenu: [

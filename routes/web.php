@@ -97,6 +97,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/admin/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update');
     Route::delete('/admin/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
 
+    // Admin - Future Modules
+    Route::get('/admin/whatsapp', function () {
+        if (auth()->user()->role !== 'admin') abort(403);
+        return Inertia::render('Admin/ComingSoon', ['title' => 'Whatsapp Blaster']);
+    })->name('admin.whatsapp');
+
+    Route::get('/admin/grading', function () {
+        if (auth()->user()->role !== 'admin') abort(403);
+        return Inertia::render('Admin/ComingSoon', ['title' => 'Grading Management']);
+    })->name('admin.grading');
+
+    Route::get('/admin/tournament', function () {
+        if (auth()->user()->role !== 'admin') abort(403);
+        return Inertia::render('Admin/ComingSoon', ['title' => 'Tournament Management']);
+    })->name('admin.tournament');
+
     // Coach Routes
     Route::get('/coach/attendance', [App\Http\Controllers\Coach\AttendanceController::class, 'index'])->name('coach.attendance.index');
     Route::get('/coach/attendance/sheet', [App\Http\Controllers\Coach\AttendanceController::class, 'show'])->name('coach.attendance.show');
