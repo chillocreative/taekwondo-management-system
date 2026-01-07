@@ -20,6 +20,7 @@ class MonthlyPayment extends Model
         'paid_date',
         'payment_method',
         'payment_reference',
+        'receipt_number',
     ];
 
     protected $casts = [

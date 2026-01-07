@@ -77,6 +77,7 @@ class StudentService
                     'paid_date' => $paymentDate,
                     'payment_method' => $child->payment_method ?? 'manual',
                     'payment_reference' => $child->payment_reference,
+                    'receipt_number' => $child->payment_reference,
                 ]);
             }
         }

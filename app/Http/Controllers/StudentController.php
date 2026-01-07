@@ -134,13 +134,28 @@ class StudentController extends Controller
     public function show(Student $student)
     {
         $student->load([
-            'payments', 
+            'payments' => function($q) {
+                $q->where('status', 'paid');
+            }, 
             'child.monthlyPayments' => function($q) {
                  $q->where('year', now()->year)->orderBy('month');
             }, 
             'child.parent', 
             'child.trainingCenter'
         ]);
+
+        // Map receipt IDs to monthly payments for the frontend
+        if ($student->child && $student->child->monthlyPayments) {
+            $student->child->monthlyPayments->map(function ($mp) use ($student) {
+                $monthStr = $mp->month_name . ' ' . $mp->year;
+                $sp = $student->payments->first(function ($p) use ($monthStr) {
+                    return $p->month === $monthStr;
+                });
+                
+                $mp->student_payment_id = $sp ? $sp->id : null;
+                return $mp;
+            });
+        }
         $student->append('total_payment');
         
         return Inertia::render('Students/Show', [

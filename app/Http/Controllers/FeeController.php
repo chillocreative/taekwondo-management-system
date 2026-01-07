@@ -58,6 +58,7 @@ class FeeController extends Controller
                         'paid_date' => $pDate,
                         'payment_method' => $child->payment_method,
                         'payment_reference' => $child->payment_reference,
+                        'receipt_number' => $child->payment_reference,
                      ]);
                      $regMonthPayment->refresh();
                  }
@@ -304,6 +305,7 @@ class FeeController extends Controller
                 'paid_date' => $payment->payment_date,
                 'payment_method' => $payment->payment_method ?? 'online',
                 'payment_reference' => $payment->transaction_ref,
+                'receipt_number' => $payment->receipt_number,
             ]);
         }
     }
