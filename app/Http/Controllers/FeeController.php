@@ -150,7 +150,6 @@ class FeeController extends Controller
         $request->validate([
             'child_id' => 'required|exists:children,id',
             'month' => 'required|string',
-            'amount' => 'required|numeric',
         ]);
 
         $child = Child::with(['parent', 'student'])->findOrFail($request->child_id);
@@ -158,6 +157,10 @@ class FeeController extends Controller
         if (!$child->student) {
             return back()->with('error', 'Peserta belum mendaftar sebagai pelajar.');
         }
+
+        // Calculate amount from backend settings
+        // Ensure student has access to fee settings
+        $amount = $child->student->monthly_fee;
 
         // Create Pending Payment Record
         // Check if exists
@@ -168,8 +171,8 @@ class FeeController extends Controller
         
         $payment->kategori = $child->student->kategori ?? 'kanak-kanak';
         $payment->quantity = 1;
-        $payment->amount = $request->amount;
-        $payment->total = $request->amount;
+        $payment->amount = $amount;
+        $payment->total = $amount;
         $payment->status = 'pending';
         $payment->save();
 
@@ -177,7 +180,7 @@ class FeeController extends Controller
         $result = $this->toyyibPayService->createBill([
             'billName' => 'Yuran ' . $request->month,
             'billDescription' => 'Pembayaran yuran untuk ' . $child->name . ' (' . $child->student->no_siri . ')',
-            'billAmount' => $request->amount, // Service will convert to cents
+            'billAmount' => $amount, // Service will convert to cents
             'billReturnUrl' => route('fees.payment.return'),
             'billCallbackUrl' => route('fees.payment.callback'),
             'billTo' => $child->parent->name ?? '',
