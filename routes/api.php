@@ -18,8 +18,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // Notification API Routes (JSON responses)
-Route::middleware(['web', 'auth'])->prefix('notifications')->group(function () {
-    Route::get('/', [App\Http\Controllers\NotificationController::class, 'index'])->name('api.notifications.index');
-    Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('api.notifications.mark-all-read');
-    Route::post('/{id}/mark-read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('api.notifications.mark-read');
-});
+// Moved to web.php to handle session/csrf more reliably for the frontend
+
