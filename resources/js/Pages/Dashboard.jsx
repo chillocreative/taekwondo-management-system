@@ -146,7 +146,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                                     <svg className="w-5 h-5 text-zinc-300 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                                                 </Link>
                                                 <Link
-                                                    href={route('children.index')}
+                                                    href={route('fees.index')}
                                                     className="flex items-center justify-between p-4 bg-white border border-zinc-200 rounded-2xl hover:bg-zinc-50 transition-colors group"
                                                 >
                                                     <div className="flex items-center gap-3">
