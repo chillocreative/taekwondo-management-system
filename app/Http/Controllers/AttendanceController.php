@@ -160,6 +160,7 @@ class AttendanceController extends Controller
         });
 
         // Calculate dynamic stats
+        \Carbon\Carbon::setLocale('ms');
         $currentYear = now()->year;
         $currentMonth = now()->month;
         $tcId = $request->input('training_center_id');
