@@ -20,14 +20,7 @@ class PaymentController extends Controller
 
         $query = StudentPayment::with(['student.child.parent']);
 
-        // Filter by Training Center if Coach has one
-        if ($user->role === 'coach' && $user->training_center_id) {
-            $query->whereHas('student.child', function($q) use ($user) {
-                $q->where('training_center_id', $user->training_center_id);
-            });
-        }
-
-        // Filter by Training Center from Request
+        // Filter by Training Center from Request (remove role-based hard filter)
         if ($request->filled('training_center_id')) {
             $query->whereHas('student.child', function($q) use ($request) {
                 $q->where('training_center_id', $request->training_center_id);
