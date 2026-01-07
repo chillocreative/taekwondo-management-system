@@ -29,13 +29,35 @@ class DashboardController extends Controller
 
     private function adminDashboard()
     {
+        Carbon::setLocale('ms');
+        $currentMonthName = Carbon::now()->translatedFormat('F');
+        $currentYear = Carbon::now()->year;
+
+        // Statistics calculation
+        $totalStudents = Student::count();
+        $totalCenters = \App\Models\TrainingCenter::count();
+        $totalCoaches = \App\Models\User::where('role', 'coach')->count();
+        $totalParents = \App\Models\User::where('role', 'user')->count();
+        
+        // Pending registrations (approvals/payments)
+        $pendingApprovals = Child::where('payment_completed', false)->count();
+
+        // Actual Monthly Revenue
+        $monthlyRevenue = \App\Models\StudentPayment::where('month', $currentMonthName)
+            ->where('year', $currentYear)
+            ->where('status', 'paid')
+            ->sum('total');
+
         return Inertia::render('Dashboard', [
-            'studentCount' => Student::count(),
+            'studentCount' => $totalStudents,
             'stats' => [
-                'total_students' => Student::count(),
-                'active_students' => Student::count(), // Add more logic if needed
-                'pending_registrations' => Child::where('payment_completed', false)->count(),
-                'monthly_revenue' => MonthlyPayment::where('year', now()->year)->where('month', now()->format('F'))->count() * 50, // Placeholder
+                'total_students' => $totalStudents,
+                'total_centers' => $totalCenters,
+                'total_coaches' => $totalCoaches,
+                'total_parents' => $totalParents,
+                'pending_approvals' => $pendingApprovals,
+                'monthly_revenue' => $monthlyRevenue,
+                'current_month' => $currentMonthName,
             ]
         ]);
     }
