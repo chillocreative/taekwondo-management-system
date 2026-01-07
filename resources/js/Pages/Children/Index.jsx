@@ -412,7 +412,53 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                             <div className="space-y-6">
                                 {/* MAKLUMAT WARIS */}
                                 <div className="space-y-4">
-                                    <h4 className="font-bold text-zinc-900 border-b border-zinc-200 pb-2">MAKLUMAT WARIS</h4>
+                                    <div className="flex justify-between items-center border-b border-zinc-200 pb-2">
+                                        <h4 className="font-bold text-zinc-900">MAKLUMAT WARIS</h4>
+                                        <label className="flex items-center gap-2 cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        // 1. Try to get from previous child if exists
+                                                        if (children && children.length > 0) {
+                                                            const prev = children[0];
+                                                            setData(prevData => ({
+                                                                ...prevData,
+                                                                guardian_name: prev.guardian_name || '',
+                                                                guardian_occupation: prev.guardian_occupation || '',
+                                                                guardian_ic_number: prev.guardian_ic_number || '',
+                                                                guardian_age: prev.guardian_age || '',
+                                                                guardian_phone: prev.guardian_phone || '',
+                                                                address: prev.address || '',
+                                                                postcode: prev.postcode || '',
+                                                                city: prev.city || '',
+                                                                state: prev.state || '',
+                                                            }));
+                                                        } else {
+                                                            // 2. Fallback to auth user details
+                                                            setData(prevData => ({
+                                                                ...prevData,
+                                                                guardian_name: auth.user.name.toUpperCase(),
+                                                                guardian_phone: auth.user.phone || '',
+                                                            }));
+                                                        }
+                                                    } else {
+                                                        // Reset if unchecked (optional, but requested behavior is "copy on tick")
+                                                        setData(prevData => ({
+                                                            ...prevData,
+                                                            guardian_name: '',
+                                                            guardian_occupation: '',
+                                                            guardian_ic_number: '',
+                                                            guardian_age: '',
+                                                            guardian_phone: '',
+                                                        }));
+                                                    }
+                                                }}
+                                                className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
+                                            />
+                                            <span className="text-xs text-zinc-500 group-hover:text-zinc-700 transition-colors">Sama seperti profil/sebelumnya</span>
+                                        </label>
+                                    </div>
 
                                     {/* Nama Waris */}
                                     <div>
@@ -439,6 +485,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                             value={data.guardian_occupation}
                                             onChange={(e) => setData('guardian_occupation', e.target.value.toUpperCase())}
                                             className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                            required
                                         />
                                     </div>
 
@@ -471,6 +518,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                             className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="Contoh: 811010011234"
                                             maxLength="12"
+                                            required
                                         />
                                         <p className="text-xs text-zinc-500 mt-1">12 digit sahaja, tanpa simbol (Umur akan dikira automatik)</p>
                                     </div>
@@ -501,6 +549,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                             className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="Contoh: 0123456789"
                                             maxLength="11"
+                                            required
                                         />
                                         <p className="text-xs text-zinc-500 mt-1">Nombor sahaja, maksimum 11 digit</p>
                                     </div>
@@ -571,6 +620,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                         className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                                         placeholder="Contoh: 150101011234"
                                                         maxLength="12"
+                                                        required
                                                     />
                                                     <p className="text-xs text-zinc-500 mt-1">12 digit sahaja, tanpa simbol</p>
                                                     {errors.ic_number && <p className="text-red-500 text-xs mt-1">{errors.ic_number}</p>}
@@ -633,6 +683,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                             className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             placeholder="Contoh: 0123456789"
                                             maxLength="11"
+                                            required
                                         />
                                         <p className="text-xs text-zinc-500 mt-1">Nombor sahaja, maksimum 11 digit</p>
                                     </div>
@@ -647,6 +698,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                             value={data.address}
                                             onChange={(e) => setData('address', e.target.value.toUpperCase())}
                                             className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none uppercase"
+                                            required
                                         ></textarea>
                                     </div>
 
@@ -661,6 +713,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                 value={data.postcode}
                                                 onChange={(e) => setData('postcode', e.target.value)}
                                                 className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                required
                                             />
                                         </div>
                                         <div>
@@ -672,6 +725,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                 value={data.city}
                                                 onChange={(e) => setData('city', e.target.value.toUpperCase())}
                                                 className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                                required
                                             />
                                         </div>
                                         <div>
@@ -682,6 +736,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                 value={data.state}
                                                 onChange={(e) => setData('state', e.target.value)}
                                                 className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                required
                                             >
                                                 <option value="">Pilih Negeri</option>
                                                 {states.map((state) => (
@@ -703,6 +758,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                             value={data.school_name}
                                             onChange={(e) => setData('school_name', e.target.value.toUpperCase())}
                                             className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                            required
                                         />
                                     </div>
 
@@ -716,6 +772,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                             value={data.school_class}
                                             onChange={(e) => setData('school_class', e.target.value.toUpperCase())}
                                             className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                            required
                                         />
                                     </div>
 
@@ -803,6 +860,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                     onChange={(e) => setData('tm_number', e.target.value)}
                                                     className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                                                     placeholder="Masukkan No. TM"
+                                                    required
                                                 />
                                                 {errors.tm_number && <p className="text-red-500 text-xs mt-1">{errors.tm_number}</p>}
                                             </div>
@@ -837,6 +895,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                     onChange={(e) => setData('belt_certificate', e.target.files[0])}
                                                     className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                                     accept="image/*,.pdf"
+                                                    required={!editingChild || !editingChild.belt_certificate}
                                                 />
                                                 <p className="text-xs text-zinc-500 mt-1">Format: JPG, PNG, atau PDF (Maks: 2MB)</p>
                                                 {errors.belt_certificate && <p className="text-red-500 text-xs mt-1">{errors.belt_certificate}</p>}

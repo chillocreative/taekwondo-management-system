@@ -87,15 +87,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                             <p className="text-gray-500 mt-1">Urus maklumat peserta.</p>
                         </div>
                         <div className="flex gap-3 w-full md:w-auto">
-                            {selectedIds.length > 0 && (
-                                <button
-                                    onClick={handleBulkDelete}
-                                    className="flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 px-5 rounded-xl transition duration-200 shadow-lg hover:shadow-red-500/30 w-full md:w-auto"
-                                >
-                                    <span>🗑️</span>
-                                    <span>Padam ({selectedIds.length})</span>
-                                </button>
-                            )}
+
                             <Link
                                 href={route('students.create')}
                                 className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-xl transition duration-200 shadow-lg hover:shadow-blue-500/30 w-full md:w-auto"
@@ -190,6 +182,31 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                 </select>
                             </div>
                         </div>
+
+                        {/* Bulk Actions */}
+                        {selectedIds.length > 0 && (
+                            <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-300">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-2">
+                                        <span className="animate-pulse">⚓</span>
+                                        {selectedIds.length} rekod dipilih
+                                    </div>
+                                    <button
+                                        onClick={() => setSelectedIds([])}
+                                        className="text-gray-400 hover:text-gray-600 text-sm font-medium transition"
+                                    >
+                                        Batal Pilihan
+                                    </button>
+                                </div>
+                                <button
+                                    onClick={handleBulkDelete}
+                                    className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-xl transition duration-200 shadow-lg shadow-red-200"
+                                >
+                                    <span>🗑️</span>
+                                    <span>Padam Terpilih</span>
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Students Table Card */}
@@ -318,7 +335,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                         )}
                     </div>
                 </div>
-            </div>
-        </AuthenticatedLayout>
+            </div >
+        </AuthenticatedLayout >
     );
 }
