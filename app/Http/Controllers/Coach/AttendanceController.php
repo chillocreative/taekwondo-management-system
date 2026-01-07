@@ -19,7 +19,7 @@ class AttendanceController extends Controller
     {
         $user = auth()->user();
         
-        if ($user->role !== 'coach') {
+        if ($user->role !== 'coach' && $user->role !== 'admin') {
             abort(403, 'Akses ditolak.');
         }
 
@@ -38,7 +38,7 @@ class AttendanceController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->role !== 'coach') {
+        if ($user->role !== 'coach' && $user->role !== 'admin') {
             abort(403, 'Akses ditolak.');
         }
 
@@ -98,16 +98,13 @@ class AttendanceController extends Controller
         $date = $request->input('date');
         $centerId = $request->input('center_id');
 
-         // Security: Ensure coach can only edit *today* (optional, or allow past edits?)
-         // Requirement says "Edit attendance on the same day". "View past attendance records in read-only mode"
-         // So prevent editing if date != today
-         // However, "View past attendance records in read-only mode" implies we shouldn't even show the submit button or allow POST.
-         // Let's implement strict validation here.
-         
-        if (!Carbon::parse($date)->isToday() && $request->input('force') !== true) {
-             if (Carbon::parse($date)->lt(Carbon::today())) {
-                 return back()->with('error', 'Anda hanya boleh mengemaskini kehadiran untuk hari ini.');
-             }
+        // Security: Ensure coach can only edit *today* (admins can edit anytime)
+        if ($user->role !== 'admin') {
+            if (!Carbon::parse($date)->isToday() && $request->input('force') !== true) {
+                 if (Carbon::parse($date)->lt(Carbon::today())) {
+                     return back()->with('error', 'Anda hanya boleh mengemaskini kehadiran untuk hari ini.');
+                 }
+            }
         }
 
 

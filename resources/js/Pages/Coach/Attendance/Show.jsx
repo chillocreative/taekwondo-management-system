@@ -22,7 +22,7 @@ export default function CoachAttendanceIndex({ auth, trainingCenter, students, d
     // Or just trust the controller handling? The controller passes 'date'.
     // Let's assume server 'date' is consistent. 
     const todayStr = new Date().toISOString().split('T')[0];
-    const canEdit = selectedDate === todayStr;
+    const canEdit = selectedDate === todayStr || auth.user.role === 'admin';
 
     useEffect(() => {
         // Initialize attendances state

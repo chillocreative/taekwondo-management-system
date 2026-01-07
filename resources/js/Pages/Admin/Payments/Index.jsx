@@ -1,14 +1,25 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export default function AdminPaymentsIndex({ auth, payments, filters }) {
+export default function AdminPaymentsIndex({ auth, payments, filters, trainingCenters }) {
     const [search, setSearch] = useState(filters.search || '');
+    const [tcId, setTcId] = useState(filters.training_center_id || '');
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        router.get(route('admin.payments.index'), { search }, { preserveState: true });
-    };
+    // Consolidated auto-filter logic
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (search !== (filters.search || '') || tcId !== (filters.training_center_id || '')) {
+                router.get(route('admin.payments.index'), {
+                    ...filters,
+                    search: search,
+                    training_center_id: tcId,
+                }, { preserveState: true, replace: true, preserveScroll: true });
+            }
+        }, 500); // Debounce search to prevent excessive requests
+
+        return () => clearTimeout(timeoutId);
+    }, [search, tcId]);
 
     return (
         <AuthenticatedLayout
@@ -26,25 +37,34 @@ export default function AdminPaymentsIndex({ auth, payments, filters }) {
                         <p className="text-gray-500 mt-1">Urus semua transaksi pembayaran yuran.</p>
                     </div>
 
-                    {/* Search */}
+                    {/* Search & Filters */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-                        <form onSubmit={handleSearch} className="flex gap-4">
+                        <div className="flex flex-col md:flex-row gap-4 items-end">
                             <div className="flex-1">
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Cari Transaksi</label>
                                 <input
                                     type="text"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Cari No. Resit, No. Siri, atau Nama Peserta..."
-                                    className="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm"
+                                    className="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm text-sm"
                                 />
                             </div>
-                            <button
-                                type="submit"
-                                className="bg-gray-900 hover:bg-gray-800 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-md"
-                            >
-                                Cari
-                            </button>
-                        </form>
+
+                            <div className="w-full md:w-64">
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pusat Latihan</label>
+                                <select
+                                    value={tcId}
+                                    onChange={(e) => setTcId(e.target.value)}
+                                    className="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm text-sm"
+                                >
+                                    <option value="">Semua Pusat Latihan</option>
+                                    {trainingCenters?.map(tc => (
+                                        <option key={tc.id} value={tc.id}>{tc.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Table */}

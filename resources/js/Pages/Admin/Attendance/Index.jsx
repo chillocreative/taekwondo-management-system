@@ -192,13 +192,13 @@ export default function AdminAttendanceIndex({ auth, attendances, training_cente
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <div className="flex justify-end gap-3">
                                                         <Link
-                                                            href={route('coach.attendance.show', {
+                                                            href={route('admin.attendance.show-sheet', {
                                                                 date: session.attendance_date,
                                                                 training_center_id: session.training_center_id
                                                             })}
                                                             className="text-blue-600 hover:text-blue-900 font-bold flex items-center gap-1"
                                                         >
-                                                            Lihat / Kemaskini
+                                                            Lihat
                                                         </Link>
                                                         <button
                                                             onClick={() => handleDeleteSingle(session.id)}

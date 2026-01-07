@@ -181,15 +181,132 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                         </div>
                     )}
 
-                    {/* Admin / Coach View - Simplified but Vibrant */}
-                    {user.role !== 'user' && (
+                    {/* Coach Dashboard View */}
+                    {user.role === 'coach' && (
+                        <div className="space-y-8">
+                            {/* Stats Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {/* Total Students */}
+                                <div className="bg-white p-6 rounded-3xl shadow-lg border border-zinc-100 flex flex-col justify-between relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                                    <div>
+                                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider relative z-10">Total Pelajar</p>
+                                        <h3 className="text-4xl font-black text-zinc-900 mt-2 relative z-10">{stats.total_students}</h3>
+                                    </div>
+                                    <div className="mt-4 flex items-center gap-2 relative z-10">
+                                        <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-lg">
+                                            +{stats.new_students} Baru
+                                        </span>
+                                        <span className="text-xs text-zinc-400 font-medium">Bulan Ini</span>
+                                    </div>
+                                </div>
+
+                                {/* Today's Attendance */}
+                                <div className="bg-white p-6 rounded-3xl shadow-lg border border-zinc-100 flex flex-col justify-between relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                                    <div>
+                                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider relative z-10">Kehadiran Hari Ini</p>
+                                        <h3 className="text-4xl font-black text-emerald-600 mt-2 relative z-10">{stats.present_today}</h3>
+                                    </div>
+                                    <div className="mt-4 flex items-center gap-2 relative z-10">
+                                        <span className="text-xs text-zinc-500 font-medium">Daripada</span>
+                                        <span className="font-bold text-zinc-900">{stats.total_today_marked}</span>
+                                        <span className="text-xs text-zinc-500 font-medium">ditanda</span>
+                                    </div>
+                                </div>
+
+                                {/* Monthly Sessions */}
+                                <div className="bg-white p-6 rounded-3xl shadow-lg border border-zinc-100 flex flex-col justify-between relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-violet-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                                    <div>
+                                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider relative z-10">Sesi Latihan</p>
+                                        <h3 className="text-4xl font-black text-violet-600 mt-2 relative z-10">{stats.monthly_sessions}</h3>
+                                    </div>
+                                    <div className="mt-4 relative z-10">
+                                        <p className="text-xs text-zinc-400 font-medium">Sesi dijalankan bulan ini</p>
+                                    </div>
+                                </div>
+
+                                {/* Financial Health */}
+                                <div className="bg-white p-6 rounded-3xl shadow-lg border border-zinc-100 flex flex-col justify-between relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-rose-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                                    <div>
+                                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider relative z-10">Yuran ({stats.current_month})</p>
+                                        <div className="flex items-baseline gap-2 mt-2 relative z-10">
+                                            <h3 className="text-4xl font-black text-zinc-900">{stats.paid_month}</h3>
+                                            <span className="text-xs font-bold text-emerald-600 uppercase">Berjaya</span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 flex items-center gap-2 relative z-10">
+                                        <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                                        <span className="text-xs text-zinc-500 font-medium">
+                                            <span className="font-bold text-zinc-900">{stats.unpaid_month}</span> Belum Jelas
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Quick Actions */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <Link
+                                    href={route('coach.attendance.index')}
+                                    className="group relative overflow-hidden rounded-3xl bg-zinc-900 p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                                >
+                                    <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors"></div>
+                                    <div className="relative z-10 flex items-start justify-between">
+                                        <div>
+                                            <div className="p-3 bg-white/10 w-fit rounded-xl mb-6 text-white group-hover:scale-110 transition-transform">
+                                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                            </div>
+                                            <h3 className="text-2xl font-black text-white mb-2">Rekod Kehadiran</h3>
+                                            <p className="text-zinc-400 font-medium max-w-xs">Tanda kehadiran pelajar untuk sesi latihan hari ini atau semak rekod lepas.</p>
+                                        </div>
+                                        <div className="p-4 bg-white/10 rounded-full group-hover:bg-white group-hover:text-zinc-900 text-white transition-all">
+                                            <svg className="w-6 h-6 transform group-hover:rotate-45 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                        </div>
+                                    </div>
+                                </Link>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <Link
+                                        href={route('coach.students.index')}
+                                        className="bg-white p-6 rounded-3xl shadow-lg border border-zinc-100 hover:border-blue-200 hover:shadow-xl transition-all group flex flex-col justify-between"
+                                    >
+                                        <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-black text-zinc-900 text-lg mb-1">Senarai Pelajar</h4>
+                                            <p className="text-xs text-zinc-500 font-medium">Lihat profil & info pelajar</p>
+                                        </div>
+                                    </Link>
+
+                                    <Link
+                                        href={route('admin.payments.index')}
+                                        className="bg-white p-6 rounded-3xl shadow-lg border border-zinc-100 hover:border-rose-200 hover:shadow-xl transition-all group flex flex-col justify-between"
+                                    >
+                                        <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-black text-zinc-900 text-lg mb-1">Status Yuran</h4>
+                                            <p className="text-xs text-zinc-500 font-medium">Semak pembayaran bulanan</p>
+                                        </div>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Admin Dashboard View */}
+                    {user.role === 'admin' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             <div className="bg-white p-8 rounded-3xl shadow-xl border border-zinc-100 overflow-hidden relative group">
                                 <div className="absolute top-0 right-0 p-4 text-zinc-50 group-hover:text-blue-500 transition-colors">
                                     <svg className="w-16 h-16 opacity-10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                                 </div>
                                 <h4 className="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Jumlah Pelajar Keseluruhan</h4>
-                                <div className="text-5xl font-black text-zinc-900 mb-6">{studentCount}</div>
+                                <div className="text-5xl font-black text-zinc-900 mb-6">{stats.total_students}</div>
                                 <Link
                                     href={route('students.index')}
                                     className="inline-flex items-center text-blue-600 font-bold hover:gap-2 transition-all"
@@ -198,31 +315,27 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                 </Link>
                             </div>
 
-                            {user.role === 'admin' && (
-                                <Link
-                                    href={route('training-centers.index')}
-                                    className="bg-white p-8 rounded-3xl shadow-xl border border-zinc-100 hover:border-blue-400 transition-all group"
-                                >
-                                    <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                                    </div>
-                                    <h4 className="text-2xl font-black text-zinc-900 mb-2">Pusat Latihan</h4>
-                                    <p className="text-zinc-500 font-medium">Urus semua lokasi latihan aktif di seluruh negeri.</p>
-                                </Link>
-                            )}
+                            <Link
+                                href={route('training-centers.index')}
+                                className="bg-white p-8 rounded-3xl shadow-xl border border-zinc-100 hover:border-blue-400 transition-all group"
+                            >
+                                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                </div>
+                                <h4 className="text-2xl font-black text-zinc-900 mb-2">Pusat Latihan</h4>
+                                <p className="text-zinc-500 font-medium">Urus semua lokasi latihan aktif di seluruh negeri.</p>
+                            </Link>
 
-                            {user.role === 'admin' && (
-                                <Link
-                                    href={route('admin.attendance.index')}
-                                    className="bg-zinc-900 p-8 rounded-3xl shadow-2xl text-white hover:scale-[1.02] transition-all group"
-                                >
-                                    <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-500 transition-colors">
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    </div>
-                                    <h4 className="text-2xl font-black mb-2">Pantau Kehadiran</h4>
-                                    <p className="text-zinc-400 font-medium">Analisis statistik kehadiran pelajar secara harian dan bulanan.</p>
-                                </Link>
-                            )}
+                            <Link
+                                href={route('admin.attendance.index')}
+                                className="bg-zinc-900 p-8 rounded-3xl shadow-2xl text-white hover:scale-[1.02] transition-all group"
+                            >
+                                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-500 transition-colors">
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                                <h4 className="text-2xl font-black mb-2">Pantau Kehadiran</h4>
+                                <p className="text-zinc-400 font-medium">Analisis statistik kehadiran pelajar secara harian dan bulanan.</p>
+                            </Link>
                         </div>
                     )}
                 </div>

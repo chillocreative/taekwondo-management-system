@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\StudentPayment;
+use App\Models\TrainingCenter;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -23,6 +24,13 @@ class PaymentController extends Controller
         if ($user->role === 'coach' && $user->training_center_id) {
             $query->whereHas('student.child', function($q) use ($user) {
                 $q->where('training_center_id', $user->training_center_id);
+            });
+        }
+
+        // Filter by Training Center from Request
+        if ($request->filled('training_center_id')) {
+            $query->whereHas('student.child', function($q) use ($request) {
+                $q->where('training_center_id', $request->training_center_id);
             });
         }
 
@@ -46,7 +54,8 @@ class PaymentController extends Controller
 
         return Inertia::render('Admin/Payments/Index', [
             'payments' => $payments,
-            'filters' => $request->only(['search', 'status']),
+            'filters' => $request->only(['search', 'status', 'training_center_id']),
+            'trainingCenters' => TrainingCenter::all(['id', 'name']),
         ]);
     }
 }

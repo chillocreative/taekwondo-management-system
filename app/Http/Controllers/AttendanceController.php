@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\Student;
+use App\Models\TrainingCenter;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -131,12 +132,19 @@ class AttendanceController extends Controller
      */
     public function adminIndex(Request $request)
     {
+        $user = auth()->user();
+
         $query = Attendance::query()
             ->selectRaw('attendance_date, training_center_id, COUNT(*) as total_students, SUM(CASE WHEN status = "hadir" THEN 1 ELSE 0 END) as present_count')
             ->groupBy('attendance_date', 'training_center_id')
             ->orderBy('attendance_date', 'desc');
 
-        // Filter by Training Center
+        // Filter by Training Center if Coach has one
+        if ($user->role === 'coach' && $user->training_center_id) {
+            $query->where('training_center_id', $user->training_center_id);
+        }
+
+        // Filter by Training Center (from request)
         if ($request->filled('training_center_id')) {
             $query->where('training_center_id', $request->training_center_id);
         }
@@ -147,7 +155,7 @@ class AttendanceController extends Controller
         }
 
         $attendances = $query->paginate(20)->through(function($session) {
-            $center = \App\Models\TrainingCenter::find($session->training_center_id);
+            $center = TrainingCenter::find($session->training_center_id);
             return [
                 'id' => $session->attendance_date->toDateString() . '-' . $session->training_center_id,
                 'attendance_date' => $session->attendance_date,
@@ -181,7 +189,7 @@ class AttendanceController extends Controller
 
         return Inertia::render('Admin/Attendance/Index', [
             'attendances' => $attendances,
-            'training_centers' => \App\Models\TrainingCenter::all(['id', 'name']),
+            'training_centers' => TrainingCenter::all(['id', 'name']),
             'filters' => $request->only(['training_center_id']),
             'stats' => [
                 'current_year' => $currentYear,
@@ -193,6 +201,55 @@ class AttendanceController extends Controller
                 'sakit' => (clone $baseStatsQuery)->where('status', 'sakit')->count(),
                 'cuti' => (clone $baseStatsQuery)->where('status', 'cuti')->count(),
             ]
+        ]);
+    }
+
+    /**
+     * View specific attendance sheet (read-only)
+     */
+    public function showSheet(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date',
+            'training_center_id' => 'required|exists:training_centers,id',
+        ]);
+
+        $date = $request->date;
+        $centerId = $request->training_center_id;
+        
+        $trainingCenter = TrainingCenter::findOrFail($centerId);
+        
+        $attendances = Attendance::with('student')
+            ->where('attendance_date', $date)
+            ->where('training_center_id', $centerId)
+            ->get()
+            ->map(function($att) {
+                return [
+                    'id' => $att->id,
+                    'student_name' => $att->student->nama_pelajar,
+                    'status' => $att->status,
+                    'status_label' => ucfirst(str_replace('_', ' ', $att->status)),
+                ];
+            });
+
+        $total = $attendances->count();
+        $stats = [
+            'hadir' => $attendances->where('status', 'hadir')->count(),
+            'tidak_hadir' => $attendances->where('status', 'tidak_hadir')->count(),
+            'sakit' => $attendances->where('status', 'sakit')->count(),
+            'cuti' => $attendances->where('status', 'cuti')->count(),
+        ];
+        
+        $stats['percentage'] = $total > 0 ? round(($stats['hadir'] / $total) * 100, 2) : 0;
+
+        \Carbon\Carbon::setLocale('ms');
+        return Inertia::render('Admin/Attendance/Sheet', [
+            'trainingCenter' => $trainingCenter,
+            'attendances' => $attendances,
+            'date' => $date,
+            'day' => Carbon::parse($date)->translatedFormat('l'),
+            'stats' => $stats,
+            'total' => $total,
         ]);
     }
 

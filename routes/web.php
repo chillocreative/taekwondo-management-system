@@ -70,6 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Admin Attendance Monitoring
     Route::get('/admin/attendance', [App\Http\Controllers\AttendanceController::class, 'adminIndex'])->name('admin.attendance.index');
+    Route::get('/admin/attendance/sheet', [App\Http\Controllers\AttendanceController::class, 'showSheet'])->name('admin.attendance.show-sheet');
     Route::post('/attendance/bulk-destroy-sessions', [App\Http\Controllers\AttendanceController::class, 'bulkDestroySessions'])->name('attendance.bulk-destroy-sessions');
 
     // Payment Settings (Admin only)

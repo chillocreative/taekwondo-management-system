@@ -95,6 +95,11 @@ export default function AuthenticatedLayout({ header, children }) {
                         active: route().current('coach.students.*'),
                     },
                     {
+                        name: 'Kehadiran',
+                        route: 'admin.attendance.index',
+                        active: route().current('admin.attendance.*'),
+                    },
+                    {
                         name: 'Yuran',
                         route: 'admin.payments.index',
                         active: route().current('admin.payments.*'),
