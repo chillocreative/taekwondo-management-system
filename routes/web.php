@@ -84,10 +84,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/settings/fees', [App\Http\Controllers\FeeSettingController::class, 'index'])->name('settings.fees.index');
     Route::post('/settings/fees', [App\Http\Controllers\FeeSettingController::class, 'update'])->name('settings.fees.update');
     
-    // Admin - Pending Payment Approvals
-    Route::get('/admin/pending-payments', [App\Http\Controllers\Admin\PendingPaymentController::class, 'index'])->name('admin.pending-payments');
-    Route::post('/admin/pending-payments/{child}/approve', [App\Http\Controllers\Admin\PendingPaymentController::class, 'approve'])->name('admin.pending-payments.approve');
-    Route::post('/admin/pending-payments/{child}/reject', [App\Http\Controllers\Admin\PendingPaymentController::class, 'reject'])->name('admin.pending-payments.reject');
+
 
     // Admin - Payment Management
     Route::get('/admin/payments', [App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('admin.payments.index');
@@ -148,5 +145,37 @@ Route::get('/storage-link', function () {
 });
 
 
+// Production Reset Route (One-time use)
+Route::get('/reset-production-data', function () {
+    // 1. Get all users except Admin, Coach, and Ayah Pin
+    $users = \App\Models\User::whereNotIn('role', ['admin', 'coach'])
+        ->where('email', '!=', 'user@taekwondo.com')
+        ->get();
+
+    $summary = "Found " . $users->count() . " users to delete.\n";
+
+    // 2. Delete users (this should cascade to children if foreign keys set, but we can do manually to be safe)
+    $deletedUsers = 0;
+    foreach ($users as $user) {
+        // Delete children first
+        \App\Models\Child::where('parent_id', $user->id)->delete();
+        $user->delete();
+        $deletedUsers++;
+    }
+    
+    // 3. Delete all students to reset NO. SIRI logic
+    // Since Students are usually linked to Children, they might remain if not cascaded.
+    // The requirement is to reset NO SIRI, which requires the students table to be empty.
+    \App\Models\Student::query()->delete();
+    
+    // Additional: Reset auto-increment if possible (mysql specific)
+    try {
+        DB::statement('ALTER TABLE students AUTO_INCREMENT = 1;');
+    } catch (\Exception $e) {
+        // Ignore if not supported or permission denied
+    }
+
+    return nl2br($summary . "Successfully deleted {$deletedUsers} users and all student records.\nNO. SIRI has been reset.");
+});
 
 require __DIR__.'/auth.php';
