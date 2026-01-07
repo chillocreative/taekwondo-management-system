@@ -104,10 +104,27 @@ export default function FeesIndex({ auth, feesData }) {
                                                                 </span>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                                {fee.is_paid ? (
-                                                                    <span className="text-emerald-600 text-xs">
-                                                                        ✓ Dibayar {fee.paid_date}
-                                                                    </span>
+                                                                {fee.hide_action ? (
+                                                                    <span className="text-zinc-300 text-xs"></span>
+                                                                ) : fee.is_paid ? (
+                                                                    <div className="flex flex-col items-start gap-1">
+                                                                        <span className="text-emerald-600 text-xs">
+                                                                            ✓ {fee.paid_date}
+                                                                        </span>
+                                                                        {fee.receipt_url && (
+                                                                            <a
+                                                                                href={fee.receipt_url}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="px-4 py-2 text-xs font-bold border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors flex items-center gap-1 shadow-sm text-zinc-700 bg-white"
+                                                                            >
+                                                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                                                </svg>
+                                                                                Resit
+                                                                            </a>
+                                                                        )}
+                                                                    </div>
                                                                 ) : fee.can_pay ? (
                                                                     <button
                                                                         onClick={() => handlePay(child.id, fee.month, fee.amount)}

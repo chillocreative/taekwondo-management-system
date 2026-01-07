@@ -59,6 +59,28 @@ class StudentService
             $child->save();
         }
 
+        // Handle Monthly Payment for the registration month
+        if ($child->payment_completed && $child->payment_date) {
+            $paymentDate = $child->payment_date instanceof \Carbon\Carbon ? $child->payment_date : \Carbon\Carbon::parse($child->payment_date);
+            
+            // Ensure monthly payments exist for that year
+            \App\Models\MonthlyPayment::generateForChild($child, $paymentDate->year);
+
+            $monthlyPayment = \App\Models\MonthlyPayment::where('child_id', $child->id)
+                ->where('year', $paymentDate->year)
+                ->where('month', $paymentDate->month)
+                ->first();
+
+            if ($monthlyPayment && !$monthlyPayment->is_paid) {
+                $monthlyPayment->update([
+                    'is_paid' => true,
+                    'paid_date' => $paymentDate,
+                    'payment_method' => $child->payment_method ?? 'manual',
+                    'payment_reference' => $child->payment_reference,
+                ]);
+            }
+        }
+
         return $student;
     }
 }

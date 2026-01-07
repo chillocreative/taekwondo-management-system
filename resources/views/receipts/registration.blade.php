@@ -100,6 +100,7 @@
 </head>
 <body>
     <div class="header">
+        <img src="{{ public_path('images/logo.png') }}" class="logo" alt="Logo" style="max-height: 80px;">
         <h1 class="title">Taekwondo A&Z</h1>
         <p class="subtitle">Resit Rasmi Pembayaran Yuran</p>
     </div>
@@ -109,15 +110,15 @@
             <strong>Kepada:</strong><br>
             {{ strtoupper($child->name) }}<br>
             {{ $child->ic_number }}<br>
-            Parent/Guardian: {{ strtoupper($user->name) }}
+            Penjaga: {{ strtoupper($user->name) }}
         </div>
         <div class="meta-right">
             <div class="receipt-box">
-                <div><strong>No. Rujukan:</strong> {{ $child->payment_reference ?? 'N/A' }}</div>
+                <div><strong>No. Resit:</strong> {{ $child->payment_reference ?? 'N/A' }}</div>
                 <div><strong>Tarikh:</strong> {{ $child->payment_date ? $child->payment_date->format('d/m/Y') : date('d/m/Y') }}</div>
             </div>
             <div style="margin-top: 10px;">
-                <span class="status-paid">LUNAS</span>
+                <span class="status-paid">TELAH DIBAYAR</span>
             </div>
         </div>
     </div>
@@ -141,7 +142,7 @@
             </tr>
             <tr>
                 <td>
-                    <strong>Yuran Bulanan ({{ \Carbon\Carbon::now()->format('F') }})</strong><br>
+                    <strong>Yuran Bulanan ({{ \Carbon\Carbon::now()->format('F Y') }})</strong><br>
                     <span style="font-size: 12px; color: #666;">Yuran latihan bulanan semasa.</span>
                 </td>
                 <td style="text-align: right;">

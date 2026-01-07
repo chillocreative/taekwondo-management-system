@@ -1,18 +1,35 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-export default function Index({ auth, students, filters, stats }) {
+export default function Index({ auth, students, filters, stats, trainingCenters }) {
     const [search, setSearch] = useState(filters.search || '');
     const [kategori, setKategori] = useState(filters.kategori || '');
+    const [trainingCenterId, setTrainingCenterId] = useState(filters.training_center_id || '');
     const [selectedIds, setSelectedIds] = useState([]);
+    const isFirstRender = useRef(true);
 
+    // Auto-filter effect
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
 
+        const timer = setTimeout(() => {
+            router.get(route('students.index'), {
+                search,
+                kategori,
+                training_center_id: trainingCenterId
+            }, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true
+            });
+        }, 300);
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        router.get(route('students.index'), { search, kategori }, { preserveState: true });
-    };
+        return () => clearTimeout(timer);
+    }, [search, kategori, trainingCenterId]);
 
     const handleDelete = (id) => {
         if (confirm('Adakah anda pasti untuk memadam rekod ini?')) {
@@ -129,7 +146,7 @@ export default function Index({ auth, students, filters, stats }) {
 
                     {/* Search and Filter Card */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-                        <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                             <div className="md:col-span-5">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Carian</label>
                                 <div className="relative">
@@ -146,6 +163,21 @@ export default function Index({ auth, students, filters, stats }) {
                                 </div>
                             </div>
                             <div className="md:col-span-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Pusat Latihan</label>
+                                <select
+                                    value={trainingCenterId}
+                                    onChange={(e) => setTrainingCenterId(e.target.value)}
+                                    className="block w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition duration-200"
+                                >
+                                    <option value="">Semua Pusat</option>
+                                    {trainingCenters && trainingCenters.map((center) => (
+                                        <option key={center.id} value={center.id}>
+                                            {center.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="md:col-span-3">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
                                 <select
                                     value={kategori}
@@ -153,19 +185,11 @@ export default function Index({ auth, students, filters, stats }) {
                                     className="block w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition duration-200"
                                 >
                                     <option value="">Semua Kategori</option>
-                                    <option value="kanak-kanak">Kanak-kanak</option>
-                                    <option value="dewasa">Dewasa</option>
+                                    <option value="kanak-kanak">Bawah 18 Tahun</option>
+                                    <option value="dewasa">18 Tahun ke atas</option>
                                 </select>
                             </div>
-                            <div className="md:col-span-3">
-                                <button
-                                    type="submit"
-                                    className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-2.5 px-4 rounded-xl transition duration-200 shadow-md"
-                                >
-                                    Tapis Hasil
-                                </button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
 
                     {/* Students Table Card */}
@@ -208,17 +232,17 @@ export default function Index({ auth, students, filters, stats }) {
                                                     </Link>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-gray-900">{student.nama_pelajar}</div>
+                                                    <div className="text-sm font-medium text-gray-900">{student.child?.name || student.nama_pelajar}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-500">{student.nama_penjaga}</div>
+                                                    <div className="text-sm text-gray-500">{student.child?.parent?.name || student.nama_penjaga}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${student.kategori === 'kanak-kanak'
                                                         ? 'bg-green-100 text-green-800 border border-green-200'
                                                         : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
                                                         }`}>
-                                                        {student.kategori === 'kanak-kanak' ? 'Kanak-kanak' : 'Dewasa'}
+                                                        {student.kategori === 'kanak-kanak' ? 'Bawah 18 Tahun' : '18 Tahun ke atas'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">

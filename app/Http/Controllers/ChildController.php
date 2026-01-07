@@ -407,6 +407,9 @@ class ChildController extends Controller
                 $studentService = new \App\Services\StudentService();
                 $studentService->syncChildToStudent($child);
 
+                // Notify Admin
+                \App\Models\Notification::createPaymentPaidNotification($child);
+
                 return redirect()->route('children.index')
                     ->with('payment_success', 'Pembayaran berjaya! Peserta telah diaktifkan.');
             }
@@ -433,8 +436,7 @@ class ChildController extends Controller
         
         if ($child->date_of_birth) {
             $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
-            $age = \Carbon\Carbon::parse($child->date_of_birth)->age;
-            $monthlyFee = $feeSettings->getMonthlyFeeByAge($age);
+            $monthlyFee = $feeSettings->getMonthlyFeeByDob($child->date_of_birth);
         } else {
             $yearlyFee = $feeSettings->yearly_fee_below_18;
             $monthlyFee = $feeSettings->monthly_fee_below_18;
@@ -452,6 +454,6 @@ class ChildController extends Controller
             'items' => $items,
         ]);
 
-        return $pdf->download('Resit_Yuran_' . preg_replace('/[^A-Za-z0-9]/', '_', $child->name) . '.pdf');
+        return $pdf->stream('Resit_Yuran_' . preg_replace('/[^A-Za-z0-9]/', '_', $child->name) . '.pdf');
     }
 }

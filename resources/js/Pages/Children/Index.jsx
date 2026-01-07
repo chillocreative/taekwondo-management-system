@@ -366,6 +366,8 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                         {child.payment_completed && (
                                                             <a
                                                                 href={route('children.payment.receipt', child.id)}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
                                                                 className="px-3 py-1.5 text-xs border border-purple-300 bg-purple-50 rounded-lg text-purple-700 hover:bg-purple-100 transition-colors"
                                                                 title="Muat Turun Resit"
                                                             >

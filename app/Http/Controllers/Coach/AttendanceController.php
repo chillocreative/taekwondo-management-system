@@ -124,6 +124,41 @@ class AttendanceController extends Controller
                     'training_center_id' => $centerId,
                 ]
             );
+
+            // Check for 3 consecutive absences
+            if ($data['status'] === 'tidak_hadir') {
+                $pastAbsences = Attendance::where('student_id', $data['student_id'])
+                    ->where('attendance_date', '<', $date)
+                    ->orderBy('attendance_date', 'desc')
+                    ->take(2)
+                    ->get();
+
+                if ($pastAbsences->count() === 2) {
+                    $consecutive = true;
+                    foreach ($pastAbsences as $pa) {
+                        if ($pa->status !== 'tidak_hadir') {
+                            $consecutive = false;
+                            break;
+                        }
+                    }
+
+                    if ($consecutive) {
+                        $student = Student::with('child')->find($data['student_id']);
+                        if ($student && $student->child) {
+                            $name = $student->child->name;
+                            // Check if we already notified today to prevent spam during updates
+                            $alreadyNotified = \App\Models\Notification::where('type', 'absent')
+                                ->where('message', 'LIKE', "%$name%")
+                                ->where('created_at', '>=', Carbon::today())
+                                ->exists();
+                                
+                            if (!$alreadyNotified) {
+                                \App\Models\Notification::createAbsentNotification($name);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return redirect()->back()->with('success', 'Kehadiran berjaya dikemaskini.');

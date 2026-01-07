@@ -60,6 +60,30 @@ class Notification extends Model
     }
 
     /**
+     * Create monthly fee payment notification
+     */
+    public static function createMonthlyFeeNotification($studentName, $month)
+    {
+        return self::create([
+            'type' => 'payment_paid',
+            'title' => 'Bayaran Yuran Bulanan',
+            'message' => "Bayaran yuran bulan $month telah diterima untuk $studentName",
+        ]);
+    }
+
+    /**
+     * Create absent warning notification
+     */
+    public static function createAbsentNotification($studentName)
+    {
+        return self::create([
+            'type' => 'absent', // Ensure frontend handles 'absent' color or fallback
+            'title' => 'Amaran Kehadiran',
+            'message' => "$studentName tidak hadir ke kelas 3 kali berturut-turut.",
+        ]);
+    }
+
+    /**
      * Get time ago string
      */
     public function getTimeAgoAttribute()

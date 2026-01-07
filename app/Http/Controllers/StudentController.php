@@ -15,7 +15,7 @@ class StudentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Student::query();
+        $query = Student::query()->with(['child.parent']);
 
         // Only show students that have a linked child with completed payment
         $query->whereHas('child', function($q) {
@@ -30,6 +30,13 @@ class StudentController extends Controller
         // Apply category filter
         if ($request->has('kategori')) {
             $query->byCategory($request->kategori);
+        }
+
+        // Apply training center filter
+        if ($request->has('training_center_id')) {
+            $query->whereHas('child', function($q) use ($request) {
+                $q->where('training_center_id', $request->training_center_id);
+            });
         }
 
         // Sort by latest update
@@ -49,10 +56,13 @@ class StudentController extends Controller
                 $q->where('payment_completed', true);
             })->where('status_bayaran', '<', 12)->count(),
         ];
+        
+        $trainingCenters = \App\Models\TrainingCenter::all();
 
         return Inertia::render('Students/Index', [
             'students' => $students,
-            'filters' => $request->only(['search', 'kategori']),
+            'trainingCenters' => $trainingCenters,
+            'filters' => $request->only(['search', 'kategori', 'training_center_id']),
             'stats' => $stats,
         ]);
     }

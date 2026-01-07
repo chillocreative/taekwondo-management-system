@@ -27,8 +27,8 @@ class FeeController extends Controller
     {
         $user = auth()->user();
         
-        // Eager load monthly payments
-        $children = $user->children()->with(['monthlyPayments' => function($query) {
+        // Eager load monthly payments and student
+        $children = $user->children()->with(['student', 'monthlyPayments' => function($query) {
             $query->where('year', Carbon::now()->year)
                   ->orderBy('month');
         }])->get();
@@ -37,10 +37,82 @@ class FeeController extends Controller
             // Generate monthly payments if they don't exist
             if ($child->monthlyPayments->count() === 0) {
                 \App\Models\MonthlyPayment::generateForChild($child);
-                $child->load('monthlyPayments');
+                $child->refresh(); // Refresh to get relations if needed, or just reload mp
+                $child->load(['student', 'monthlyPayments' => function($query) {
+                     $query->where('year', Carbon::now()->year)->orderBy('month');
+                }]);
             }
 
-            $fees = $child->monthlyPayments->map(function ($monthlyPayment) {
+            // Lazy Fix: Sync Registration month payment if marked in Child but not MonthlyPayment
+            if ($child->payment_completed && $child->payment_date) {
+                 $pDate = $child->payment_date instanceof Carbon ? $child->payment_date : Carbon::parse($child->payment_date);
+                 
+                 // Check collection
+                 $regMonthPayment = $child->monthlyPayments->first(function($mp) use ($pDate) {
+                     return $mp->month == $pDate->month && $mp->year == $pDate->year;
+                 });
+                 
+                 if ($regMonthPayment && !$regMonthPayment->is_paid) {
+                     $regMonthPayment->update([
+                        'is_paid' => true,
+                        'paid_date' => $pDate,
+                        'payment_method' => $child->payment_method,
+                        'payment_reference' => $child->payment_reference,
+                     ]);
+                     $regMonthPayment->refresh();
+                 }
+            }
+
+            $fees = $child->monthlyPayments->map(function ($monthlyPayment) use ($child) {
+                // Visibility Logic: Hide months before registration/payment
+                $paymentDate = $child->payment_date ? ($child->payment_date instanceof Carbon ? $child->payment_date : Carbon::parse($child->payment_date)) : null;
+                $hideDetails = false;
+                
+                if ($paymentDate) {
+                     $regStart = $paymentDate->copy()->startOfMonth();
+                     $monthStart = Carbon::create($monthlyPayment->year, $monthlyPayment->month, 1);
+                     if ($monthStart->lt($regStart)) {
+                         $hideDetails = true;
+                     }
+                }
+
+                if ($hideDetails) {
+                    return [
+                        'id' => $monthlyPayment->id,
+                        'month' => $monthlyPayment->month_name . ' ' . $monthlyPayment->year,
+                        'status' => '',
+                        'is_paid' => false, 
+                        'is_overdue' => false,
+                        'amount' => 0,
+                        'due_date' => '',
+                        'paid_date' => '',
+                        'can_pay' => false,
+                        'child_id' => $monthlyPayment->child_id,
+                        'hide_action' => true,
+                        'receipt_url' => null,
+                    ];
+                }
+
+                // Determine Receipt URL
+                $receiptUrl = null;
+                if ($monthlyPayment->is_paid) {
+                     $monthStr = $monthlyPayment->month_name . ' ' . $monthlyPayment->year;
+                     $sp = null;
+                     if ($child->student) {
+                        $sp = \App\Models\StudentPayment::where('student_id', $child->student->id)
+                            ->where('month', $monthStr)
+                            ->where('status', 'paid')
+                            ->first();
+                     }
+
+                     if ($sp) {
+                        $receiptUrl = route('receipts.stream', $sp->id);
+                     } else {
+                        // Fallback to Registration Receipt
+                        $receiptUrl = route('children.payment.receipt', $child->id);
+                     }
+                }
+
                 return [
                     'id' => $monthlyPayment->id,
                     'month' => $monthlyPayment->month_name . ' ' . $monthlyPayment->year,
@@ -52,6 +124,8 @@ class FeeController extends Controller
                     'paid_date' => $monthlyPayment->paid_date?->format('d/m/Y'),
                     'can_pay' => !$monthlyPayment->is_paid,
                     'child_id' => $monthlyPayment->child_id,
+                    'hide_action' => false,
+                    'receipt_url' => $receiptUrl,
                 ];
             });
 
@@ -140,6 +214,10 @@ class FeeController extends Controller
                 $payment->payment_date = now();
                 $payment->receipt_number = 'REC-' . now()->format('ym') . '-' . str_pad($payment->id, 4, '0', STR_PAD_LEFT);
                 $payment->save();
+
+                // Notify Admin
+                $studentName = $payment->student->nama_pelajar ?? 'Unknown';
+                \App\Models\Notification::createMonthlyFeeNotification($studentName, $payment->month);
             }
             return redirect()->route('fees.index')->with('success', 'Pembayaran berjaya! Resit telah dijana.');
         }
@@ -161,6 +239,10 @@ class FeeController extends Controller
                 $payment->payment_date = now();
                 $payment->receipt_number = 'REC-' . now()->format('ym') . '-' . str_pad($payment->id, 4, '0', STR_PAD_LEFT);
                 $payment->save();
+
+                // Notify Admin
+                $studentName = $payment->student->nama_pelajar ?? 'Unknown';
+                \App\Models\Notification::createMonthlyFeeNotification($studentName, $payment->month);
             }
         }
     }
