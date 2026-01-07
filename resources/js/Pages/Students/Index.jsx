@@ -84,7 +84,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                     <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                         <div>
                             <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Senarai Peserta</h1>
-                            <p className="text-gray-500 mt-1">Urus maklumat peserta dan pembayaran yuran.</p>
+                            <p className="text-gray-500 mt-1">Urus maklumat peserta.</p>
                         </div>
                         <div className="flex gap-3 w-full md:w-auto">
                             {selectedIds.length > 0 && (
@@ -120,25 +120,25 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                 </div>
                             </div>
 
-                            {/* Paid Students */}
+                            {/* Under 18 */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
                                 <div className="p-4 bg-green-50 rounded-xl text-green-600">
-                                    <span className="text-3xl">✅</span>
+                                    <span className="text-3xl">👶</span>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">Selesai Bayaran (12 Bulan)</p>
-                                    <p className="text-2xl font-bold text-gray-900">{stats.paid}</p>
+                                    <p className="text-sm font-medium text-gray-500">Peserta 18 Tahun Bawah</p>
+                                    <p className="text-2xl font-bold text-gray-900">{stats.total_below_18}</p>
                                 </div>
                             </div>
 
-                            {/* Pending Payments */}
+                            {/* Above 18 */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
                                 <div className="p-4 bg-amber-50 rounded-xl text-amber-600">
-                                    <span className="text-3xl">⏳</span>
+                                    <span className="text-3xl">🧑</span>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">Bayaran Tertunggak</p>
-                                    <p className="text-2xl font-bold text-gray-900">{stats.pending}</p>
+                                    <p className="text-sm font-medium text-gray-500">Peserta 18 Tahun Atas</p>
+                                    <p className="text-2xl font-bold text-gray-900">{stats.total_above_18}</p>
                                 </div>
                             </div>
                         </div>
@@ -227,7 +227,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                                     />
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <Link href={route('students.edit', student.id)} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">
+                                                    <Link href={route('students.show', student.id)} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">
                                                         {student.no_siri}
                                                     </Link>
                                                 </td>
@@ -246,14 +246,21 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center">
-                                                        <div className={`h-2.5 w-2.5 rounded-full mr-2 ${student.status_bayaran >= 12 ? 'bg-green-500' :
-                                                            student.status_bayaran >= 6 ? 'bg-yellow-500' :
-                                                                'bg-red-500'
-                                                            }`}></div>
-                                                        <span className="text-sm font-medium text-gray-700">
-                                                            {student.status_bayaran}/12 bulan
-                                                        </span>
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex items-center">
+                                                            <div className={`h-2.5 w-2.5 rounded-full mr-2 ${student.status_bayaran >= 12 ? 'bg-green-500' :
+                                                                student.status_bayaran >= 6 ? 'bg-yellow-500' :
+                                                                    'bg-red-500'
+                                                                }`}></div>
+                                                            <span className="text-sm font-medium text-gray-700">
+                                                                {student.status_bayaran}/12 bulan
+                                                            </span>
+                                                        </div>
+                                                        {student.yuran_tahunan_paid && (
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 w-fit">
+                                                                ✅ Yuran Tahunan
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -265,21 +272,6 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                                         >
                                                             👁️
                                                         </Link>
-                                                        <Link
-                                                            href={route('students.edit', student.id)}
-                                                            className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition"
-                                                            title="Edit"
-                                                        >
-                                                            ✏️
-                                                        </Link>
-                                                        <a
-                                                            href={route('students.export-pdf', student.id)}
-                                                            className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
-                                                            target="_blank"
-                                                            title="Muat Turun PDF"
-                                                        >
-                                                            📥
-                                                        </a>
                                                         <button
                                                             onClick={() => handleDelete(student.id)}
                                                             className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"

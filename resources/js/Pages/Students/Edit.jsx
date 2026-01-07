@@ -3,142 +3,102 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
-import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
 
 const MONTHS = [
-    'JANUARI 2025',
-    'FEBRUARI 2025',
-    'MAC 2025',
-    'APRIL 2025',
-    'MEI 2025',
-    'JUN 2025',
-    'JULAI 2025',
-    'OGOS 2025',
-    'SEPTEMBER 2025',
-    'OKTOBER 2025',
-    'NOVEMBER 2025',
-    'DISEMBER 2025'
+    'JANUARI', 'FEBRUARI', 'MAC', 'APRIL', 'MEI', 'JUN',
+    'JULAI', 'OGOS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DISEMBER'
 ];
 
-export default function Edit({ auth, student }) {
-    // Helper to find payment for a specific month
-    const findPayment = (month) => {
-        return student.payments?.find(p => p.month === month);
-    };
-
-    // Initialize quantities from payments or status_bayaran (fallback)
-    const initialQuantities = MONTHS.map((month, index) => {
-        const payment = findPayment(month);
-        if (payment) return payment.quantity;
-        return index < student.status_bayaran ? 1 : 0;
-    });
-
-    // Initialize kategori from payments or student's main kategori (fallback)
-    const initialKategoris = MONTHS.map((month) => {
-        const payment = findPayment(month);
-        if (payment) return payment.kategori;
-        return student.kategori || 'kanak-kanak';
-    });
-
-    const [quantities, setQuantities] = useState(initialQuantities);
-    const [kategoris, setKategoris] = useState(initialKategoris);
-    const [processing, setProcessing] = useState(false);
-    const [errors, setErrors] = useState({});
-
-    // Form data state
-    const [formData, setFormData] = useState({
+export default function Edit({ auth, student, trainingCenters, currentYear }) {
+    const { data, setData, put, processing, errors } = useForm({
+        // Student/Child Info
+        training_center_id: student.child?.training_center_id || '',
         nama_pelajar: student.nama_pelajar || '',
+        date_of_birth: student.child?.date_of_birth || '',
+        age: student.child?.age || '',
+        ic_number: student.child?.ic_number || '',
+        belt_level: student.child?.belt_level || 'white',
+        tm_number: student.child?.tm_number || '',
+
+        // Guardian Info
         nama_penjaga: student.nama_penjaga || '',
+        guardian_occupation: student.child?.guardian_occupation || '',
+        guardian_ic_number: student.child?.guardian_ic_number || '',
+        guardian_age: student.child?.guardian_age || '',
+        guardian_phone: student.child?.guardian_phone || '',
+
+        // Address & Other
         alamat: student.alamat || '',
-        no_tel: student.no_tel || '',
+        no_tel: student.no_tel || '', // This is the child's phone in Child model sometimes, but synced to no_tel in Student
+        phone_number: student.child?.phone_number || '',
+        postcode: student.child?.postcode || '',
+        city: student.child?.city || '',
+        state: student.child?.state || '',
+        school_name: student.child?.school_name || '',
+        school_class: student.child?.school_class || '',
+
+        // Derived
+        kategori: student.kategori || 'kanak-kanak',
     });
 
-    // Get price based on kategori for a specific row
-    const getPrice = (index) => {
-        return kategoris[index] === 'kanak-kanak' ? 30 : 50;
-    };
+    const beltLevels = [
+        { value: 'white', label: 'Putih' },
+        { value: 'yellow', label: 'Kuning' },
+        { value: 'green', label: 'Hijau' },
+        { value: 'blue', label: 'Biru' },
+        { value: 'red', label: 'Merah' },
+        { value: 'black_1', label: 'Hitam 1 Dan' },
+        { value: 'black_2', label: 'Hitam 2 Dan' },
+        { value: 'black_3', label: 'Hitam 3 Dan' },
+        { value: 'black_4', label: 'Hitam 4 Dan' },
+        { value: 'black_5', label: 'Hitam 5 Dan' },
+    ];
 
-    // Calculate total from all rows
-    const calculateTotal = () => {
-        return quantities.reduce((sum, qty, index) => {
-            return sum + (qty * getPrice(index));
-        }, 0);
-    };
+    const states = [
+        "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan",
+        "Pahang", "Perak", "Perlis", "Pulau Pinang", "Sabah",
+        "Sarawak", "Selangor", "Terengganu", "Wilayah Persekutuan (Kuala Lumpur)",
+        "Wilayah Persekutuan (Labuan)", "Wilayah Persekutuan (Putrajaya)"
+    ];
 
-    // Calculate status_bayaran from quantities
-    const getStatusBayaran = () => {
-        return quantities.filter(qty => qty > 0).length;
-    };
+    const handleICChange = (value) => {
+        const ic = value.replace(/\D/g, '').slice(0, 12);
+        let dob = data.date_of_birth;
+        let age = data.age;
 
-    // Get main kategori based on most common selection
-    const getMainKategori = () => {
-        const activeKategoris = kategoris.filter((_, i) => quantities[i] > 0);
-        if (activeKategoris.length > 0) {
-            const kanakCount = activeKategoris.filter(k => k === 'kanak-kanak').length;
-            const dewasaCount = activeKategoris.filter(k => k === 'dewasa').length;
-            return kanakCount >= dewasaCount ? 'kanak-kanak' : 'dewasa';
+        if (ic.length >= 6) {
+            const yearStr = ic.substring(0, 2);
+            const monthStr = ic.substring(2, 4);
+            const dayStr = ic.substring(4, 6);
+
+            const yearPrefix = parseInt(yearStr) > (new Date().getFullYear() % 100) ? '19' : '20';
+            const fullYear = yearPrefix + yearStr;
+
+            if (parseInt(monthStr) >= 1 && parseInt(monthStr) <= 12 && parseInt(dayStr) >= 1 && parseInt(dayStr) <= 31) {
+                dob = `${fullYear}-${monthStr}-${dayStr}`;
+                age = new Date().getFullYear() - parseInt(fullYear);
+            }
         }
-        return student.kategori || 'kanak-kanak';
-    };
 
-    const handleQuantityChange = (index, value) => {
-        // Only allow digits and max 2 digits
-        const numValue = value.replace(/\D/g, '').slice(0, 2);
-        const newQuantities = [...quantities];
-        newQuantities[index] = parseInt(numValue) || 0;
-        setQuantities(newQuantities);
-    };
-
-    const handleKategoriChange = (index, value) => {
-        const newKategoris = [...kategoris];
-        newKategoris[index] = value;
-        setKategoris(newKategoris);
-    };
-
-    const handleInputChange = (field, value) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+        setData(prev => ({
+            ...prev,
+            ic_number: ic,
+            date_of_birth: dob,
+            age: age,
+            kategori: age < 18 ? 'kanak-kanak' : 'dewasa'
+        }));
     };
 
     const submit = (e) => {
         e.preventDefault();
-        setProcessing(true);
-
-        // Build payment details array
-        const paymentDetails = MONTHS.map((month, index) => ({
-            month: month,
-            kategori: kategoris[index],
-            quantity: quantities[index],
-            amount: getPrice(index),
-            total: quantities[index] * getPrice(index)
-        }));
-
-        // Build the complete data object at submission time
-        const submitData = {
-            nama_pelajar: formData.nama_pelajar,
-            nama_penjaga: formData.nama_penjaga,
-            alamat: formData.alamat,
-            no_tel: formData.no_tel,
-            kategori: getMainKategori(),
-            status_bayaran: getStatusBayaran(),
-            payment_details: paymentDetails,
-        };
-
-        router.put(route('students.update', student.id), submitData, {
-            onSuccess: () => {
-                setProcessing(false);
-            },
-            onError: (errors) => {
-                setErrors(errors);
-                setProcessing(false);
-            },
-        });
+        put(route('students.update', student.id));
     };
 
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Edit Pelajar</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Edit Maklumat Pelajar</h2>}
         >
             <Head title="Edit Pelajar" />
 
@@ -147,176 +107,334 @@ export default function Edit({ auth, student }) {
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             <form onSubmit={submit}>
-                                {/* Student Info Section */}
-                                <div className="mb-8">
-                                    <div className="flex justify-between items-start mb-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                    {/* MAKLUMAT WARIS */}
+                                    <div className="space-y-4">
+                                        <h3 className="font-bold text-lg text-gray-800 border-b pb-2 flex items-center gap-2">
+                                            <span>👤</span> MAKLUMAT WARIS
+                                        </h3>
+
                                         <div>
-                                            <h2 className="text-2xl font-bold text-gray-800 uppercase">
-                                                {formData.nama_pelajar || 'Nama Pelajar'}
-                                            </h2>
+                                            <InputLabel htmlFor="nama_penjaga" value="Nama Waris *" />
+                                            <TextInput
+                                                id="nama_penjaga"
+                                                type="text"
+                                                className="mt-1 block w-full uppercase"
+                                                value={data.nama_penjaga}
+                                                onChange={(e) => setData('nama_penjaga', e.target.value.toUpperCase())}
+                                                required
+                                            />
+                                            <InputError message={errors.nama_penjaga} className="mt-2" />
                                         </div>
-                                        <div className="text-right">
-                                            <div className="text-sm text-gray-500">No Siri:</div>
-                                            <div className="text-xl font-bold">{student.no_siri}</div>
+
+                                        <div>
+                                            <InputLabel htmlFor="guardian_occupation" value="Pekerjaan" />
+                                            <TextInput
+                                                id="guardian_occupation"
+                                                type="text"
+                                                className="mt-1 block w-full uppercase"
+                                                value={data.guardian_occupation}
+                                                onChange={(e) => setData('guardian_occupation', e.target.value.toUpperCase())}
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <InputLabel htmlFor="guardian_ic_number" value="IC Waris" />
+                                                <TextInput
+                                                    id="guardian_ic_number"
+                                                    type="text"
+                                                    className="mt-1 block w-full"
+                                                    value={data.guardian_ic_number}
+                                                    onChange={(e) => setData('guardian_ic_number', e.target.value.replace(/\D/g, '').slice(0, 12))}
+                                                    placeholder="810101011234"
+                                                />
+                                            </div>
+                                            <div>
+                                                <InputLabel htmlFor="guardian_age" value="Umur Waris" />
+                                                <TextInput
+                                                    id="guardian_age"
+                                                    type="number"
+                                                    className="mt-1 block w-full bg-gray-50"
+                                                    value={data.guardian_age}
+                                                    readOnly
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <InputLabel htmlFor="guardian_phone" value="No. Telefon Waris" />
+                                            <TextInput
+                                                id="guardian_phone"
+                                                type="text"
+                                                className="mt-1 block w-full"
+                                                value={data.guardian_phone}
+                                                onChange={(e) => setData('guardian_phone', e.target.value.replace(/\D/g, '').slice(0, 11))}
+                                                placeholder="0123456789"
+                                            />
                                         </div>
                                     </div>
 
-                                    {/* Row 1: Nama Pelajar and No. Telefon */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                                    {/* MAKLUMAT PESERTA */}
+                                    <div className="space-y-4">
+                                        <h3 className="font-bold text-lg text-gray-800 border-b pb-2 flex items-center gap-2">
+                                            <span>🥋</span> MAKLUMAT PESERTA
+                                        </h3>
+
                                         <div>
-                                            <InputLabel htmlFor="nama_pelajar" value="Nama Pelajar *" />
+                                            <InputLabel htmlFor="nama_pelajar" value="Nama Penuh *" />
                                             <TextInput
                                                 id="nama_pelajar"
                                                 type="text"
-                                                className="mt-1 block w-full"
-                                                value={formData.nama_pelajar}
-                                                onChange={(e) => handleInputChange('nama_pelajar', e.target.value.toUpperCase())}
+                                                className="mt-1 block w-full uppercase"
+                                                value={data.nama_pelajar}
+                                                onChange={(e) => setData('nama_pelajar', e.target.value.toUpperCase())}
                                                 required
                                             />
                                             <InputError message={errors.nama_pelajar} className="mt-2" />
                                         </div>
 
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <InputLabel htmlFor="ic_number" value="No. IC *" />
+                                                <TextInput
+                                                    id="ic_number"
+                                                    type="text"
+                                                    className="mt-1 block w-full"
+                                                    value={data.ic_number}
+                                                    onChange={(e) => handleICChange(e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.ic_number} className="mt-2" />
+                                            </div>
+                                            <div>
+                                                <InputLabel htmlFor="age" value="Umur" />
+                                                <TextInput
+                                                    id="age"
+                                                    type="number"
+                                                    className="mt-1 block w-full bg-gray-50"
+                                                    value={data.age}
+                                                    readOnly
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <InputLabel htmlFor="date_of_birth" value="Tarikh Lahir" />
+                                                <TextInput
+                                                    id="date_of_birth"
+                                                    type="date"
+                                                    className="mt-1 block w-full bg-gray-50"
+                                                    value={data.date_of_birth}
+                                                    readOnly
+                                                />
+                                            </div>
+                                            <div>
+                                                <InputLabel htmlFor="belt_level" value="Tali Pinggang *" />
+                                                <select
+                                                    id="belt_level"
+                                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                                    value={data.belt_level}
+                                                    onChange={(e) => setData('belt_level', e.target.value)}
+                                                    required
+                                                >
+                                                    {beltLevels.map(lvl => (
+                                                        <option key={lvl.value} value={lvl.value}>{lvl.label}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+
                                         <div>
-                                            <InputLabel htmlFor="no_tel" value="No. Telefon *" />
-                                            <TextInput
-                                                id="no_tel"
-                                                type="text"
-                                                inputMode="numeric"
-                                                className="mt-1 block w-full"
-                                                value={formData.no_tel}
-                                                onChange={(e) => handleInputChange('no_tel', e.target.value.replace(/\D/g, ''))}
+                                            <InputLabel htmlFor="training_center_id" value="Pusat Latihan *" />
+                                            <select
+                                                id="training_center_id"
+                                                className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                                value={data.training_center_id}
+                                                onChange={(e) => setData('training_center_id', e.target.value)}
                                                 required
-                                                placeholder="Contoh: 0123456789"
-                                            />
-                                            <InputError message={errors.no_tel} className="mt-2" />
-                                        </div>
-                                    </div>
-
-                                    {/* Row 2: Nama Penjaga (full width) */}
-                                    <div className="mb-4">
-                                        <InputLabel htmlFor="nama_penjaga" value="Nama Penjaga *" />
-                                        <TextInput
-                                            id="nama_penjaga"
-                                            type="text"
-                                            className="mt-1 block w-full"
-                                            value={formData.nama_penjaga}
-                                            onChange={(e) => handleInputChange('nama_penjaga', e.target.value.toUpperCase())}
-                                            required
-                                        />
-                                        <InputError message={errors.nama_penjaga} className="mt-2" />
-                                    </div>
-
-                                    {/* Row 3: Alamat (full width, expandable textarea) */}
-                                    <div className="mb-4">
-                                        <InputLabel htmlFor="alamat" value="Alamat *" />
-                                        <textarea
-                                            id="alamat"
-                                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm resize-y"
-                                            value={formData.alamat}
-                                            onChange={(e) => handleInputChange('alamat', e.target.value)}
-                                            rows="3"
-                                            style={{ minHeight: '80px' }}
-                                            required
-                                        />
-                                        <InputError message={errors.alamat} className="mt-2" />
-                                    </div>
-                                </div>
-
-                                {/* Payment Table Section */}
-                                <div className="mb-8">
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Butiran Pembayaran</h3>
-
-                                    <div className="overflow-x-auto">
-                                        <table className="min-w-full divide-y divide-gray-200">
-                                            <thead className="bg-blue-500">
-                                                <tr>
-                                                    <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
-                                                        Butiran Pembayaran
-                                                    </th>
-                                                    <th className="px-4 py-3 text-center text-xs font-bold text-white uppercase tracking-wider">
-                                                        Kategori
-                                                    </th>
-                                                    <th className="px-4 py-3 text-right text-xs font-bold text-white uppercase tracking-wider">
-                                                        Jumlah Bayaran
-                                                    </th>
-                                                    <th className="px-4 py-3 text-center text-xs font-bold text-white uppercase tracking-wider">
-                                                        Kuantiti
-                                                    </th>
-                                                    <th className="px-4 py-3 text-right text-xs font-bold text-white uppercase tracking-wider">
-                                                        Total
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="bg-white divide-y divide-gray-200">
-                                                {MONTHS.map((month, index) => (
-                                                    <tr key={index} className="hover:bg-gray-50">
-                                                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                                            {month}
-                                                        </td>
-                                                        <td className="px-4 py-3 whitespace-nowrap text-center">
-                                                            <select
-                                                                value={kategoris[index]}
-                                                                onChange={(e) => handleKategoriChange(index, e.target.value)}
-                                                                className="text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                                            >
-                                                                <option value="kanak-kanak">Kanak-kanak</option>
-                                                                <option value="dewasa">Dewasa</option>
-                                                            </select>
-                                                        </td>
-                                                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                            RM{getPrice(index).toFixed(2)}
-                                                        </td>
-                                                        <td className="px-4 py-3 whitespace-nowrap text-center">
-                                                            <input
-                                                                type="text"
-                                                                inputMode="numeric"
-                                                                pattern="[0-9]*"
-                                                                maxLength="2"
-                                                                value={quantities[index] || ''}
-                                                                onChange={(e) => handleQuantityChange(index, e.target.value)}
-                                                                className="w-12 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                                                placeholder=""
-                                                            />
-                                                        </td>
-                                                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
-                                                            RM{(quantities[index] * getPrice(index)).toFixed(2)}
-                                                        </td>
-                                                    </tr>
+                                            >
+                                                <option value="">Pilih Pusat Latihan</option>
+                                                {trainingCenters.map(center => (
+                                                    <option key={center.id} value={center.id}>{center.name}</option>
                                                 ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                            </select>
+                                            <InputError message={errors.training_center_id} className="mt-2" />
+                                        </div>
 
-                                    {/* Summary */}
-                                    <div className="mt-4 flex justify-end">
-                                        <div className="w-64">
-                                            <div className="flex justify-between py-2 border-b">
-                                                <span className="font-semibold text-gray-600">SUBTOTAL</span>
-                                                <span className="font-semibold">RM {calculateTotal().toFixed(2)}</span>
-                                            </div>
-                                            <div className="flex justify-between py-2">
-                                                <span className="font-bold text-gray-800">TOTAL</span>
-                                                <span className="font-bold text-gray-800">RM {calculateTotal().toFixed(2)}</span>
-                                            </div>
+                                        <div>
+                                            <InputLabel htmlFor="tm_number" value="No. TM (Jika ada)" />
+                                            <TextInput
+                                                id="tm_number"
+                                                type="text"
+                                                className="mt-1 block w-full"
+                                                value={data.tm_number}
+                                                onChange={(e) => setData('tm_number', e.target.value)}
+                                            />
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Debug info - hidden */}
-                                <input type="hidden" name="status_bayaran" value={getStatusBayaran()} />
-                                <input type="hidden" name="kategori" value={getMainKategori()} />
+                                <hr className="border-4 border-gray-50 mb-8" />
+
+                                {/* ALAMAT & SEKOLAH */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                    <div className="space-y-4">
+                                        <h3 className="font-bold text-lg text-gray-800 border-b pb-2 flex items-center gap-2">
+                                            <span>📍</span> LOKASI & HUBUNGAN
+                                        </h3>
+                                        <div>
+                                            <InputLabel htmlFor="alamat" value="Alamat *" />
+                                            <textarea
+                                                id="alamat"
+                                                className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm resize-y"
+                                                value={data.alamat}
+                                                onChange={(e) => setData('alamat', e.target.value)}
+                                                rows="3"
+                                                required
+                                            />
+                                            <InputError message={errors.alamat} className="mt-2" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <InputLabel htmlFor="postcode" value="Poskod" />
+                                                <TextInput
+                                                    id="postcode"
+                                                    type="text"
+                                                    className="mt-1 block w-full"
+                                                    value={data.postcode}
+                                                    onChange={(e) => setData('postcode', e.target.value.replace(/\D/g, '').slice(0, 5))}
+                                                />
+                                            </div>
+                                            <div>
+                                                <InputLabel htmlFor="city" value="Bandar" />
+                                                <TextInput
+                                                    id="city"
+                                                    type="text"
+                                                    className="mt-1 block w-full uppercase"
+                                                    value={data.city}
+                                                    onChange={(e) => setData('city', e.target.value.toUpperCase())}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <InputLabel htmlFor="state" value="Negeri" />
+                                            <select
+                                                id="state"
+                                                className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                                value={data.state}
+                                                onChange={(e) => setData('state', e.target.value)}
+                                            >
+                                                <option value="">Pilih Negeri</option>
+                                                {states.map(s => <option key={s} value={s}>{s}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <InputLabel htmlFor="phone_number" value="No. Telefon Peserta (Jika ada)" />
+                                            <TextInput
+                                                id="phone_number"
+                                                type="text"
+                                                className="mt-1 block w-full"
+                                                value={data.phone_number}
+                                                onChange={(e) => setData('phone_number', e.target.value.replace(/\D/g, '').slice(0, 11))}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <h3 className="font-bold text-lg text-gray-800 border-b pb-2 flex items-center gap-2">
+                                            <span>🏫</span> MAKLUMAT SEKOLAH
+                                        </h3>
+                                        <div>
+                                            <InputLabel htmlFor="school_name" value="Nama Sekolah" />
+                                            <TextInput
+                                                id="school_name"
+                                                type="text"
+                                                className="mt-1 block w-full uppercase"
+                                                value={data.school_name}
+                                                onChange={(e) => setData('school_name', e.target.value.toUpperCase())}
+                                            />
+                                        </div>
+                                        <div>
+                                            <InputLabel htmlFor="school_class" value="Kelas" />
+                                            <TextInput
+                                                id="school_class"
+                                                type="text"
+                                                className="mt-1 block w-full uppercase"
+                                                value={data.school_class}
+                                                onChange={(e) => setData('school_class', e.target.value.toUpperCase())}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Online Payment Status (Read-Only) */}
+                                {student.child && (
+                                    <div className="mb-12">
+                                        <h3 className="text-lg font-bold text-blue-800 mb-4 flex items-center gap-2 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                            <span>💳</span> Status Bayaran Online (Tahun {currentYear})
+                                        </h3>
+                                        <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+                                            <table className="min-w-full divide-y divide-gray-200">
+                                                <thead className="bg-gray-50">
+                                                    <tr>
+                                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider border-r">Bulan</th>
+                                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider border-r">Status</th>
+                                                        <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider border-r">Tarikh Bayaran</th>
+                                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Resit</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-200">
+                                                    {student.child.monthly_payments?.map((payment, idx) => (
+                                                        <tr key={idx} className={payment.is_paid ? 'bg-green-50/20' : ''}>
+                                                            <td className="px-6 py-4 text-sm text-gray-900 font-bold border-r">{MONTHS[payment.month - 1]}</td>
+                                                            <td className="px-6 py-4 text-center border-r">
+                                                                <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${payment.is_paid
+                                                                    ? 'bg-green-100 text-green-800 border border-green-200'
+                                                                    : 'bg-red-50 text-red-600 border border-red-100'
+                                                                    }`}>
+                                                                    {payment.is_paid ? 'SUDAH DIBAYAR' : 'TERTUNGGAK'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-sm text-gray-500 text-right border-r">
+                                                                {payment.paid_date ? new Date(payment.paid_date).toLocaleDateString('ms-MY') : '-'}
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                {payment.is_paid && payment.receipt_number ? (
+                                                                    <span className="text-xs font-mono font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded">
+                                                                        {payment.receipt_number}
+                                                                    </span>
+                                                                ) : <span className="text-gray-400">-</span>}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                    {(!student.child.monthly_payments || student.child.monthly_payments.length === 0) && (
+                                                        <tr>
+                                                            <td colSpan="4" className="px-6 py-12 text-center text-sm text-gray-500 italic">
+                                                                Tiada rekod pembayaran online dijumpai untuk tahun ini.
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Action Buttons */}
-                                <div className="flex items-center justify-between pt-4 border-t">
+                                <div className="flex items-center justify-between pt-6 border-t border-gray-100">
                                     <Link
                                         href={route('students.index')}
-                                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition duration-200"
+                                        className="text-gray-600 hover:text-gray-800 font-medium flex items-center gap-2 transition"
                                     >
-                                        ← Kembali
+                                        ← Kembali ke Senarai
                                     </Link>
-                                    <PrimaryButton disabled={processing}>
-                                        {processing ? 'Mengemaskini...' : '💾 Kemaskini'}
-                                    </PrimaryButton>
+                                    <div className="flex gap-3">
+                                        <PrimaryButton disabled={processing} className="px-8 py-3 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 transition">
+                                            {processing ? 'Menyimpan...' : '💾 Simpan Perubahan'}
+                                        </PrimaryButton>
+                                    </div>
                                 </div>
                             </form>
                         </div>

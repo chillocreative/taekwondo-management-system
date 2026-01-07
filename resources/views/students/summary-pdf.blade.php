@@ -3,169 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ringkasan Pembayaran - {{ $student->nama_pelajar }}</title>
+    <title>Ringkasan Pelajar - {{ $student->nama_pelajar }}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        @page {
+            margin: 0cm 0cm;
         }
         
         body {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 11px;
+            font-family: 'Helvetica', Arial, sans-serif;
+            font-size: 10pt;
             line-height: 1.4;
-            padding: 40px;
-            padding-bottom: 80px; /* Space for footer */
             color: #333;
+            margin: 0;
+            padding: 0;
         }
         
-        /* Header & Content Styles */
         .header {
-            width: 100%;
-            margin-bottom: 40px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 20px;
+            background-color: #fff;
+            padding: 20pt 30pt;
+            border-bottom: 2pt solid #eee;
         }
         
-        .header-table { width: 100%; }
-        .logo-cell { width: 100px; vertical-align: middle; }
-        .club-info-cell { vertical-align: middle; }
-        .title-cell { text-align: right; vertical-align: middle; }
+        .header-table { width: 100%; border-collapse: collapse; }
+        .logo { width: 60pt; height: auto; }
+        .club-name { font-size: 16pt; font-weight: bold; color: #1a365d; }
+        .club-sub { font-size: 9pt; color: #718096; }
+        .doc-title { font-size: 18pt; font-weight: bold; color: #e53e3e; text-align: right; }
         
-        .club-name { font-size: 18px; font-weight: bold; color: #000; margin-bottom: 5px; }
-        .club-location { font-size: 12px; color: #666; }
-        .title { font-size: 24px; font-weight: bold; color: #e74c3c; line-height: 1.1; text-align: right; }
+        .content { padding: 20pt 30pt; }
         
-        .student-info { margin-bottom: 30px; position: relative; }
-        .student-name { font-size: 16px; font-weight: bold; color: #000; margin-bottom: 15px; text-transform: uppercase; }
-        .info-table { width: 100%; }
-        .info-label { width: 80px; color: #666; font-size: 11px; vertical-align: top; padding-bottom: 5px; }
-        .info-value { color: #000; font-size: 11px; vertical-align: top; padding-bottom: 5px; }
+        .section-title {
+            background-color: #f7fafc;
+            padding: 5pt 10pt;
+            font-weight: bold;
+            color: #2d3748;
+            font-size: 11pt;
+            border-left: 3pt solid #4299e1;
+            margin-bottom: 10pt;
+            text-transform: uppercase;
+        }
         
-        .no-siri-box { position: absolute; top: 0; right: 0; text-align: right; }
-        .no-siri-label { font-size: 11px; color: #666; margin-bottom: 5px; }
-        .no-siri-value { font-size: 16px; font-weight: bold; color: #000; }
+        .info-grid { width: 100%; border-collapse: collapse; margin-bottom: 20pt; }
+        .info-grid td { padding: 4pt 0; vertical-align: top; }
+        .label { width: 100pt; color: #718096; font-size: 9pt; font-weight: bold; }
+        .value { color: #2d3748; font-weight: 500; }
         
-        .payment-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-        .payment-table thead th { background-color: #3498db; color: white; padding: 12px 10px; text-align: left; font-weight: bold; font-size: 11px; text-transform: uppercase; }
-        .payment-table th.center { text-align: center; }
-        .payment-table th.right { text-align: right; }
-        .payment-table tbody td { padding: 10px; border-bottom: 1px solid #eee; font-size: 11px; }
-        .payment-table td.center { text-align: center; }
-        .payment-table td.right { text-align: right; }
+        .payment-table { width: 100%; border-collapse: collapse; margin-bottom: 20pt; }
+        .payment-table th { 
+            background-color: #4a5568; 
+            color: white; 
+            padding: 8pt; 
+            font-size: 9pt; 
+            text-align: left; 
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .payment-table td { 
+            padding: 7pt 8pt; 
+            border-bottom: 1px solid #edf2f7; 
+            font-size: 9pt; 
+        }
+        .payment-table tr:nth-child(even) { background-color: #f8fafc; }
         
-        .summary-section { width: 100%; margin-top: 20px; }
-        .summary-table { width: 250px; margin-left: auto; }
-        .summary-table td { padding: 5px 0; text-align: right; }
-        .summary-label { font-weight: bold; color: #666; font-size: 12px; padding-right: 20px; }
-        .summary-value { font-weight: bold; color: #000; font-size: 12px; }
-        .total-row .summary-label, .total-row .summary-value { font-size: 14px; color: #000; padding-top: 10px; }
-
-        /* Minimalist Footer Styles */
+        .status-paid { color: #38a169; font-weight: bold; }
+        .status-unpaid { color: #e53e3e; font-weight: bold; }
+        
+        .no-siri { font-size: 14pt; font-weight: bold; color: #2d3748; border: 1pt solid #cbd5e0; padding: 5pt 10pt; display: inline-block; margin-top: 10pt; }
+        
         .footer {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 70px;
-            background-color: #004aad;
+            bottom: 0pt;
+            left: 0pt;
+            right: 0pt;
+            height: 40pt;
+            background-color: #1a365d;
             color: white;
-            font-family: 'Poppins', sans-serif;
             text-align: center;
-            padding-top: 10px;
-            line-height: 1.4;
+            padding-top: 10pt;
+            font-size: 8pt;
         }
+        
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .bold { font-weight: bold; }
+        .uppercase { text-transform: uppercase; }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <div class="header">
         <table class="header-table">
             <tr>
-                <td class="logo-cell">
-                    <img src="{{ public_path('images/logo_new.jpg') }}" alt="Logo" style="width: 80px; height: auto;">
+                <td style="width: 70pt;">
+                    <img src="{{ public_path('images/logo_new.jpg') }}" class="logo">
                 </td>
-                <td class="club-info-cell">
+                <td>
                     <div class="club-name">KELAB TAEKWONDO A&Z</div>
-                    <div class="club-location">Kepala Batas, Pulau Pinang</div>
+                    <div class="club-sub">Kepala Batas, Pulau Pinang • 012 - 479 4200</div>
                 </td>
-                <td class="title-cell">
-                    <div class="title">RINGKASAN<br>PEMBAYARAN</div>
+                <td>
+                    <div class="doc-title">MAKLUMAT &<br>YURAN PELAJAR</div>
                 </td>
             </tr>
         </table>
     </div>
 
-    <!-- Student Info -->
-    <div class="student-info">
-        <div class="student-name">{{ strtoupper($student->nama_pelajar) }}</div>
-        
-        <table class="info-table">
-            <tr>
-                <td class="info-label">Alamat:</td>
-                <td class="info-value">{{ $student->alamat }}</td>
-            </tr>
-            <tr>
-                <td class="info-label">No Tel:</td>
-                <td class="info-value">{{ $student->no_tel }}</td>
-            </tr>
-        </table>
-
-        <div class="no-siri-box">
-            <div class="no-siri-label">No Siri:</div>
-            <div class="no-siri-value">{{ $student->no_siri }}</div>
+    <div class="content">
+        <div style="float: right; text-align: right;">
+            <div style="font-size: 9pt; color: #718096;">NO. SIRI KEAHLIAN</div>
+            <div class="no-siri">{{ $student->no_siri }}</div>
         </div>
-    </div>
+        
+        <div style="margin-bottom: 30pt;">
+            <h1 style="font-size: 18pt; margin: 0; color: #1a202c;">{{ strtoupper($student->nama_pelajar) }}</h1>
+            <div style="color: #4a5568; font-size: 10pt; margin-top: 5pt;">Kategori: <span class="bold uppercase">{{ $student->kategori == 'kanak-kanak' ? 'Bawah 18 Tahun' : '18 Tahun Ke Atas' }}</span></div>
+        </div>
 
-    <!-- Payment Table -->
-    <table class="payment-table">
-        <thead>
-            <tr>
-                <th>BUTIRAN PEMBAYARAN</th>
-                <th class="center">KATEGORI</th>
-                <th class="right">JUMLAH PEMBAYARAN</th>
-                <th class="center">KUANTITI</th>
-                <th class="right">TOTAL</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php $grandTotal = 0; @endphp
-            @foreach($paymentData as $data)
-                @if($data['paid'])
-                @php $grandTotal += $data['total']; @endphp
-                <tr>
-                    <td>{{ $data['month'] }}</td>
-                    <td class="center">{{ ucfirst($data['kategori']) }}</td>
-                    <td class="right">RM{{ number_format($data['amount'], 2) }}</td>
-                    <td class="center">{{ $data['quantity'] }}</td>
-                    <td class="right">RM{{ number_format($data['total'], 2) }}</td>
-                </tr>
-                @endif
-            @endforeach
-        </tbody>
-    </table>
+        <div style="clear: both;"></div>
 
-    <!-- Summary -->
-    <div class="summary-section">
-        <table class="summary-table">
+        <div class="section-title">A. MAKLUMAT PERIBADI PESERTA</div>
+        <table class="info-grid">
             <tr>
-                <td class="summary-label">SUBTOTAL</td>
-                <td class="summary-value">RM {{ number_format($grandTotal, 2) }}</td>
+                <td class="label">No. Kad Pengenalan:</td>
+                <td class="value">{{ $student->child->ic_number ?? '-' }}</td>
+                <td class="label">Tarikh Lahir:</td>
+                <td class="value">{{ $student->child->date_of_birth ? $student->child->date_of_birth->format('d/m/Y') : '-' }}</td>
             </tr>
-            <tr class="total-row">
-                <td class="summary-label">TOTAL</td>
-                <td class="summary-value">RM {{ number_format($grandTotal, 2) }}</td>
+            <tr>
+                <td class="label">Pusat Latihan:</td>
+                <td class="value">{{ $student->child->trainingCenter->name ?? '-' }}</td>
+                <td class="label">Tali Pinggang:</td>
+                <td class="value uppercase">{{ $student->child->belt_level ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">No. TM:</td>
+                <td class="value">{{ $student->child->tm_number ?? '-' }}</td>
+                <td class="label">Umur:</td>
+                <td class="value">{{ $student->child->age ?? '-' }} Tahun</td>
+            </tr>
+            <tr>
+                <td class="label">Sekolah:</td>
+                <td class="value">{{ $student->child->school_name ?? '-' }}</td>
+                <td class="label">Kelas:</td>
+                <td class="value">{{ $student->child->school_class ?? '-' }}</td>
             </tr>
         </table>
+
+        <div class="section-title">B. MAKLUMAT WARIS & HUBUNGAN</div>
+        <table class="info-grid">
+            <tr>
+                <td class="label">Nama Penjaga:</td>
+                <td class="value">{{ $student->nama_penjaga }}</td>
+                <td class="label">No. Telefon:</td>
+                <td class="value">{{ $student->no_tel }}</td>
+            </tr>
+            <tr>
+                <td class="label">Alamat:</td>
+                <td class="value" colspan="3">{{ $student->alamat }} {{ $student->child->postcode ?? '' }} {{ $student->child->city ?? '' }} {{ $student->child->state ?? '' }}</td>
+            </tr>
+        </table>
+
+        <div class="section-title">C. JADUAL PEMBAYARAN YURAN (TAHUN {{ $year }})</div>
+        <table class="payment-table">
+            <thead>
+                <tr>
+                    <th style="width: 30%;">BULAN</th>
+                    <th style="width: 25%;" class="text-center">STATUS</th>
+                    <th style="width: 20%;" class="text-right">TARIKH BAYARAN</th>
+                    <th style="width: 25%;" class="text-center">NO. RESIT</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($monthlyPayments as $item)
+                <tr>
+                    <td class="bold">{{ $item['month'] }}</td>
+                    <td class="text-center">
+                        <span class="{{ $item['is_paid'] ? 'status-paid' : 'status-unpaid' }}">
+                            {{ $item['status'] }}
+                        </span>
+                    </td>
+                    <td class="text-right">{{ $item['date'] }}</td>
+                    <td class="text-center font-mono" style="font-family: monospace;">{{ $item['receipt'] }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        @if(count($paymentData) > 0)
+        <div style="margin-top: 10pt; font-size: 8pt; color: #718096; font-style: italic;">
+            * Dokumen ini dijana secara automatik daripada sistem pengurusan taekwondo.
+        </div>
+        @endif
     </div>
 
-    <!-- Footer -->
     <div class="footer">
-        <div style="font-weight: bold;">Kelas Taekwondo A&Z</div>
-        <div>012 - 479 4200</div>
+        <div class="bold">KELAB TAEKWONDO A&Z</div>
+        <div>Kepala Batas, Pulau Pinang • Kelas Taekwondo Terbaik di Utara</div>
         <div>www.taekwondoanz.com</div>
     </div>
 </body>

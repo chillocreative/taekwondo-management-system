@@ -1,7 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function Show({ auth, student }) {
+export default function Show({ auth, student, currentYear }) {
+    const months = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
     const monthlyFee = student.kategori === 'kanak-kanak' ? 30 : 50;
     // Use total_payment from backend if available, otherwise fallback
     const totalPayment = student.total_payment !== undefined
@@ -94,22 +95,48 @@ export default function Show({ auth, student }) {
                             </div>
 
                             <div className="border-t pt-6">
-                                <h3 className="text-xl font-bold text-gray-800 mb-4">Ringkasan Pembayaran</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="bg-green-50 border-2 border-green-200 p-6 rounded-lg text-center">
-                                        <p className="text-sm text-green-600 mb-2">Bulan Dibayar</p>
-                                        <p className="text-3xl font-bold text-green-800">{student.status_bayaran}/12</p>
-                                        <p className="text-xs text-green-600 mt-1">bulan</p>
-                                    </div>
-                                    <div className="bg-blue-50 border-2 border-blue-200 p-6 rounded-lg text-center">
-                                        <p className="text-sm text-blue-600 mb-2">Jumlah Dibayar</p>
-                                        <p className="text-3xl font-bold text-blue-800">RM {totalPayment}</p>
-                                        <p className="text-xs text-blue-600 mt-1">untuk {student.status_bayaran} bulan</p>
-                                    </div>
-                                    <div className="bg-red-50 border-2 border-red-200 p-6 rounded-lg text-center">
-                                        <p className="text-sm text-red-600 mb-2">Baki Tertunggak</p>
-                                        <p className="text-3xl font-bold text-red-800">RM {outstandingAmount}</p>
-                                        <p className="text-xs text-red-600 mt-1">({outstandingMonths} bulan lagi)</p>
+                                <h3 className="text-xl font-bold text-gray-800 mb-4">Jadual Pembayaran Yuran ({currentYear})</h3>
+                                <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bulan</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarikh Bayaran</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rujukan</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {student.child?.monthly_payments?.map((payment, idx) => (
+                                                    <tr key={idx} className={payment.is_paid ? 'bg-green-50/30' : 'hover:bg-gray-50'}>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                            {months[payment.month - 1]}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">RM {monthlyFee}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${payment.is_paid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                                                }`}>
+                                                                {payment.is_paid ? 'Dibayar' : 'Tertunggak'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {payment.paid_date ? new Date(payment.paid_date).toLocaleDateString() : '-'}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {payment.payment_reference || '-'}
+                                                        </td>
+                                                    </tr>
+                                                )) || (
+                                                        <tr>
+                                                            <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
+                                                                Tiada rekod pembayaran dijumpai.
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>

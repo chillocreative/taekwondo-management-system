@@ -15,7 +15,10 @@ class StudentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Student::query()->with(['child.parent']);
+        // Eager load child, parent, and monthly payments for current year
+        $query = Student::query()->with(['child.parent', 'child.monthlyPayments' => function($q) {
+            $q->where('year', now()->year);
+        }]);
 
         // Only show students that have a linked child with completed payment
         $query->whereHas('child', function($q) {
@@ -44,17 +47,32 @@ class StudentController extends Controller
 
         $students = $query->paginate(10)->withQueryString();
 
-        // Calculate statistics (only for students with completed payment)
+        // Calculate dynamic fields
+        $students->getCollection()->transform(function ($student) {
+            $paidCount = 0;
+            if ($student->child && $student->child->monthlyPayments) {
+                $paidCount = $student->child->monthlyPayments->where('is_paid', true)->count();
+            }
+            // Override or append calculated status
+            $student->status_bayaran = $paidCount; 
+            
+            // Append Yuran Tahunan status (always true due to filter, but good to have explicit)
+            $student->yuran_tahunan_paid = $student->child ? $student->child->payment_completed : false;
+            
+            return $student;
+        });
+
+        // Calculate statistics
         $stats = [
             'total' => Student::whereHas('child', function($q) {
                 $q->where('payment_completed', true);
             })->count(),
-            'paid' => Student::whereHas('child', function($q) {
+            'total_below_18' => Student::whereHas('child', function($q) {
                 $q->where('payment_completed', true);
-            })->where('status_bayaran', '>=', 12)->count(),
-            'pending' => Student::whereHas('child', function($q) {
+            })->where('kategori', 'kanak-kanak')->count(),
+            'total_above_18' => Student::whereHas('child', function($q) {
                 $q->where('payment_completed', true);
-            })->where('status_bayaran', '<', 12)->count(),
+            })->where('kategori', 'dewasa')->count(),
         ];
         
         $trainingCenters = \App\Models\TrainingCenter::all();
@@ -115,11 +133,19 @@ class StudentController extends Controller
      */
     public function show(Student $student)
     {
-        $student->load(['payments', 'child']);
+        $student->load([
+            'payments', 
+            'child.monthlyPayments' => function($q) {
+                 $q->where('year', now()->year)->orderBy('month');
+            }, 
+            'child.parent', 
+            'child.trainingCenter'
+        ]);
         $student->append('total_payment');
         
         return Inertia::render('Students/Show', [
             'student' => $student,
+            'currentYear' => now()->year,
         ]);
     }
 
@@ -128,10 +154,18 @@ class StudentController extends Controller
      */
     public function edit(Student $student)
     {
-        // Load payments relationship
-        $student->load('payments');
+        // Load payments relationship and child details
+        $student->load([
+            'payments',
+            'child.monthlyPayments' => function($q) {
+                $q->where('year', now()->year)->orderBy('month');
+            }
+        ]);
+
         return Inertia::render('Students/Edit', [
-            'student' => $student
+            'student' => $student,
+            'trainingCenters' => \App\Models\TrainingCenter::active()->orderBy('name')->get(),
+            'currentYear' => now()->year
         ]);
     }
 
@@ -141,36 +175,67 @@ class StudentController extends Controller
     public function update(Request $request, Student $student)
     {
         $validated = $request->validate([
+            // Student specific (some overlap with child)
             'nama_pelajar' => 'required|string|max:255',
             'nama_penjaga' => 'required|string|max:255',
             'alamat' => 'required|string',
             'no_tel' => 'required|string|max:20',
             'kategori' => 'required|in:kanak-kanak,dewasa',
-            'status_bayaran' => 'required|integer|min:0|max:12',
-            'payment_details' => 'nullable|array',
-            'payment_details.*.month' => 'required|string',
-            'payment_details.*.kategori' => 'required|in:kanak-kanak,dewasa',
-            'payment_details.*.quantity' => 'required|integer|min:0',
-            'payment_details.*.amount' => 'required|numeric|min:0',
-            'payment_details.*.total' => 'required|numeric|min:0',
+            
+            // Child profile fields
+            'training_center_id' => 'nullable|exists:training_centers,id',
+            'ic_number' => 'nullable|string|max:12',
+            'belt_level' => 'nullable|string',
+            'tm_number' => 'nullable|string|max:50',
+            'guardian_occupation' => 'nullable|string|max:255',
+            'guardian_ic_number' => 'nullable|string|max:20',
+            'guardian_age' => 'nullable|integer',
+            'guardian_phone' => 'nullable|string|max:20',
+            'postcode' => 'nullable|string|max:10',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'phone_number' => 'nullable|string|max:20',
+            'school_name' => 'nullable|string|max:255',
+            'school_class' => 'nullable|string|max:50',
+            'date_of_birth' => 'nullable|date',
+            'age' => 'nullable|integer',
         ]);
 
-        $validated['tarikh_kemaskini'] = now();
+        $student->update([
+            'nama_pelajar' => $validated['nama_pelajar'],
+            'nama_penjaga' => $validated['nama_penjaga'],
+            'alamat' => $validated['alamat'],
+            'no_tel' => $validated['no_tel'],
+            'kategori' => $validated['kategori'],
+            'tarikh_kemaskini' => now(),
+        ]);
 
-        $student->update($validated);
-
-        // Update payment details
-        if ($request->has('payment_details')) {
-            // Delete existing payments and recreate (simplest approach for full update)
-            $student->payments()->delete();
-            
-            foreach ($request->payment_details as $detail) {
-                $student->payments()->create($detail);
-            }
+        // Update linked child if exists
+        if ($student->child) {
+            $student->child->update([
+                'training_center_id' => $validated['training_center_id'],
+                'name' => $validated['nama_pelajar'],
+                'ic_number' => $validated['ic_number'],
+                'belt_level' => $validated['belt_level'],
+                'tm_number' => $validated['tm_number'],
+                'guardian_name' => $validated['nama_penjaga'],
+                'guardian_occupation' => $validated['guardian_occupation'],
+                'guardian_ic_number' => $validated['guardian_ic_number'],
+                'guardian_age' => $validated['guardian_age'],
+                'guardian_phone' => $validated['guardian_phone'],
+                'address' => $validated['alamat'],
+                'postcode' => $validated['postcode'],
+                'city' => $validated['city'],
+                'state' => $validated['state'],
+                'phone_number' => $validated['phone_number'],
+                'school_name' => $validated['school_name'],
+                'school_class' => $validated['school_class'],
+                'date_of_birth' => $validated['date_of_birth'],
+            ]);
         }
 
         return redirect()->route('students.index')
-            ->with('success', 'Student record updated successfully.');
+            ->with('success', 'Rekod pelajar berjaya dikemaskini.');
     }
 
     /**
@@ -253,24 +318,42 @@ class StudentController extends Controller
      */
     public function exportPDF(Student $student)
     {
-        // Refresh the student data from the database and load payments
+        // Refresh the student data and eager load child, payments, and monthly payments
         $student->refresh();
-        $student->load('payments');
+        $student->load(['payments', 'child.monthlyPayments' => function($q) {
+            $q->where('year', now()->year)->orderBy('month');
+        }, 'child.trainingCenter', 'child.parent']);
         
-        $year = 2025;
+        $year = now()->year;
         $months = [
             'JANUARI', 'FEBRUARI', 'MAC', 'APRIL', 'MEI', 'JUN',
             'JULAI', 'OGOS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DISEMBER'
         ];
 
-        // Calculate payment data for each month from saved payments
-        $paymentData = [];
-        $payments = $student->payments->keyBy('month');
+        // Prepare monthly payment schedule data
+        $monthlyPayments = [];
+        if ($student->child) {
+            $payments = $student->child->monthlyPayments->keyBy('month');
+            for ($m = 1; $m <= 12; $m++) {
+                $payment = $payments->get($m);
+                $monthlyPayments[] = [
+                    'month' => $months[$m-1] . ' ' . $year,
+                    'status' => $payment && $payment->is_paid ? 'SUDAH DIBAYAR' : 'TERTUNGGAK',
+                    'date' => $payment && $payment->paid_date ? $payment->paid_date->format('d/m/Y') : '-',
+                    'receipt' => $payment && $payment->receipt_number ? $payment->receipt_number : '-',
+                    'is_paid' => $payment && $payment->is_paid,
+                    'amount' => $student->monthly_fee
+                ];
+            }
+        }
 
+        // Keep existing paymentData for backward compatibility if needed, 
+        // but we'll prioritize monthlyPayments in the new PDF view
+        $paymentData = [];
+        $manualPayments = $student->payments->keyBy('month');
         foreach ($months as $monthName) {
             $fullMonthName = $monthName . ' ' . $year;
-            $payment = $payments->get($fullMonthName);
-            
+            $payment = $manualPayments->get($fullMonthName);
             if ($payment) {
                 $paymentData[] = [
                     'month' => $fullMonthName,
@@ -280,25 +363,13 @@ class StudentController extends Controller
                     'total' => $payment->total,
                     'kategori' => $payment->kategori
                 ];
-            } else {
-                // Fallback if no payment record exists
-                $paymentData[] = [
-                    'month' => $fullMonthName,
-                    'paid' => false,
-                    'amount' => $student->monthly_fee,
-                    'quantity' => 0,
-                    'total' => 0,
-                    'kategori' => $student->kategori
-                ];
             }
         }
 
-        $pdf = Pdf::loadView('students.summary-pdf', compact('student', 'year', 'months', 'paymentData'));
-        
-        // Set paper size to A4
+        $pdf = Pdf::loadView('students.summary-pdf', compact('student', 'year', 'months', 'paymentData', 'monthlyPayments'));
         $pdf->setPaper('A4', 'portrait');
 
-        $filename = 'RingkasanPembayaran-' . str_replace(' ', '-', $student->nama_pelajar) . '-' . $year . '.pdf';
+        $filename = 'Ringkasan-Pelajar-' . str_replace(' ', '-', $student->nama_pelajar) . '-' . $year . '.pdf';
 
         return $pdf->download($filename);
     }
