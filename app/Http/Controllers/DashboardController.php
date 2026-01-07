@@ -44,7 +44,7 @@ class DashboardController extends Controller
 
         // Actual Monthly Revenue
         $monthlyRevenue = \App\Models\StudentPayment::where('month', $currentMonthName)
-            ->where('year', $currentYear)
+            ->whereYear('payment_date', $currentYear)
             ->where('status', 'paid')
             ->sum('total');
 
