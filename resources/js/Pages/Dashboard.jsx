@@ -340,18 +340,63 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Financial Performance Card */}
-                                <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 p-6 rounded-3xl shadow-2xl relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                                    <h4 className="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2 relative z-10">Kutipan Yuran ({stats.current_month})</h4>
-                                    <div className="mt-4 relative z-10">
-                                        <span className="text-xs font-bold text-zinc-400 mr-1">RM</span>
-                                        <span className="text-4xl font-black text-white">
-                                            {new Intl.NumberFormat('ms-MY', { minimumFractionDigits: 0 }).format(stats.monthly_revenue)}
-                                        </span>
+                            {/* Financial Performance Section */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-black text-zinc-900 border-l-4 border-zinc-900 pl-3">Analisis Kewangan</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {/* Monthly Collection (Current Month) */}
+                                    <div className="bg-white p-6 rounded-3xl shadow-xl border border-zinc-100 relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                                        <h4 className="text-zinc-400 text-[10px] font-black uppercase tracking-widest mb-2 relative z-10">Yuran Bulanan ({stats.current_month})</h4>
+                                        <div className="flex items-baseline gap-1 mt-4 relative z-10">
+                                            <span className="text-xs font-bold text-zinc-400">RM</span>
+                                            <span className="text-3xl font-black text-zinc-900">
+                                                {new Intl.NumberFormat('ms-MY', { minimumFractionDigits: 0 }).format(stats.monthly_revenue)}
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-zinc-400 mt-4 font-medium relative z-10">Kutipan untuk bulan semasa</p>
                                     </div>
-                                    <p className="text-[10px] text-emerald-400 font-bold mt-4 uppercase tracking-widest relative z-10">Prestasi Positif</p>
+
+                                    {/* Annual Fee Collection (Yearly/Reg) */}
+                                    <div className="bg-white p-6 rounded-3xl shadow-xl border border-zinc-100 relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-violet-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                                        <h4 className="text-zinc-400 text-[10px] font-black uppercase tracking-widest mb-2 relative z-10">Yuran Pendaftaran (Tahunan)</h4>
+                                        <div className="flex items-baseline gap-1 mt-4 relative z-10">
+                                            <span className="text-xs font-bold text-zinc-400">RM</span>
+                                            <span className="text-3xl font-black text-zinc-900">
+                                                {new Intl.NumberFormat('ms-MY', { minimumFractionDigits: 0 }).format(stats.annual_fees)}
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-zinc-400 mt-4 font-medium relative z-10">Terkumpul dari pendaftaran baru</p>
+                                    </div>
+
+                                    {/* Total Monthly Year-to-Date */}
+                                    <div className="bg-white p-6 rounded-3xl shadow-xl border border-zinc-100 relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                                        <h4 className="text-zinc-400 text-[10px] font-black uppercase tracking-widest mb-2 relative z-10">Yuran Bulanan (Terkumpul)</h4>
+                                        <div className="flex items-baseline gap-1 mt-4 relative z-10">
+                                            <span className="text-xs font-bold text-zinc-400">RM</span>
+                                            <span className="text-3xl font-black text-emerald-600">
+                                                {new Intl.NumberFormat('ms-MY', { minimumFractionDigits: 0 }).format(stats.yearly_monthly_fees)}
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-zinc-400 mt-4 font-medium relative z-10">Jumlah kutipan bulanan tahun {new Date().getFullYear()}</p>
+                                    </div>
+
+                                    {/* Grand Total Revenue */}
+                                    <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 p-6 rounded-3xl shadow-2xl relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                                        <h4 className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-2 relative z-10">Jumlah Keseluruhan (Tahun Ini)</h4>
+                                        <div className="mt-4 relative z-10 flex items-baseline gap-1">
+                                            <span className="text-xs font-bold text-zinc-400">RM</span>
+                                            <span className="text-4xl font-black text-white">
+                                                {new Intl.NumberFormat('ms-MY', { minimumFractionDigits: 0 }).format(stats.total_revenue)}
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-emerald-400 font-bold mt-4 uppercase tracking-widest relative z-10 group-hover:animate-pulse">Prestasi Cemerlang</p>
+                                    </div>
                                 </div>
                             </div>
 

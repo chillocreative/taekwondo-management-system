@@ -42,11 +42,23 @@ class DashboardController extends Controller
         // Pending registrations (approvals/payments)
         $pendingApprovals = Child::where('payment_completed', false)->count();
 
-        // Actual Monthly Revenue
-        $monthlyRevenue = \App\Models\StudentPayment::where('month', $currentMonthName)
+        // 1. Monthly Revenue (Current Month)
+        $currentMonthRevenue = \App\Models\StudentPayment::where('month', $currentMonthName)
             ->whereYear('payment_date', $currentYear)
             ->where('status', 'paid')
             ->sum('total');
+
+        // 2. Annual/Registration Fees (Total)
+        $annualFees = \App\Models\Child::where('payment_completed', true)
+            ->sum('registration_fee');
+
+        // 3. Total Monthly Fees (Year-to-Date)
+        $yearlyMonthlyFees = \App\Models\StudentPayment::whereYear('payment_date', $currentYear)
+            ->where('status', 'paid')
+            ->sum('total');
+
+        // 4. Total Overall Collection
+        $totalOverallCollection = $annualFees + \App\Models\StudentPayment::where('status', 'paid')->sum('total');
 
         return Inertia::render('Dashboard', [
             'studentCount' => $totalStudents,
@@ -56,7 +68,10 @@ class DashboardController extends Controller
                 'total_coaches' => $totalCoaches,
                 'total_parents' => $totalParents,
                 'pending_approvals' => $pendingApprovals,
-                'monthly_revenue' => $monthlyRevenue,
+                'monthly_revenue' => $currentMonthRevenue,
+                'annual_fees' => $annualFees,
+                'yearly_monthly_fees' => $yearlyMonthlyFees,
+                'total_revenue' => $totalOverallCollection,
                 'current_month' => $currentMonthName,
             ]
         ]);
