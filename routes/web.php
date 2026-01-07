@@ -89,6 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Admin - Payment Management
     Route::get('/admin/payments', [App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('admin.payments.index');
+    Route::post('/admin/payments/bulk-destroy', [App\Http\Controllers\Admin\PaymentController::class, 'bulkDestroy'])->name('admin.payments.bulk-destroy');
     
     // Admin - User Management
     Route::get('/admin/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index');

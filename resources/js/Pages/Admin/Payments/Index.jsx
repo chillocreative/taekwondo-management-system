@@ -5,6 +5,40 @@ import { useState, useEffect } from 'react';
 export default function AdminPaymentsIndex({ auth, payments, filters, trainingCenters }) {
     const [search, setSearch] = useState(filters.search || '');
     const [tcId, setTcId] = useState(filters.training_center_id || '');
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Master checkbox logic
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            setSelectedIds(payments.data.map(p => p.id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    const handleSelectOne = (id) => {
+        if (selectedIds.includes(id)) {
+            setSelectedIds(selectedIds.filter(i => i !== id));
+        } else {
+            setSelectedIds([...selectedIds, id]);
+        }
+    };
+
+    const handleBulkDelete = () => {
+        if (!confirm(`Adakah anda pasti untuk memadam ${selectedIds.length} rekod pembayaran ini?`)) return;
+
+        setIsDeleting(true);
+        router.post(route('admin.payments.bulk-destroy'), {
+            ids: selectedIds
+        }, {
+            onSuccess: () => {
+                setSelectedIds([]);
+                setIsDeleting(false);
+            },
+            onFinish: () => setIsDeleting(false)
+        });
+    };
 
     // Consolidated auto-filter logic
     useEffect(() => {
@@ -32,9 +66,11 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                     {/* Header */}
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Senarai Pembayaran</h1>
-                        <p className="text-gray-500 mt-1">Urus semua transaksi pembayaran yuran.</p>
+                    <div className="mb-8 flex justify-between items-end">
+                        <div>
+                            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Senarai Pembayaran</h1>
+                            <p className="text-gray-500 mt-1">Urus semua transaksi pembayaran yuran.</p>
+                        </div>
                     </div>
 
                     {/* Search & Filters */}
@@ -67,12 +103,37 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                         </div>
                     </div>
 
+                    {/* Bulk Actions */}
+                    {selectedIds.length > 0 && auth.user.role === 'admin' && (
+                        <div className="mb-4 flex items-center gap-4 bg-red-50 p-4 rounded-xl border border-red-100 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <span className="text-sm font-bold text-red-700">{selectedIds.length} rekod dipilih</span>
+                            <button
+                                onClick={handleBulkDelete}
+                                disabled={isDeleting}
+                                className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition-colors shadow-sm flex items-center gap-2"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
+                                {isDeleting ? 'Memadam...' : 'Hapus Pilihan'}
+                            </button>
+                        </div>
+                    )}
+
                     {/* Table */}
                     <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
+                                        {auth.user.role === 'admin' && (
+                                            <th className="px-6 py-4 w-10">
+                                                <input
+                                                    type="checkbox"
+                                                    onChange={handleSelectAll}
+                                                    checked={selectedIds.length === payments.data.length && payments.data.length > 0}
+                                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                />
+                                            </th>
+                                        )}
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Tarikh</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">No. Resit</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Peserta</th>
@@ -85,7 +146,17 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                 <tbody className="bg-white divide-y divide-gray-100">
                                     {payments.data.length > 0 ? (
                                         payments.data.map((payment) => (
-                                            <tr key={payment.id} className="hover:bg-blue-50/50 transition duration-150">
+                                            <tr key={payment.id} className={`hover:bg-blue-50/50 transition duration-150 ${selectedIds.includes(payment.id) ? 'bg-blue-50' : ''}`}>
+                                                {auth.user.role === 'admin' && (
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedIds.includes(payment.id)}
+                                                            onChange={() => handleSelectOne(payment.id)}
+                                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                        />
+                                                    </td>
+                                                )}
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                     {new Date(payment.payment_date || payment.created_at).toLocaleDateString('ms-MY')}
                                                 </td>

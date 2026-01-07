@@ -51,4 +51,20 @@ class PaymentController extends Controller
             'trainingCenters' => TrainingCenter::all(['id', 'name']),
         ]);
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        if (auth()->user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:student_payments,id',
+        ]);
+
+        StudentPayment::whereIn('id', $request->ids)->delete();
+
+        return back()->with('success', count($request->ids) . ' rekod pembayaran berjaya dipadam.');
+    }
 }
