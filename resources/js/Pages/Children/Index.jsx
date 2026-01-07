@@ -6,17 +6,34 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
     const { flash } = usePage().props;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChild, setEditingChild] = useState(null);
-    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [popupState, setPopupState] = useState({ show: false, type: 'success', message: '' });
 
     useEffect(() => {
-        if (flash?.success) {
-            setShowSuccessPopup(true);
+        if (flash?.payment_success) {
+            setPopupState({ show: true, type: 'success', message: flash.payment_success });
+        } else if (flash?.payment_error) {
+            setPopupState({ show: true, type: 'error', message: flash.payment_error });
+        }
+
+        if (flash?.payment_success || flash?.payment_error) {
             const timer = setTimeout(() => {
-                setShowSuccessPopup(false);
+                setPopupState(prev => ({ ...prev, show: false }));
             }, 3000);
             return () => clearTimeout(timer);
         }
     }, [flash]);
+
+    const isPaymentValidForCurrentYear = (child) => {
+        if (!child.payment_completed) return false;
+        // If payment_completed is true but date is missing, assume valid (legacy data) or invalid? 
+        // Best to check date if available, otherwise fallback to completed status.
+        if (!child.payment_date) return child.payment_completed;
+
+        const paymentYear = new Date(child.payment_date).getFullYear();
+        const currentYear = new Date().getFullYear();
+
+        return paymentYear === currentYear;
+    };
 
     const states = [
         "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan",
@@ -356,7 +373,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                         >
                                                             Edit
                                                         </button>
-                                                        {!child.payment_completed && (
+                                                        {!isPaymentValidForCurrentYear(child) && (
                                                             <button
                                                                 onClick={() => handlePayment(child.id)}
                                                                 className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -843,12 +860,12 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                     </div>
                 </div>
             )}
-            {/* Success Popup */}
-            {showSuccessPopup && (
+            {/* Notification Popup */}
+            {popupState.show && (
                 <div className="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none px-4">
-                    <div className="bg-white rounded-xl shadow-2xl border border-emerald-100 p-6 max-w-sm w-full transform transition-all duration-300 pointer-events-auto relative animate-fade-in-up">
+                    <div className={`bg-white rounded-xl shadow-2xl border ${popupState.type === 'success' ? 'border-emerald-100' : 'border-red-100'} p-6 max-w-sm w-full transform transition-all duration-300 pointer-events-auto relative animate-fade-in-up`}>
                         <button
-                            onClick={() => setShowSuccessPopup(false)}
+                            onClick={() => setPopupState(prev => ({ ...prev, show: false }))}
                             className="absolute top-2 right-2 text-zinc-400 hover:text-zinc-600 p-1 rounded-full hover:bg-zinc-100 transition-colors"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -856,13 +873,21 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                             </svg>
                         </button>
                         <div className="flex flex-col items-center text-center">
-                            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
-                                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                </svg>
+                            <div className={`w-16 h-16 ${popupState.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'} rounded-full flex items-center justify-center mb-4`}>
+                                {popupState.type === 'success' ? (
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                )}
                             </div>
-                            <h3 className="text-xl font-bold text-zinc-900 mb-2">Pembayaran Berjaya!</h3>
-                            <p className="text-zinc-600">{flash.success}</p>
+                            <h3 className="text-xl font-bold text-zinc-900 mb-2">
+                                {popupState.type === 'success' ? 'Pembayaran Berjaya!' : 'Pembayaran Gagal!'}
+                            </h3>
+                            <p className="text-zinc-600">{popupState.message}</p>
                         </div>
                     </div>
                 </div>

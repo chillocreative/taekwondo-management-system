@@ -408,11 +408,11 @@ class ChildController extends Controller
                 $studentService->syncChildToStudent($child);
 
                 return redirect()->route('children.index')
-                    ->with('success', 'Pembayaran berjaya! Peserta telah diaktifkan.');
+                    ->with('payment_success', 'Pembayaran berjaya! Peserta telah diaktifkan.');
             }
         }
 
         return redirect()->route('children.index')
-            ->with('error', 'Pembayaran gagal atau belum selesai.');
+            ->with('payment_error', 'Pembayaran gagal atau belum selesai.');
     }
 }
