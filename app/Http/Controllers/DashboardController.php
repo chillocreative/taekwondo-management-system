@@ -42,23 +42,43 @@ class DashboardController extends Controller
         // Pending registrations (approvals/payments)
         $pendingApprovals = Child::where('payment_completed', false)->count();
 
-        // 1. Monthly Revenue (Current Month)
-        $currentMonthRevenue = \App\Models\StudentPayment::where('month', $currentMonthName)
-            ->whereYear('payment_date', $currentYear)
+        $currentMonthYear = Carbon::now()->translatedFormat('F Y');
+        $currentMonthNumeric = Carbon::now()->month;
+
+        // 1. Monthly Revenue (Current Month Monthly Portion Only)
+        // Total from StudentPayment for this month
+        $thisMonthTotal = \App\Models\StudentPayment::where('month', $currentMonthYear)
             ->where('status', 'paid')
             ->sum('total');
+        
+        // Registration fees collected this month
+        $regFeesThisMonth = \App\Models\Child::where('payment_completed', true)
+            ->whereYear('payment_date', $currentYear)
+            ->whereMonth('payment_date', $currentMonthNumeric)
+            ->sum('registration_fee');
+        
+        $currentMonthRevenue = max(0, $thisMonthTotal - $regFeesThisMonth);
 
-        // 2. Annual/Registration Fees (Total)
+        // 2. Annual/Registration Fees (Total Year-to-Date)
         $annualFees = \App\Models\Child::where('payment_completed', true)
+            ->whereYear('payment_date', $currentYear)
             ->sum('registration_fee');
 
-        // 3. Total Monthly Fees (Year-to-Date)
-        $yearlyMonthlyFees = \App\Models\StudentPayment::whereYear('payment_date', $currentYear)
+        // 3. Total Monthly Fees Only (Year-to-Date)
+        $allTimeStudentPaymentsTotal = \App\Models\StudentPayment::whereYear('payment_date', $currentYear)
             ->where('status', 'paid')
             ->sum('total');
+        
+        $allTimeRegFeesInPayments = \App\Models\Child::where('payment_completed', true)
+            ->whereYear('payment_date', $currentYear)
+            // Only count registration fees if they actually have a StudentPayment record to avoid over-deducting
+            ->whereHas('student.payments') 
+            ->sum('registration_fee');
 
-        // 4. Total Overall Collection
-        $totalOverallCollection = $annualFees + \App\Models\StudentPayment::where('status', 'paid')->sum('total');
+        $yearlyMonthlyFees = max(0, $allTimeStudentPaymentsTotal - $allTimeRegFeesInPayments);
+
+        // 4. Total Overall Collection (No double counting)
+        $totalOverallCollection = $annualFees + $yearlyMonthlyFees;
 
         // 5. Top 5 Students by Attendance Percentage (Current Year)
         $topStudents = Student::withCount([
