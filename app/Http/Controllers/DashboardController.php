@@ -117,9 +117,8 @@ class DashboardController extends Controller
         $centerId = $user->training_center_id;
 
         // Scopes for reuse - only show paid & active students
-        $studentsQuery = Student::whereHas('child', function($q) use ($centerId) {
-            $q->where('training_center_id', $centerId)
-              ->where('payment_completed', true)
+        $studentsQuery = Student::whereHas('child', function($q) {
+            $q->where('payment_completed', true)
               ->where('is_active', true);
         });
 
@@ -128,23 +127,20 @@ class DashboardController extends Controller
         $newStudentsMonth = (clone $studentsQuery)->whereMonth('students.created_at', Carbon::now()->month)->count();
 
         // 2. Attendance Stats
-        $todayAttendance = Attendance::where('attendance_date', Carbon::today()->toDateString())
-            ->where('training_center_id', $centerId);
+        $todayAttendance = Attendance::where('attendance_date', Carbon::today()->toDateString());
         
         $presentToday = (clone $todayAttendance)->where('status', 'hadir')->count();
         $totalToday = (clone $todayAttendance)->count();
 
         // Monthly Attendance Rate (Sessions Held)
-        $monthlySessions = Attendance::where('training_center_id', $centerId)
-            ->whereYear('attendance_date', $currentYear)
+        $monthlySessions = Attendance::whereYear('attendance_date', $currentYear)
             ->whereMonth('attendance_date', Carbon::now()->month)
-            ->distinct('attendance_date')
+            ->distinct('attendance_date', 'training_center_id')
             ->count();
 
         // 3. Finance Stats - Using MonthlyPayment for more accuracy per month
-        $baseMonthlyPaymentQuery = \App\Models\MonthlyPayment::whereHas('child', function($q) use ($centerId) {
-                $q->where('training_center_id', $centerId)
-                  ->where('payment_completed', true)
+        $baseMonthlyPaymentQuery = \App\Models\MonthlyPayment::whereHas('child', function($q) {
+                $q->where('payment_completed', true)
                   ->where('is_active', true);
             })
             ->where('year', $currentYear)

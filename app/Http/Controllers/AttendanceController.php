@@ -139,11 +139,6 @@ class AttendanceController extends Controller
             ->groupBy('attendance_date', 'training_center_id')
             ->orderBy('attendance_date', 'desc');
 
-        // Filter by Training Center if Coach has one
-        if ($user->role === 'coach' && $user->training_center_id) {
-            $query->where('training_center_id', $user->training_center_id);
-        }
-
         // Filter by Training Center (from request)
         if ($request->filled('training_center_id')) {
             $query->where('training_center_id', $request->training_center_id);
@@ -181,8 +176,6 @@ class AttendanceController extends Controller
         $baseStatsQuery = Attendance::query();
         if ($tcId) {
             $baseStatsQuery->where('training_center_id', $tcId);
-        } elseif ($user->role === 'coach' && $user->training_center_id) {
-            $baseStatsQuery->where('training_center_id', $user->training_center_id);
         }
 
         $monthlySessionsQuery = (clone $baseStatsQuery)

@@ -23,12 +23,8 @@ class AttendanceController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        // If coach has a specific center, use it
-        if ($user->role === 'coach' && $user->training_center_id) {
-            $trainingCenters = TrainingCenter::where('id', $user->training_center_id)->get();
-        } else {
-            $trainingCenters = TrainingCenter::all();
-        }
+        // Fetch ALL training centers for the coach to choose from
+        $trainingCenters = TrainingCenter::all();
 
         return Inertia::render('Coach/Attendance/Select', [
             'trainingCenters' => $trainingCenters,
