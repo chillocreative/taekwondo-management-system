@@ -205,6 +205,13 @@ class ChildController extends Controller
                 ->with('error', 'Peserta ini sudah membuat pembayaran.');
         }
 
+        // Check if ToyyibPay is configured
+        $paymentSettings = \App\Models\PaymentSetting::getActive();
+        if (!$paymentSettings || !$paymentSettings->secret_key || !$paymentSettings->category_code) {
+            return redirect()->route('children.payment', $child->id)
+                ->with('error', 'Sistem pembayaran belum dikonfigurasi. Sila hubungi pentadbir.');
+        }
+
         // Calculate fees based on age
         $feeSettings = \App\Models\FeeSetting::current();
         
@@ -243,8 +250,8 @@ class ChildController extends Controller
             'billCallbackUrl' => route('children.payment.callback.post'),
             'billExternalReferenceNo' => 'CHILD-' . $child->id . '-' . time(),
             'billTo' => Auth::user()->name,
-            'billEmail' => Auth::user()->email,
-            'billPhone' => Auth::user()->phone ?? '',
+            'billEmail' => Auth::user()->email ?? '',
+            'billPhone' => Auth::user()->phone_number ?? '',
         ];
 
         $result = $toyyibPay->createBill($billData);
@@ -266,8 +273,14 @@ class ChildController extends Controller
             'billData' => $billData
         ]);
 
-        return redirect()->route('children.index')
-            ->with(['error' => 'Gagal memulakan pembayaran: ' . ($result['message'] ?? 'Ralat tidak diketahui')]);
+        // Redirect back to payment page with error message
+        $errorMessage = $result['message'] ?? 'Ralat tidak diketahui';
+        if (isset($result['response'])) {
+            $errorMessage .= ' - ' . json_encode($result['response']);
+        }
+
+        return redirect()->route('children.payment', $child->id)
+            ->with('error', 'Gagal memulakan pembayaran: ' . $errorMessage);
     }
 
     /**

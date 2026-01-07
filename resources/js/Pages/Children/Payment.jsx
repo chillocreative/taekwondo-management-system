@@ -1,7 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 export default function Payment({ auth, child, yearlyFee, monthlyFee, totalAmount, currentMonth, ageCategory }) {
+    const { flash } = usePage().props;
+
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('ms-MY', {
             style: 'currency',
@@ -37,6 +39,19 @@ export default function Payment({ auth, child, yearlyFee, monthlyFee, totalAmoun
 
             <div className="py-6 sm:py-12 bg-zinc-50 min-h-screen">
                 <div className="mx-auto max-w-2xl px-4 sm:px-6">
+                    {/* Error Message */}
+                    {flash?.error && (
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+                            <div className="flex items-start gap-3">
+                                <span className="text-xl">❌</span>
+                                <div>
+                                    <p className="font-medium text-red-800">Ralat Pembayaran</p>
+                                    <p className="text-sm text-red-700 mt-1">{flash.error}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Participant Info Card */}
                     <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden mb-6">
                         <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
