@@ -1,22 +1,41 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-export default function Index({ auth, students, filters, stats }) {
+export default function Index({ auth, students, filters, stats, trainingCenters }) {
     const [search, setSearch] = useState(filters.search || '');
     const [kategori, setKategori] = useState(filters.kategori || '');
+    const [trainingCenterId, setTrainingCenterId] = useState(filters.training_center_id || '');
+    const isFirstRender = useRef(true);
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        router.get(route('coach.students.index'), { search, kategori }, { preserveState: true });
-    };
+    // Auto-filter effect
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            router.get(route('coach.students.index'), {
+                search,
+                kategori,
+                training_center_id: trainingCenterId
+            }, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true
+            });
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [search, kategori, trainingCenterId]);
 
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-bold text-2xl text-gray-800 leading-tight">Senarai Peserta</h2>}
+            header={<h2 className="font-bold text-2xl text-gray-800 leading-tight">Pengurusan Peserta</h2>}
         >
-            <Head title="Senarai Peserta" />
+            <Head title="Pengurusan Pelajar" />
 
             <div className="py-12 bg-gray-50 min-h-screen">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -43,25 +62,25 @@ export default function Index({ auth, students, filters, stats }) {
                                 </div>
                             </div>
 
-                            {/* Paid Students */}
+                            {/* Under 18 */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
                                 <div className="p-4 bg-green-50 rounded-xl text-green-600">
-                                    <span className="text-3xl">✅</span>
+                                    <span className="text-3xl">👶</span>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">Selesai Bayaran (12 Bulan)</p>
-                                    <p className="text-2xl font-bold text-gray-900">{stats.paid}</p>
+                                    <p className="text-sm font-medium text-gray-500">Peserta 18 Tahun Bawah</p>
+                                    <p className="text-2xl font-bold text-gray-900">{stats.total_below_18}</p>
                                 </div>
                             </div>
 
-                            {/* Pending Payments */}
+                            {/* Above 18 */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
                                 <div className="p-4 bg-amber-50 rounded-xl text-amber-600">
-                                    <span className="text-3xl">⏳</span>
+                                    <span className="text-3xl">🧑</span>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">Bayaran Tertunggak</p>
-                                    <p className="text-2xl font-bold text-gray-900">{stats.pending}</p>
+                                    <p className="text-sm font-medium text-gray-500">Peserta 18 Tahun Atas</p>
+                                    <p className="text-2xl font-bold text-gray-900">{stats.total_above_18}</p>
                                 </div>
                             </div>
                         </div>
@@ -69,7 +88,7 @@ export default function Index({ auth, students, filters, stats }) {
 
                     {/* Search and Filter Card */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-                        <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                             <div className="md:col-span-5">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Carian</label>
                                 <div className="relative">
@@ -86,6 +105,21 @@ export default function Index({ auth, students, filters, stats }) {
                                 </div>
                             </div>
                             <div className="md:col-span-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Pusat Latihan</label>
+                                <select
+                                    value={trainingCenterId}
+                                    onChange={(e) => setTrainingCenterId(e.target.value)}
+                                    className="block w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition duration-200"
+                                >
+                                    <option value="">Semua Pusat</option>
+                                    {trainingCenters && trainingCenters.map((center) => (
+                                        <option key={center.id} value={center.id}>
+                                            {center.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="md:col-span-3">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
                                 <select
                                     value={kategori}
@@ -93,19 +127,11 @@ export default function Index({ auth, students, filters, stats }) {
                                     className="block w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition duration-200"
                                 >
                                     <option value="">Semua Kategori</option>
-                                    <option value="kanak-kanak">Kanak-kanak</option>
-                                    <option value="dewasa">Dewasa</option>
+                                    <option value="kanak-kanak">Bawah 18 Tahun</option>
+                                    <option value="dewasa">18 Tahun ke atas</option>
                                 </select>
                             </div>
-                            <div className="md:col-span-3">
-                                <button
-                                    type="submit"
-                                    className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-2.5 px-4 rounded-xl transition duration-200 shadow-md"
-                                >
-                                    Tapis Hasil
-                                </button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
 
                     {/* Students Table Card */}
@@ -127,46 +153,47 @@ export default function Index({ auth, students, filters, stats }) {
                                         students.data.map((student) => (
                                             <tr key={student.id} className="hover:bg-blue-50/50 transition duration-150 group">
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <Link
-                                                        href={route('coach.students.show', student.id)}
-                                                        className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline"
-                                                    >
+                                                    <Link href={route('coach.students.show', student.id)} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">
                                                         {student.no_siri}
                                                     </Link>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-gray-900">{student.nama_pelajar}</div>
+                                                    <div className="text-sm font-medium text-gray-900">{student.child?.name || student.nama_pelajar}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-500">{student.nama_penjaga}</div>
+                                                    <div className="text-sm text-gray-500">{student.child?.parent?.name || student.nama_penjaga}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${student.kategori === 'kanak-kanak'
                                                         ? 'bg-green-100 text-green-800 border border-green-200'
                                                         : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
                                                         }`}>
-                                                        {student.kategori === 'kanak-kanak' ? 'Kanak-kanak' : 'Dewasa'}
+                                                        {student.kategori === 'kanak-kanak' ? 'Bawah 18 Tahun' : '18 Tahun ke atas'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center">
-                                                        <div className={`h-2.5 w-2.5 rounded-full mr-2 ${student.status_bayaran >= 12 ? 'bg-green-500' :
-                                                            student.status_bayaran >= 6 ? 'bg-yellow-500' :
-                                                                'bg-red-500'
-                                                            }`}></div>
-                                                        <span className="text-sm font-medium text-gray-700">
-                                                            {student.status_bayaran}/12 bulan
-                                                        </span>
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex items-center">
+                                                            <div className={`h-2.5 w-2.5 rounded-full mr-2 ${student.status_bayaran >= 12 ? 'bg-green-500' :
+                                                                student.status_bayaran >= 6 ? 'bg-yellow-500' :
+                                                                    'bg-red-500'
+                                                                }`}></div>
+                                                            <span className="text-sm font-medium text-gray-700">
+                                                                {student.status_bayaran}/12 bulan
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <Link
-                                                        href={route('coach.students.show', student.id)}
-                                                        className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition inline-block"
-                                                        title="Lihat"
-                                                    >
-                                                        👁️ Lihat
-                                                    </Link>
+                                                    <div className="flex justify-end gap-2">
+                                                        <Link
+                                                            href={route('coach.students.show', student.id)}
+                                                            className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
+                                                            title="Lihat"
+                                                        >
+                                                            👁️ Lihat
+                                                        </Link>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -175,7 +202,7 @@ export default function Index({ auth, students, filters, stats }) {
                                             <td colSpan="6" className="px-6 py-12 text-center">
                                                 <div className="flex flex-col items-center justify-center text-gray-500">
                                                     <span className="text-4xl mb-3">🔍</span>
-                                                    <p className="text-lg font-medium">Tiada rekod peserta dijumpai.</p>
+                                                    <p className="text-lg font-medium">Tiada rekod pelajar dijumpai.</p>
                                                     <p className="text-sm">Cuba ubah carian atau tapis kategori anda.</p>
                                                 </div>
                                             </td>
@@ -205,7 +232,7 @@ export default function Index({ auth, students, filters, stats }) {
                         )}
                     </div>
                 </div>
-            </div>
-        </AuthenticatedLayout>
+            </div >
+        </AuthenticatedLayout >
     );
 }

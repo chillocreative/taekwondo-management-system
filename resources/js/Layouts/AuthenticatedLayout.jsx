@@ -80,16 +80,26 @@ export default function AuthenticatedLayout({ header, children }) {
 
         const coachMenu = [
             {
-                name: 'Pelajar',
-                icon: '👥',
-                route: 'coach.students.index',
-                active: route().current('coach.students.*'),
-            },
-            {
                 name: 'Kehadiran',
                 icon: '📋',
                 route: 'coach.attendance.index',
                 active: route().current('coach.attendance.*'),
+            },
+            {
+                name: 'Pengurusan',
+                icon: '👥',
+                submenu: [
+                    {
+                        name: 'Pelajar',
+                        route: 'coach.students.index',
+                        active: route().current('coach.students.*'),
+                    },
+                    {
+                        name: 'Yuran',
+                        route: 'admin.payments.index',
+                        active: route().current('admin.payments.*'),
+                    },
+                ],
             },
         ];
 

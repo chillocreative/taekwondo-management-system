@@ -20,7 +20,10 @@ class StudentController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        $query = Student::query();
+        // Eager load child, parent, and monthly payments for current year
+        $query = Student::query()->with(['child.parent', 'child.monthlyPayments' => function($q) {
+            $q->where('year', now()->year);
+        }]);
 
         // Only show students with completed payment
         $query->whereHas('child', function($q) use ($user) {
@@ -38,6 +41,13 @@ class StudentController extends Controller
             $query->search($request->search);
         }
 
+        // Apply training center filter
+        if ($request->filled('training_center_id')) {
+            $query->whereHas('child', function($q) use ($request) {
+                $q->where('training_center_id', $request->training_center_id);
+            });
+        }
+
         // Apply category filter
         if ($request->has('kategori')) {
             $query->byCategory($request->kategori);
@@ -47,6 +57,16 @@ class StudentController extends Controller
         $query->orderBy('tarikh_kemaskini', 'desc');
 
         $students = $query->paginate(10)->withQueryString();
+
+        // Calculate dynamic fields
+        $students->getCollection()->transform(function ($student) {
+            $paidCount = 0;
+            if ($student->child && $student->child->monthlyPayments) {
+                $paidCount = $student->child->monthlyPayments->where('is_paid', true)->count();
+            }
+            $student->status_bayaran = $paidCount; 
+            return $student;
+        });
 
         // Calculate statistics
         $statsQuery = Student::whereHas('child', function($q) use ($user) {
@@ -60,14 +80,15 @@ class StudentController extends Controller
 
         $stats = [
             'total' => (clone $statsQuery)->count(),
-            'paid' => (clone $statsQuery)->where('status_bayaran', '>=', 12)->count(),
-            'pending' => (clone $statsQuery)->where('status_bayaran', '<', 12)->count(),
+            'total_below_18' => (clone $statsQuery)->where('kategori', 'kanak-kanak')->count(),
+            'total_above_18' => (clone $statsQuery)->where('kategori', 'dewasa')->count(),
         ];
 
         return Inertia::render('Coach/Students/Index', [
             'students' => $students,
-            'filters' => $request->only(['search', 'kategori']),
+            'filters' => $request->only(['search', 'kategori', 'training_center_id']),
             'stats' => $stats,
+            'trainingCenters' => \App\Models\TrainingCenter::all(),
         ]);
     }
 
@@ -96,12 +117,36 @@ class StudentController extends Controller
             abort(403, 'Anda tidak mempunyai akses ke pelajar ini.');
         }
 
-        $student->load('payments');
+        $student->load([
+            'payments' => function($q) {
+                $q->where('status', 'paid');
+            }, 
+            'child.monthlyPayments' => function($q) {
+                 $q->where('year', now()->year)->orderBy('month');
+            }, 
+            'child.parent', 
+            'child.trainingCenter'
+        ]);
+
+        // Map receipt IDs to monthly payments for the frontend
+        if ($student->child && $student->child->monthlyPayments) {
+            $student->child->monthly_payments = $student->child->monthlyPayments->map(function($mp) {
+                return [
+                    'month' => $mp->month,
+                    'is_paid' => $mp->is_paid,
+                    'paid_date' => $mp->paid_date,
+                    'receipt_number' => $mp->payment?->receipt_number,
+                    'student_payment_id' => $mp->student_payment_id,
+                ];
+            });
+        }
+
         $student->append('total_payment');
         
         return Inertia::render('Coach/Students/Show', [
             'student' => $student,
-            'readOnly' => true, // Flag for frontend to disable editing
+            'currentYear' => now()->year,
+            'readOnly' => true,
         ]);
     }
 }
