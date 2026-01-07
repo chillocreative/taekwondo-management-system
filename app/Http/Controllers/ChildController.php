@@ -406,6 +406,59 @@ class ChildController extends Controller
                 // Create/Sync Student Record (Generate No. Keahlian)
                 $studentService = new \App\Services\StudentService();
                 $studentService->syncChildToStudent($child);
+                
+                // Reload child to get student relation
+                $child->refresh();
+
+                // Create StudentPayment record so it appears on admin payments page
+                if ($child->student) {
+                    $currentMonth = \Carbon\Carbon::now()->translatedFormat('F Y');
+                    
+                    // Calculate fees
+                    $feeSettings = \App\Models\FeeSetting::current();
+                    if ($child->date_of_birth) {
+                        $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+                        $monthlyFee = $feeSettings->getMonthlyFeeByDob($child->date_of_birth);
+                    } else {
+                        $yearlyFee = $feeSettings->yearly_fee_below_18;
+                        $monthlyFee = $feeSettings->monthly_fee_below_18;
+                    }
+                    $totalAmount = $yearlyFee + $monthlyFee;
+
+                    // Create payment record for registration
+                    $payment = \App\Models\StudentPayment::create([
+                        'student_id' => $child->student->id,
+                        'month' => $currentMonth,
+                        'kategori' => $child->student->kategori ?? 'kanak-kanak',
+                        'quantity' => 1,
+                        'amount' => $totalAmount,
+                        'total' => $totalAmount,
+                        'receipt_number' => 'REC-' . now()->format('ym') . '-' . str_pad($child->student->id, 4, '0', STR_PAD_LEFT),
+                        'transaction_ref' => $billCode,
+                        'payment_method' => 'online',
+                        'status' => 'paid',
+                        'payment_date' => now(),
+                    ]);
+
+                    // Update monthly payment record for current month
+                    $currentMonthNum = \Carbon\Carbon::now()->month;
+                    $currentYear = \Carbon\Carbon::now()->year;
+                    $monthlyPayment = \App\Models\MonthlyPayment::where('child_id', $child->id)
+                        ->where('month', $currentMonthNum)
+                        ->where('year', $currentYear)
+                        ->first();
+
+                    if ($monthlyPayment) {
+                        $monthlyPayment->update([
+                            'is_paid' => true,
+                            'paid_date' => now(),
+                            'payment_method' => 'online',
+                            'payment_reference' => $billCode,
+                            'receipt_number' => $payment->receipt_number,
+                            'student_payment_id' => $payment->id,
+                        ]);
+                    }
+                }
 
                 // Notify Admin
                 \App\Models\Notification::createPaymentPaidNotification($child);

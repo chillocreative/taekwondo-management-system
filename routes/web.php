@@ -150,6 +150,70 @@ Route::get('/storage-link', function () {
     }
 });
 
+// Backfill Registration Payments Route
+Route::get('/backfill-payments', function () {
+    $feeSettings = \App\Models\FeeSetting::current();
+    $paidChildren = \App\Models\Child::where('payment_completed', true)
+        ->whereNotNull('payment_date')
+        ->with('student')
+        ->get();
+
+    $output = "Starting backfill of registration payments...\n\n";
+    $created = 0;
+
+    foreach ($paidChildren as $child) {
+        if (!$child->student) {
+            $output .= "Skipping child {$child->id} ({$child->name}) - no student record\n";
+            continue;
+        }
+
+        // Check if StudentPayment already exists for this registration
+        $paymentDate = $child->payment_date instanceof \Carbon\Carbon ? $child->payment_date : \Carbon\Carbon::parse($child->payment_date);
+        $monthStr = $paymentDate->translatedFormat('F Y');
+
+        $existingPayment = \App\Models\StudentPayment::where('student_id', $child->student->id)
+            ->where('month', $monthStr)
+            ->where('status', 'paid')
+            ->first();
+
+        if ($existingPayment) {
+            $output .= "Payment already exists for {$child->name} ({$monthStr})\n";
+            continue;
+        }
+
+        // Calculate fees
+        if ($child->date_of_birth) {
+            $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+            $monthlyFee = $feeSettings->getMonthlyFeeByDob($child->date_of_birth);
+        } else {
+            $yearlyFee = $feeSettings->yearly_fee_below_18;
+            $monthlyFee = $feeSettings->monthly_fee_below_18;
+        }
+        $totalAmount = $yearlyFee + $monthlyFee;
+
+        // Create payment record
+        $payment = \App\Models\StudentPayment::create([
+            'student_id' => $child->student->id,
+            'month' => $monthStr,
+            'kategori' => $child->student->kategori ?? 'kanak-kanak',
+            'quantity' => 1,
+            'amount' => $totalAmount,
+            'total' => $totalAmount,
+            'receipt_number' => 'REC-' . $paymentDate->format('ym') . '-' . str_pad($child->student->id, 4, '0', STR_PAD_LEFT),
+            'transaction_ref' => $child->payment_reference ?? 'REGBACKFILL-' . $child->id,
+            'payment_method' => $child->payment_method ?? 'online',
+            'status' => 'paid',
+            'payment_date' => $paymentDate,
+        ]);
+
+        $output .= "✅ Created payment record for {$child->name} - {$payment->receipt_number}\n";
+        $created++;
+    }
+
+    $output .= "\nBackfill complete! Created {$created} payment records.";
+    return nl2br($output);
+});
+
 
 
 
