@@ -141,7 +141,15 @@ export default function AuthenticatedLayout({ header, children }) {
 
     const fetchNotifications = async () => {
         try {
-            const response = await fetch('/api/notifications');
+            const response = await fetch('/api/notifications', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            if (!response.ok) {
+                throw new Error('Failed to fetch notifications');
+            }
             const data = await response.json();
             setNotifications(data);
         } catch (error) {
@@ -154,7 +162,9 @@ export default function AuthenticatedLayout({ header, children }) {
             await fetch('/api/notifications/mark-all-read', {
                 method: 'POST',
                 headers: {
+                    'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 },
             });

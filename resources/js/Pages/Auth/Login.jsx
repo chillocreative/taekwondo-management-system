@@ -107,70 +107,7 @@ export default function Login({ status, canResetPassword }) {
                     </Link>
                 </div>
 
-                {/* Test Credentials Section */}
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                    <div className="text-center mb-3">
-                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Akaun Ujian</span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {/* Admin */}
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 border border-blue-200">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-lg">👨‍💼</span>
-                                <span className="text-xs font-bold text-blue-900">ADMIN</span>
-                            </div>
-                            <div className="space-y-1 text-xs">
-                                <div className="flex items-center gap-1">
-                                    <span className="text-gray-600">Tel:</span>
-                                    <code className="bg-white px-2 py-0.5 rounded text-blue-700 font-mono">0123456789</code>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <span className="text-gray-600">Pass:</span>
-                                    <code className="bg-white px-2 py-0.5 rounded text-blue-700 font-mono">password</code>
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Coach */}
-                        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3 border border-green-200">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-lg">🥋</span>
-                                <span className="text-xs font-bold text-green-900">COACH</span>
-                            </div>
-                            <div className="space-y-1 text-xs">
-                                <div className="flex items-center gap-1">
-                                    <span className="text-gray-600">Tel:</span>
-                                    <code className="bg-white px-2 py-0.5 rounded text-green-700 font-mono">0198765432</code>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <span className="text-gray-600">Pass:</span>
-                                    <code className="bg-white px-2 py-0.5 rounded text-green-700 font-mono">password</code>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* User */}
-                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-3 border border-purple-200">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-lg">👤</span>
-                                <span className="text-xs font-bold text-purple-900">USER</span>
-                            </div>
-                            <div className="space-y-1 text-xs">
-                                <div className="flex items-center gap-1">
-                                    <span className="text-gray-600">Tel:</span>
-                                    <code className="bg-white px-2 py-0.5 rounded text-purple-700 font-mono">01122334455</code>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <span className="text-gray-600">Pass:</span>
-                                    <code className="bg-white px-2 py-0.5 rounded text-purple-700 font-mono">password</code>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <p className="text-center text-xs text-gray-500 mt-3">
-                        💡 Klik pada nombor telefon untuk salin
-                    </p>
-                </div>
             </form>
         </GuestLayout>
     );

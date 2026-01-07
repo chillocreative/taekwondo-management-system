@@ -132,7 +132,7 @@ export default function CoachAttendanceIndex({ auth, trainingCenter, students, d
                     <div className="flex justify-between items-center mb-4">
                         <input
                             type="text"
-                            placeholder="Cari nama atau no. keahlian..."
+                            placeholder="Cari nama atau no. siri..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="rounded-lg border-zinc-300 w-full md:w-64 focus:ring-black focus:border-black"

@@ -34,7 +34,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters }) {
                                     type="text"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="Cari No. Resit, No. Keahlian, atau Nama Peserta..."
+                                    placeholder="Cari No. Resit, No. Siri, atau Nama Peserta..."
                                     className="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm"
                                 />
                             </div>

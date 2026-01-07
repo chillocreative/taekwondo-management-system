@@ -51,7 +51,7 @@ export default function FeesIndex({ auth, feesData }) {
                                     >
                                         <div>
                                             <h3 className="text-lg font-bold text-zinc-900">{child.name}</h3>
-                                            <p className="text-sm text-zinc-500">No. Keahlian: {child.no_siri}</p>
+                                            <p className="text-sm text-zinc-500">No. Siri: {child.no_siri}</p>
                                         </div>
                                         <div className="text-zinc-400">
                                             <svg
@@ -95,10 +95,10 @@ export default function FeesIndex({ auth, feesData }) {
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <span className={`px-3 py-1 text-xs font-medium rounded-full ${fee.status === 'Sudah Dibayar'
-                                                                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                                                        : fee.status === 'Tertunggak'
-                                                                            ? 'bg-red-50 text-red-600 border border-red-200'
-                                                                            : 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                                                    : fee.status === 'Tertunggak'
+                                                                        ? 'bg-red-50 text-red-600 border border-red-200'
+                                                                        : 'bg-amber-50 text-amber-600 border border-amber-100'
                                                                     }`}>
                                                                     {fee.status}
                                                                 </span>
@@ -112,8 +112,8 @@ export default function FeesIndex({ auth, feesData }) {
                                                                     <button
                                                                         onClick={() => handlePay(child.id, fee.month, fee.amount)}
                                                                         className={`px-4 py-2 text-white text-xs font-bold rounded-lg transition-colors shadow-sm ${fee.is_overdue
-                                                                                ? 'bg-red-600 hover:bg-red-700'
-                                                                                : 'bg-black hover:bg-zinc-800'
+                                                                            ? 'bg-red-600 hover:bg-red-700'
+                                                                            : 'bg-black hover:bg-zinc-800'
                                                                             }`}
                                                                     >
                                                                         BAYAR

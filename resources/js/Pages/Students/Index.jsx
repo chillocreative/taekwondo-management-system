@@ -138,7 +138,7 @@ export default function Index({ auth, students, filters, stats }) {
                                     </div>
                                     <input
                                         type="text"
-                                        placeholder="Cari nama, no. keahlian, penjaga..."
+                                        placeholder="Cari nama, no. siri, penjaga..."
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         className="pl-10 block w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition duration-200"
@@ -182,7 +182,7 @@ export default function Index({ auth, students, filters, stats }) {
                                                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 h-5 w-5"
                                             />
                                         </th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">No. Keahlian</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">No. Siri</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Peserta</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Penjaga</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Kategori</th>

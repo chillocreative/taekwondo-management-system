@@ -228,7 +228,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                 Nama
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                                                No. Keahlian
+                                                No. Siri
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                                                 Pusat Latihan
@@ -240,7 +240,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                 Kategori
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                                                Status Keahlian
+                                                Status
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                                                 Status Pembayaran

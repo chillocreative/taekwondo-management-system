@@ -106,7 +106,7 @@ function ParentView({ childrenData }) {
                                 <div>
                                     <h3 className="text-xl font-black text-zinc-900 tracking-tight">{child.name}</h3>
                                     <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500 font-medium">
-                                        <span>ID: {child.no_keahlian}</span>
+                                        <span>No. Siri: {child.no_siri}</span>
                                         <span>•</span>
                                         <span className="text-blue-600">Pelajar Aktif</span>
                                     </div>

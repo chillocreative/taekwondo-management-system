@@ -137,7 +137,7 @@ export default function AdminAttendanceIndex({ auth, attendances, stats, filters
                                         type="text"
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        placeholder="Nama atau No. Keahlian..."
+                                        placeholder="Nama atau No. Siri..."
                                         className="w-full rounded-lg border-zinc-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
                                     />
                                 </div>
@@ -199,7 +199,7 @@ export default function AdminAttendanceIndex({ auth, attendances, stats, filters
                                 <thead className="bg-zinc-50">
                                     <tr>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Tarikh</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">No. Keahlian</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">No. Siri</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Nama Peserta</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Status</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Catatan</th>
@@ -307,8 +307,8 @@ export default function AdminAttendanceIndex({ auth, attendances, stats, filters
                                                 onClick={() => link.url && router.get(link.url)}
                                                 disabled={!link.url}
                                                 className={`px-3 py-1 border rounded text-sm ${link.active
-                                                        ? 'bg-black text-white border-black'
-                                                        : 'bg-white text-zinc-700 border-zinc-300 hover:bg-zinc-50'
+                                                    ? 'bg-black text-white border-black'
+                                                    : 'bg-white text-zinc-700 border-zinc-300 hover:bg-zinc-50'
                                                     } ${!link.url && 'opacity-50 cursor-not-allowed'}`}
                                                 dangerouslySetInnerHTML={{ __html: link.label }}
                                             />

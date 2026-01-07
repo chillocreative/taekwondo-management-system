@@ -30,7 +30,7 @@ export default function Show({ auth, student, readOnly = true }) {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div className="bg-gray-50 p-4 rounded-lg">
-                                    <p className="text-sm text-gray-600 mb-1">No. Keahlian</p>
+                                    <p className="text-sm text-gray-600 mb-1">No. Siri</p>
                                     <p className="text-lg font-semibold">{student.no_siri}</p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-lg">
