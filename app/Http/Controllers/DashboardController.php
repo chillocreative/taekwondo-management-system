@@ -43,9 +43,9 @@ class DashboardController extends Controller
         // Pending registrations (approvals/payments)
         $pendingApprovals = Child::where('payment_completed', false)->count();
 
-        // 1. Monthly Revenue (Current Month) - Sum of all MonthlyPayment records paid in this calendar month
-        $currentMonthRevenue = \App\Models\MonthlyPayment::whereYear('paid_date', $currentYear)
-            ->whereMonth('paid_date', $currentMonthNumeric)
+        // 1. Monthly Revenue (Current Month) - Sum of all MonthlyPayment records FOR this month
+        $currentMonthRevenue = \App\Models\MonthlyPayment::where('year', $currentYear)
+            ->where('month', $currentMonthNumeric)
             ->where('is_paid', true)
             ->sum('amount');
 
@@ -54,8 +54,8 @@ class DashboardController extends Controller
             ->whereYear('payment_date', $currentYear)
             ->sum('registration_fee');
 
-        // 3. Cumulative Monthly Fees (Year-to-Date) - Sum of all MonthlyPayment records paid in this year
-        $yearlyMonthlyFees = \App\Models\MonthlyPayment::whereYear('paid_date', $currentYear)
+        // 3. Cumulative Monthly Fees (Year-to-Date) - Sum of all MonthlyPayment records FOR this year
+        $yearlyMonthlyFees = \App\Models\MonthlyPayment::where('year', $currentYear)
             ->where('is_paid', true)
             ->sum('amount');
 
