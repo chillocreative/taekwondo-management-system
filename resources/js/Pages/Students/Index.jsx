@@ -6,7 +6,6 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
     const [search, setSearch] = useState(filters.search || '');
     const [kategori, setKategori] = useState(filters.kategori || '');
     const [trainingCenterId, setTrainingCenterId] = useState(filters.training_center_id || '');
-    const [statusPembayaran, setStatusPembayaran] = useState(filters.status_pembayaran || 'all');
     const [selectedIds, setSelectedIds] = useState([]);
     const isFirstRender = useRef(true);
 
@@ -21,8 +20,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
             router.get(route('students.index'), {
                 search,
                 kategori,
-                training_center_id: trainingCenterId,
-                status_pembayaran: statusPembayaran
+                training_center_id: trainingCenterId
             }, {
                 preserveState: true,
                 preserveScroll: true,
@@ -31,7 +29,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [search, kategori, trainingCenterId, statusPembayaran]);
+    }, [search, kategori, trainingCenterId]);
 
     const handleDelete = (id) => {
         if (confirm('Adakah anda pasti untuk memadam rekod ini?')) {
@@ -102,7 +100,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
 
                     {/* Statistics Cards */}
                     {stats && (
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                             {/* Paid Students */}
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4">
                                 <div className="p-4 bg-green-50 rounded-xl text-green-600">
@@ -111,17 +109,6 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                 <div>
                                     <p className="text-sm font-medium text-gray-500">Pelajar Berbayar</p>
                                     <p className="text-2xl font-bold text-gray-900">{stats.total_paid}</p>
-                                </div>
-                            </div>
-
-                            {/* Pending Approval */}
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4 border-l-4 border-l-rose-500">
-                                <div className="p-4 bg-rose-50 rounded-xl text-rose-600">
-                                    <span className="text-3xl">⏳</span>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-500">Menunggu Kelulusan</p>
-                                    <p className="text-2xl font-bold text-rose-600 font-black">{stats.total_pending_approval}</p>
                                 </div>
                             </div>
 
@@ -152,7 +139,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                     {/* Search and Filter Card */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                            <div className="md:col-span-3">
+                            <div className="md:col-span-5">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Carian</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -167,7 +154,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                     />
                                 </div>
                             </div>
-                            <div className="md:col-span-3">
+                            <div className="md:col-span-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Pusat Latihan</label>
                                 <select
                                     value={trainingCenterId}
@@ -192,18 +179,6 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                     <option value="">Semua Kategori</option>
                                     <option value="kanak-kanak">Bawah 18 Tahun</option>
                                     <option value="dewasa">18 Tahun ke atas</option>
-                                </select>
-                            </div>
-                            <div className="md:col-span-3">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Status Pembayaran</label>
-                                <select
-                                    value={statusPembayaran}
-                                    onChange={(e) => setStatusPembayaran(e.target.value)}
-                                    className="block w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition duration-200"
-                                >
-                                    <option value="all">Semua Status</option>
-                                    <option value="paid">Sudah Bayar (Aktif)</option>
-                                    <option value="pending">Menunggu Kelulusan</option>
                                 </select>
                             </div>
                         </div>

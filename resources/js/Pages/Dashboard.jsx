@@ -190,7 +190,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                 <div className="bg-white p-6 rounded-3xl shadow-lg border border-zinc-100 flex flex-col justify-between relative overflow-hidden group">
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                                     <div>
-                                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider relative z-10">Total Pelajar</p>
+                                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider relative z-10">Jumlah Pelajar</p>
                                         <h3 className="text-4xl font-black text-zinc-900 mt-2 relative z-10">{stats.total_students}</h3>
                                     </div>
                                     <div className="mt-4 flex items-center gap-2 relative z-10">

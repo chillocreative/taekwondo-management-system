@@ -111,44 +111,47 @@ class DashboardController extends Controller
     private function coachDashboard($user)
     {
         Carbon::setLocale('ms');
+        $currentMonthNumeric = Carbon::now()->month;
         $currentMonthName = Carbon::now()->translatedFormat('F');
         $currentYear = Carbon::now()->year;
         $centerId = $user->training_center_id;
 
-        // Scopes for reuse
+        // Scopes for reuse - only show paid & active students
         $studentsQuery = Student::whereHas('child', function($q) use ($centerId) {
-            $q->where('training_center_id', $centerId);
+            $q->where('training_center_id', $centerId)
+              ->where('payment_completed', true)
+              ->where('is_active', true);
         });
 
         // 1. Student Stats
         $totalStudents = $studentsQuery->count();
-        $newStudentsMonth = (clone $studentsQuery)->whereMonth('created_at', Carbon::now()->month)->count();
+        $newStudentsMonth = (clone $studentsQuery)->whereMonth('students.created_at', Carbon::now()->month)->count();
 
         // 2. Attendance Stats
         $todayAttendance = Attendance::where('attendance_date', Carbon::today()->toDateString())
             ->where('training_center_id', $centerId);
         
         $presentToday = (clone $todayAttendance)->where('status', 'hadir')->count();
-        $totalToday = $todayAttendance->count(); // Can be used to show "X / Y marked"
+        $totalToday = (clone $todayAttendance)->count();
 
         // Monthly Attendance Rate (Sessions Held)
         $monthlySessions = Attendance::where('training_center_id', $centerId)
+            ->whereYear('attendance_date', $currentYear)
             ->whereMonth('attendance_date', Carbon::now()->month)
             ->distinct('attendance_date')
             ->count();
 
-        // 3. Finance Stats
-        $paidCount = \App\Models\StudentPayment::whereHas('student.child', function($q) use ($centerId) {
-                $q->where('training_center_id', $centerId);
+        // 3. Finance Stats - Using MonthlyPayment for more accuracy per month
+        $baseMonthlyPaymentQuery = \App\Models\MonthlyPayment::whereHas('child', function($q) use ($centerId) {
+                $q->where('training_center_id', $centerId)
+                  ->where('payment_completed', true)
+                  ->where('is_active', true);
             })
-            ->where('month', $currentMonthName)
-            ->whereYear('payment_date', $currentYear) // Use whereYear on payment_date
-            ->where('status', 'paid')
-            ->count();
-            
-        // Estimated Unpaid (Total Active Students - Paid)
-        // This is a rough estimate as some might not be liable, but good for a simple dashboard
-        $unpaidCount = max(0, $totalStudents - $paidCount);
+            ->where('year', $currentYear)
+            ->where('month', $currentMonthNumeric);
+
+        $paidCount = (clone $baseMonthlyPaymentQuery)->where('is_paid', true)->count();
+        $unpaidCount = (clone $baseMonthlyPaymentQuery)->where('is_paid', false)->count();
 
         return Inertia::render('Dashboard', [
             'studentCount' => $totalStudents, 

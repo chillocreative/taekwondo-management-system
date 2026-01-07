@@ -15,22 +15,13 @@ class StudentController extends Controller
      */
     public function index(Request $request)
     {
-        // Initial query with eager loading
+        // Initial query with eager loading - Only show fully paid and active students
         $query = Student::query()->with(['child.parent', 'child.monthlyPayments' => function($q) {
             $q->where('year', now()->year);
-        }]);
-
-        // Filter by Payment Status
-        $statusPembayaran = $request->input('status_pembayaran', 'all');
-        if ($statusPembayaran === 'paid') {
-            $query->whereHas('child', function($q) {
-                $q->where('payment_completed', true);
-            });
-        } elseif ($statusPembayaran === 'pending') {
-            $query->whereHas('child', function($q) {
-                $q->where('payment_completed', false);
-            });
-        }
+        }])->whereHas('child', function($q) {
+            $q->where('payment_completed', true)
+              ->where('is_active', true);
+        });
 
         // Apply search
         if ($request->filled('search')) {
@@ -49,7 +40,7 @@ class StudentController extends Controller
             });
         }
 
-        // Sort by latest update (or created_at if pending)
+        // Sort by latest update
         $query->orderBy('tarikh_kemaskini', 'desc');
 
         $students = $query->paginate(15)->withQueryString();
@@ -63,23 +54,23 @@ class StudentController extends Controller
             // Override or append calculated status
             $student->status_bayaran = $paidCount; 
             
-            // Append Yuran Tahunan status (always true due to filter, but good to have explicit)
+            // Append Yuran Tahunan status
             $student->yuran_tahunan_paid = $student->child ? $student->child->payment_completed : false;
             
             return $student;
         });
 
-        // Calculate statistics
+        // Calculate statistics (Only for paid students)
         $stats = [
-            'total' => Student::count(),
             'total_paid' => Student::whereHas('child', function($q) {
                 $q->where('payment_completed', true);
             })->count(),
-            'total_pending_approval' => Student::whereHas('child', function($q) {
-                $q->where('payment_completed', false);
-            })->count(),
-            'total_below_18' => Student::where('kategori', 'kanak-kanak')->count(),
-            'total_above_18' => Student::where('kategori', 'dewasa')->count(),
+            'total_below_18' => Student::whereHas('child', function($q) {
+                $q->where('payment_completed', true);
+            })->where('kategori', 'kanak-kanak')->count(),
+            'total_above_18' => Student::whereHas('child', function($q) {
+                $q->where('payment_completed', true);
+            })->where('kategori', 'dewasa')->count(),
         ];
         
         $trainingCenters = \App\Models\TrainingCenter::all();
@@ -87,7 +78,7 @@ class StudentController extends Controller
         return Inertia::render('Students/Index', [
             'students' => $students,
             'trainingCenters' => $trainingCenters,
-            'filters' => $request->only(['search', 'kategori', 'training_center_id', 'status_pembayaran']),
+            'filters' => $request->only(['search', 'kategori', 'training_center_id']),
             'stats' => $stats,
         ]);
     }

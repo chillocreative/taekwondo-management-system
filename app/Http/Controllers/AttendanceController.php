@@ -181,6 +181,8 @@ class AttendanceController extends Controller
         $baseStatsQuery = Attendance::query();
         if ($tcId) {
             $baseStatsQuery->where('training_center_id', $tcId);
+        } elseif ($user->role === 'coach' && $user->training_center_id) {
+            $baseStatsQuery->where('training_center_id', $user->training_center_id);
         }
 
         $monthlySessionsQuery = (clone $baseStatsQuery)
