@@ -340,6 +340,31 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Top 5 Students Card */}
+                                <div className="bg-white p-6 rounded-3xl shadow-xl border border-zinc-100 relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-rose-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                                    <h4 className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-2 relative z-10">5 Pelajar Terbaik {new Date().getFullYear()}</h4>
+                                    <div className="mt-4 space-y-2 relative z-10 outline-none">
+                                        {stats.top_students && stats.top_students.length > 0 ? (
+                                            stats.top_students.map((student, index) => (
+                                                <Link
+                                                    key={student.id}
+                                                    href={route('students.show', student.id)}
+                                                    className="flex items-center justify-between text-[11px] group/item hover:bg-zinc-50 p-1 rounded-lg transition-all"
+                                                >
+                                                    <span className="text-zinc-600 group-hover/item:text-rose-600 font-bold truncate max-w-[120px]">
+                                                        {index + 1}. {student.name}
+                                                    </span>
+                                                    <span className="font-black text-rose-600">{student.percentage}%</span>
+                                                </Link>
+                                            ))
+                                        ) : (
+                                            <p className="text-xs text-zinc-400 text-center py-4 italic">Tiada data kehadiran</p>
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] text-zinc-400 mt-4 font-medium relative z-10">Berdasarkan peratus kehadiran</p>
+                                </div>
                             </div>
 
                             {/* Financial Performance Section */}

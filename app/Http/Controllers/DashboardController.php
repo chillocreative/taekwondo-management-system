@@ -60,6 +60,36 @@ class DashboardController extends Controller
         // 4. Total Overall Collection
         $totalOverallCollection = $annualFees + \App\Models\StudentPayment::where('status', 'paid')->sum('total');
 
+        // 5. Top 5 Students by Attendance Percentage (Current Year)
+        $topStudents = Student::withCount([
+            'attendances as total_attended' => function ($query) use ($currentYear) {
+                $query->whereYear('attendance_date', $currentYear)
+                      ->where('status', 'hadir');
+            },
+            'attendances as total_sessions' => function ($query) use ($currentYear) {
+                $query->whereYear('attendance_date', $currentYear);
+            }
+        ])
+        ->get()
+        ->map(function ($student) {
+            $student->attendance_percentage = $student->total_sessions > 0 
+                ? round(($student->total_attended / $student->total_sessions) * 100, 1) 
+                : 0;
+            return $student;
+        })
+        ->sortByDesc(function($student) {
+            return [$student->attendance_percentage, $student->total_attended];
+        })
+        ->take(5)
+        ->values()
+        ->map(function ($student) {
+            return [
+                'id' => $student->id,
+                'name' => $student->nama_pelajar,
+                'percentage' => $student->attendance_percentage,
+            ];
+        });
+
         return Inertia::render('Dashboard', [
             'studentCount' => $totalStudents,
             'stats' => [
@@ -72,6 +102,7 @@ class DashboardController extends Controller
                 'annual_fees' => $annualFees,
                 'yearly_monthly_fees' => $yearlyMonthlyFees,
                 'total_revenue' => $totalOverallCollection,
+                'top_students' => $topStudents,
                 'current_month' => $currentMonthName,
             ]
         ]);
