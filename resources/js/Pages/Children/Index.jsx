@@ -1,10 +1,22 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 
 export default function ChildrenIndex({ auth, children, trainingCenters }) {
+    const { flash } = usePage().props;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChild, setEditingChild] = useState(null);
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+    useEffect(() => {
+        if (flash?.success) {
+            setShowSuccessPopup(true);
+            const timer = setTimeout(() => {
+                setShowSuccessPopup(false);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [flash]);
 
     const states = [
         "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan",
@@ -828,6 +840,30 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                 </div>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {/* Success Popup */}
+            {showSuccessPopup && (
+                <div className="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none px-4">
+                    <div className="bg-white rounded-xl shadow-2xl border border-emerald-100 p-6 max-w-sm w-full transform transition-all duration-300 pointer-events-auto relative animate-fade-in-up">
+                        <button
+                            onClick={() => setShowSuccessPopup(false)}
+                            className="absolute top-2 right-2 text-zinc-400 hover:text-zinc-600 p-1 rounded-full hover:bg-zinc-100 transition-colors"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <div className="flex flex-col items-center text-center">
+                            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-zinc-900 mb-2">Pembayaran Berjaya!</h3>
+                            <p className="text-zinc-600">{flash.success}</p>
+                        </div>
                     </div>
                 </div>
             )}
