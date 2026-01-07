@@ -146,39 +146,6 @@ Route::get('/storage-link', function () {
 
 
 
-// Cleanup Ayah Pin Participants Route
-Route::get('/cleanup-ayah-pin-participants', function () {
-    $user = \App\Models\User::where('email', 'user@taekwondo.com')->first();
-    
-    if (!$user) {
-        return 'User Ayah Pin not found.';
-    }
 
-    $children = $user->children;
-    $count = $children->count();
-    
-    foreach ($children as $child) {
-        // Delete files
-        if ($child->belt_certificate) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($child->belt_certificate);
-        }
-        if ($child->payment_slip) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($child->payment_slip);
-        }
-        
-        // Delete linked student record if exists
-        if ($child->student_id) {
-             \App\Models\Student::where('id', $child->student_id)->delete();
-        }
-        
-        // Delete the child
-        $child->delete();
-    }
-    
-    // Optional: If we want to strictly clean any Student record that might be linked by name/IC but not ID (fallback)
-    // But usually student_id linkage is sufficient.
-    
-    return "Successfully deleted {$count} participants under Ayah Pin.";
-});
 
 require __DIR__.'/auth.php';
