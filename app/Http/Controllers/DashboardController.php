@@ -30,7 +30,7 @@ class DashboardController extends Controller
     private function adminDashboard()
     {
         Carbon::setLocale('ms');
-        $currentMonthName = Carbon::now()->translatedFormat('F');
+        $currentMonthName = Carbon::now()->translatedFormat('F Y');
         $currentMonthNumeric = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
 
@@ -43,34 +43,23 @@ class DashboardController extends Controller
         // Pending registrations (approvals/payments)
         $pendingApprovals = Child::where('payment_completed', false)->count();
 
-        // 1. Monthly Revenue (Current Month)
-        // We sum all payments made IN THIS CALENDAR MONTH and subtract the registration portion
-        $thisMonthPaymentsTotal = \App\Models\StudentPayment::whereYear('payment_date', $currentYear)
-            ->whereMonth('payment_date', $currentMonthNumeric)
-            ->where('status', 'paid')
-            ->sum('total');
-            
-        $regFeesThisMonth = \App\Models\Child::where('payment_completed', true)
-            ->whereYear('payment_date', $currentYear)
-            ->whereMonth('payment_date', $currentMonthNumeric)
-            ->sum('registration_fee');
-            
-        $currentMonthRevenue = max(0, $thisMonthPaymentsTotal - $regFeesThisMonth);
+        // 1. Monthly Revenue (Current Month) - Sum of all MonthlyPayment records paid in this calendar month
+        $currentMonthRevenue = \App\Models\MonthlyPayment::whereYear('paid_date', $currentYear)
+            ->whereMonth('paid_date', $currentMonthNumeric)
+            ->where('is_paid', true)
+            ->sum('amount');
 
         // 2. Annual/Registration Fees (Year-to-Date)
         $annualFees = \App\Models\Child::where('payment_completed', true)
             ->whereYear('payment_date', $currentYear)
             ->sum('registration_fee');
 
-        // 3. Cumulative Monthly Fees (Year-to-Date)
-        // All payments made this year minus all registration fees this year
-        $yearlyPaymentsTotal = \App\Models\StudentPayment::whereYear('payment_date', $currentYear)
-            ->where('status', 'paid')
-            ->sum('total');
-            
-        $yearlyMonthlyFees = max(0, $yearlyPaymentsTotal - $annualFees);
+        // 3. Cumulative Monthly Fees (Year-to-Date) - Sum of all MonthlyPayment records paid in this year
+        $yearlyMonthlyFees = \App\Models\MonthlyPayment::whereYear('paid_date', $currentYear)
+            ->where('is_paid', true)
+            ->sum('amount');
 
-        // 4. Total Overall Collection
+        // 4. Total Overall Collection (Monthly Fees + Registration Fees)
         $totalOverallCollection = $annualFees + $yearlyMonthlyFees;
 
         // 5. Top 5 Students by Attendance Percentage (Current Year)
@@ -125,7 +114,7 @@ class DashboardController extends Controller
     {
         Carbon::setLocale('ms');
         $currentMonthNumeric = Carbon::now()->month;
-        $currentMonthName = Carbon::now()->translatedFormat('F');
+        $currentMonthName = Carbon::now()->translatedFormat('F Y');
         $currentYear = Carbon::now()->year;
         $centerId = $user->training_center_id;
 
