@@ -242,14 +242,17 @@ class ChildController extends Controller
             $ageCategory
         );
         
+        // ToyyibPay limits billName to 30 characters
+        $billName = 'Yuran - ' . mb_substr($child->name, 0, 21);
+        
         $billData = [
-            'billName' => 'Yuran Taekwondo - ' . $child->name,
+            'billName' => $billName,
             'billDescription' => $billDescription,
             'billAmount' => $totalAmount,
             'billReturnUrl' => route('children.payment.callback'),
             'billCallbackUrl' => route('children.payment.callback.post'),
             'billExternalReferenceNo' => 'CHILD-' . $child->id . '-' . time(),
-            'billTo' => Auth::user()->name,
+            'billTo' => mb_substr(Auth::user()->name, 0, 30),
             'billEmail' => Auth::user()->email ?? '',
             'billPhone' => Auth::user()->phone_number ?? '',
         ];
