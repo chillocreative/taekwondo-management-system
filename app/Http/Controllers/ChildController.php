@@ -415,4 +415,43 @@ class ChildController extends Controller
         return redirect()->route('children.index')
             ->with('payment_error', 'Pembayaran gagal atau belum selesai.');
     }
+    /**
+     * Download Payment Receipt
+     */
+    public function downloadReceipt(Child $child)
+    {
+        if ($child->parent_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if (!$child->payment_completed) {
+            return back()->with('payment_error', 'Pembayaran belum dibuat.');
+        }
+
+        // Calculate fee breakdown
+        $feeSettings = \App\Models\FeeSetting::current();
+        
+        if ($child->date_of_birth) {
+            $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+            $age = \Carbon\Carbon::parse($child->date_of_birth)->age;
+            $monthlyFee = $feeSettings->getMonthlyFeeByAge($age);
+        } else {
+            $yearlyFee = $feeSettings->yearly_fee_below_18;
+            $monthlyFee = $feeSettings->monthly_fee_below_18;
+        }
+
+        $items = [
+            'yearly_fee' => $yearlyFee,
+            'monthly_fee' => $monthlyFee,
+            'total' => $yearlyFee + $monthlyFee
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('receipts.registration', [
+            'child' => $child,
+            'user' => Auth::user(),
+            'items' => $items,
+        ]);
+
+        return $pdf->download('Resit_Yuran_' . preg_replace('/[^A-Za-z0-9]/', '_', $child->name) . '.pdf');
+    }
 }

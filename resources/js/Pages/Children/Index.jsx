@@ -338,11 +338,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                             <span className="px-2 py-1 text-xs font-medium rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
                                                                 Sudah Bayar
                                                             </span>
-                                                            {child.payment_method && (
-                                                                <div className="text-xs text-zinc-500 mt-1">
-                                                                    {child.payment_method === 'online' ? 'Online' : 'Offline'}
-                                                                </div>
-                                                            )}
+
                                                         </div>
                                                     ) : child.payment_method === 'offline' && child.payment_reference ? (
                                                         <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-600 border border-blue-100">
@@ -365,6 +361,15 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                                 title="Lihat Sijil"
                                                             >
                                                                 📄 Sijil
+                                                            </a>
+                                                        )}
+                                                        {child.payment_completed && (
+                                                            <a
+                                                                href={route('children.payment.receipt', child.id)}
+                                                                className="px-3 py-1.5 text-xs border border-purple-300 bg-purple-50 rounded-lg text-purple-700 hover:bg-purple-100 transition-colors"
+                                                                title="Muat Turun Resit"
+                                                            >
+                                                                🧾 Resit
                                                             </a>
                                                         )}
                                                         <button

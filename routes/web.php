@@ -56,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/children/{child}/payment/online', [ChildController::class, 'initiateOnlinePayment'])->name('children.payment.online');
     Route::get('/children/{child}/payment/offline', [ChildController::class, 'showOfflinePayment'])->name('children.payment.offline');
     Route::post('/children/{child}/payment/offline', [ChildController::class, 'submitOfflinePayment'])->name('children.payment.offline.submit');
+    Route::get('/children/{child}/payment/receipt', [ChildController::class, 'downloadReceipt'])->name('children.payment.receipt');
     Route::get('/children/payment/callback', [ChildController::class, 'paymentCallback'])->name('children.payment.callback');
     Route::post('/children/payment/callback', [ChildController::class, 'paymentCallback'])->name('children.payment.callback.post');
 
