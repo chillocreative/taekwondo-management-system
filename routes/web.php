@@ -74,6 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Admin Attendance Monitoring
     Route::get('/admin/attendance', [App\Http\Controllers\AttendanceController::class, 'adminIndex'])->name('admin.attendance.index');
+    Route::post('/attendance/bulk-destroy-sessions', [App\Http\Controllers\AttendanceController::class, 'bulkDestroySessions'])->name('attendance.bulk-destroy-sessions');
 
     // Payment Settings (Admin only)
     Route::get('/settings/payment', [App\Http\Controllers\PaymentSettingController::class, 'index'])->name('settings.payment');

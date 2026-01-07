@@ -131,57 +131,64 @@ class AttendanceController extends Controller
      */
     public function adminIndex(Request $request)
     {
-        $query = Attendance::with(['student'])
+        $query = Attendance::query()
+            ->selectRaw('attendance_date, training_center_id, COUNT(*) as total_students, SUM(CASE WHEN status = "hadir" THEN 1 ELSE 0 END) as present_count')
+            ->groupBy('attendance_date', 'training_center_id')
             ->orderBy('attendance_date', 'desc');
 
-        // Filter by date range
-        if ($request->filled('start_date')) {
-            $query->where('attendance_date', '>=', $request->start_date);
-        }
-        if ($request->filled('end_date')) {
-            $query->where('attendance_date', '<=', $request->end_date);
+        // Filter by Training Center
+        if ($request->filled('training_center_id')) {
+            $query->where('training_center_id', $request->training_center_id);
         }
 
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        // Filter by student name or no_siri
+        // Filter by search (Date)
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('student', function($q) use ($search) {
-                $q->where('nama_pelajar', 'like', "%{$search}%")
-                  ->orWhere('no_siri', 'like', "%{$search}%");
-            });
+            $query->where('attendance_date', 'like', "%{$request->search}%");
         }
 
-        $attendances = $query->paginate(50)->through(function($attendance) {
+        $attendances = $query->paginate(20)->through(function($session) {
+            $center = \App\Models\TrainingCenter::find($session->training_center_id);
             return [
-                'id' => $attendance->id,
-                'student_id' => $attendance->student_id,
-                'student_name' => $attendance->student->nama_pelajar ?? '-',
-                'student_no_siri' => $attendance->student->no_siri ?? '-',
-                'attendance_date' => $attendance->attendance_date,
-                'status' => $attendance->status,
-                'notes' => $attendance->notes,
-                'created_at' => $attendance->created_at,
+                'id' => $session->attendance_date->toDateString() . '-' . $session->training_center_id,
+                'attendance_date' => $session->attendance_date,
+                'training_center_id' => $session->training_center_id,
+                'training_center_name' => $center->name ?? 'Unknown',
+                'present_count' => (int)$session->present_count,
+                'total_students' => (int)$session->total_students,
+                'status_label' => $session->present_count . ' / ' . $session->total_students . ' Hadir',
             ];
         });
 
-        // Get summary statistics
-        $stats = [
-            'total' => Attendance::count(),
-            'hadir' => Attendance::where('status', 'hadir')->count(),
-            'tidak_hadir' => Attendance::where('status', 'tidak_hadir')->count(),
-            'sakit' => Attendance::where('status', 'sakit')->count(),
-            'cuti' => Attendance::where('status', 'cuti')->count(),
-        ];
-
         return Inertia::render('Admin/Attendance/Index', [
             'attendances' => $attendances,
-            'stats' => $stats,
-            'filters' => $request->only(['search', 'status', 'start_date', 'end_date']),
+            'training_centers' => \App\Models\TrainingCenter::all(['id', 'name']),
+            'filters' => $request->only(['search', 'training_center_id']),
+            'stats' => [
+                'total_records' => Attendance::count(),
+                'total_sessions' => Attendance::distinct()->count(['attendance_date', 'training_center_id']),
+            ]
         ]);
+    }
+
+    /**
+     * Bulk delete attendance sessions
+     */
+    public function bulkDestroySessions(Request $request)
+    {
+        $sessionIds = $request->input('ids', []); // Format: YYYY-MM-DD-CenterID
+        
+        foreach ($sessionIds as $id) {
+            $parts = explode('-', $id);
+            if (count($parts) >= 4) {
+                $centerId = array_pop($parts);
+                $date = implode('-', $parts);
+                
+                Attendance::where('attendance_date', $date)
+                    ->where('training_center_id', $centerId)
+                    ->delete();
+            }
+        }
+
+        return back()->with('success', 'Rekod kehadiran berjaya dipadam.');
     }
 }

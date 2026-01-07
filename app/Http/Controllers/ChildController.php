@@ -423,7 +423,7 @@ class ChildController extends Controller
      */
     public function downloadReceipt(Child $child)
     {
-        if ($child->parent_id !== Auth::id()) {
+        if (!Auth::user()->isAdmin() && $child->parent_id !== Auth::id()) {
             abort(403);
         }
 

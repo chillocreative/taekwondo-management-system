@@ -6,7 +6,7 @@
     <title>Ringkasan Pelajar - {{ $student->nama_pelajar }}</title>
     <style>
         @page {
-            margin: 0cm 0cm;
+            margin: 0pt;
         }
         
         body {
@@ -14,13 +14,18 @@
             font-size: 10pt;
             line-height: 1.4;
             color: #333;
-            margin: 0;
+            margin: 130pt 0pt 50pt 0pt;
             padding: 0;
         }
         
         .header {
+            position: fixed;
+            top: 0pt;
+            left: 0pt;
+            right: 0pt;
+            height: 100pt;
             background-color: #fff;
-            padding: 20pt 30pt;
+            padding: 15pt 30pt;
             border-bottom: 2pt solid #eee;
         }
         
@@ -30,7 +35,7 @@
         .club-sub { font-size: 9pt; color: #718096; }
         .doc-title { font-size: 18pt; font-weight: bold; color: #e53e3e; text-align: right; }
         
-        .content { padding: 20pt 30pt; }
+        .content { padding: 0pt 30pt; }
         
         .section-title {
             background-color: #f7fafc;
