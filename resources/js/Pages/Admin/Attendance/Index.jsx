@@ -5,22 +5,17 @@ import Toast from '@/Components/Toast';
 
 export default function AdminAttendanceIndex({ auth, attendances, training_centers, stats, filters, flash }) {
     const [toast, setToast] = useState(null);
-    const [search, setSearch] = useState(filters?.search || '');
     const [tcId, setTcId] = useState(filters?.training_center_id || '');
     const [selectedIds, setSelectedIds] = useState([]);
 
     // Auto-filter logic
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            if (search !== (filters?.search || '') || tcId !== (filters?.training_center_id || '')) {
-                router.get(route('admin.attendance.index'), {
-                    search,
-                    training_center_id: tcId,
-                }, { preserveState: true, replace: true, preserveScroll: true });
-            }
-        }, 300);
-        return () => clearTimeout(timeoutId);
-    }, [search, tcId]);
+        if (tcId !== (filters?.training_center_id || '')) {
+            router.get(route('admin.attendance.index'), {
+                training_center_id: tcId,
+            }, { preserveState: true, replace: true, preserveScroll: true });
+        }
+    }, [tcId]);
 
     // Show flash messages
     useEffect(() => {
@@ -87,14 +82,30 @@ export default function AdminAttendanceIndex({ auth, attendances, training_cente
                         <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight mb-4">Senarai Kehadiran Peserta</h1>
 
                         {/* Stats Cards */}
-                        <div className="grid grid-cols-2 gap-4 mb-6 max-w-md">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
                             <div className="bg-white rounded-xl border border-zinc-200 p-4">
-                                <div className="text-2xl font-bold text-zinc-900">{stats.total_sessions}</div>
-                                <div className="text-xs text-zinc-500 uppercase tracking-wider">Jumlah Sesi</div>
+                                <div className="text-2xl font-bold text-zinc-900">{stats.yearly_sessions}</div>
+                                <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Jumlah Kelas Tahun {stats.current_year}</div>
                             </div>
-                            <div className="bg-blue-50 rounded-xl border border-blue-200 p-4">
-                                <div className="text-2xl font-bold text-blue-700">{stats.total_records}</div>
-                                <div className="text-xs text-blue-600 uppercase tracking-wider">Jumlah Kehadiran</div>
+                            <div className="bg-white rounded-xl border border-zinc-200 p-4">
+                                <div className="text-2xl font-bold text-zinc-900">{stats.monthly_sessions}</div>
+                                <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Jumlah Kelas {stats.current_month_name} {stats.current_year}</div>
+                            </div>
+                            <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-4">
+                                <div className="text-2xl font-bold text-emerald-700">{stats.hadir}</div>
+                                <div className="text-[10px] text-emerald-600 uppercase tracking-wider font-bold">Hadir</div>
+                            </div>
+                            <div className="bg-rose-50 rounded-xl border border-rose-200 p-4">
+                                <div className="text-2xl font-bold text-rose-700">{stats.tidak_hadir}</div>
+                                <div className="text-[10px] text-rose-600 uppercase tracking-wider font-bold">Tidak Hadir</div>
+                            </div>
+                            <div className="bg-amber-50 rounded-xl border border-amber-200 p-4">
+                                <div className="text-2xl font-bold text-amber-700">{stats.sakit}</div>
+                                <div className="text-[10px] text-amber-600 uppercase tracking-wider font-bold">Sakit</div>
+                            </div>
+                            <div className="bg-purple-50 rounded-xl border border-purple-200 p-4">
+                                <div className="text-2xl font-bold text-purple-700">{stats.cuti}</div>
+                                <div className="text-[10px] text-purple-600 uppercase tracking-wider font-bold">Cuti</div>
                             </div>
                         </div>
                     </div>
@@ -102,30 +113,18 @@ export default function AdminAttendanceIndex({ auth, attendances, training_cente
                     {/* Filters & Bulk Actions */}
                     <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 mb-6">
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 mb-1 font-bold">Cari Tarikh</label>
-                                    <input
-                                        type="text"
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        placeholder="Tahun-Bulan-Hari..."
-                                        className="w-full rounded-lg border-zinc-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 mb-1 font-bold">Pusat Latihan</label>
-                                    <select
-                                        value={tcId}
-                                        onChange={(e) => setTcId(e.target.value)}
-                                        className="w-full rounded-lg border-zinc-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
-                                    >
-                                        <option value="">Semua Pusat Latihan</option>
-                                        {training_centers.map(tc => (
-                                            <option key={tc.id} value={tc.id}>{tc.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                            <div className="w-full md:w-1/3">
+                                <label className="block text-sm font-medium text-zinc-700 mb-1 font-bold">Pusat Latihan</label>
+                                <select
+                                    value={tcId}
+                                    onChange={(e) => setTcId(e.target.value)}
+                                    className="w-full rounded-lg border-zinc-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                >
+                                    <option value="">Semua Pusat Latihan</option>
+                                    {training_centers.map(tc => (
+                                        <option key={tc.id} value={tc.id}>{tc.name}</option>
+                                    ))}
+                                </select>
                             </div>
 
                             {selectedIds.length > 0 && (
@@ -184,8 +183,8 @@ export default function AdminAttendanceIndex({ auth, attendances, training_cente
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-center">
                                                     <span className={`px-3 py-1 rounded-full text-xs font-bold border ${session.present_count === session.total_students
-                                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                        : 'bg-amber-50 text-amber-700 border-amber-200'
                                                         }`}>
                                                         {session.status_label}
                                                     </span>

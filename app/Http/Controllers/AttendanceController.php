@@ -159,13 +159,38 @@ class AttendanceController extends Controller
             ];
         });
 
+        // Calculate dynamic stats
+        $currentYear = now()->year;
+        $currentMonth = now()->month;
+        $tcId = $request->input('training_center_id');
+
+        // Stats card logic
+        $yearlyQuery = Attendance::query()->whereYear('attendance_date', $currentYear);
+        // Requirement 3: Card Tahun 2026 does NOT change with TC filter
+        $stats['yearly_sessions'] = (clone $yearlyQuery)->distinct()->count(['attendance_date', 'training_center_id']);
+
+        $baseStatsQuery = Attendance::query();
+        if ($tcId) {
+            $baseStatsQuery->where('training_center_id', $tcId);
+        }
+
+        $monthlySessionsQuery = (clone $baseStatsQuery)
+            ->whereYear('attendance_date', $currentYear)
+            ->whereMonth('attendance_date', $currentMonth);
+
         return Inertia::render('Admin/Attendance/Index', [
             'attendances' => $attendances,
             'training_centers' => \App\Models\TrainingCenter::all(['id', 'name']),
-            'filters' => $request->only(['search', 'training_center_id']),
+            'filters' => $request->only(['training_center_id']),
             'stats' => [
-                'total_records' => Attendance::count(),
-                'total_sessions' => Attendance::distinct()->count(['attendance_date', 'training_center_id']),
+                'current_year' => $currentYear,
+                'current_month_name' => now()->translatedFormat('F'),
+                'yearly_sessions' => $stats['yearly_sessions'],
+                'monthly_sessions' => $monthlySessionsQuery->distinct()->count(['attendance_date', 'training_center_id']),
+                'hadir' => (clone $baseStatsQuery)->where('status', 'hadir')->count(),
+                'tidak_hadir' => (clone $baseStatsQuery)->where('status', 'tidak_hadir')->count(),
+                'sakit' => (clone $baseStatsQuery)->where('status', 'sakit')->count(),
+                'cuti' => (clone $baseStatsQuery)->where('status', 'cuti')->count(),
             ]
         ]);
     }
