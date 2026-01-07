@@ -1,94 +1,153 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
-export default function Payment({ auth, child, yearlyFee, ageCategory }) {
-    const handleOnlinePayment = () => {
+export default function Payment({ auth, child, yearlyFee, monthlyFee, totalAmount, currentMonth, ageCategory }) {
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('ms-MY', {
+            style: 'currency',
+            currency: 'MYR',
+            minimumFractionDigits: 2,
+        }).format(amount);
+    };
+
+    const handlePayment = () => {
         window.location.href = route('children.payment.online', child.id);
     };
 
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-zinc-800 leading-tight">Pembayaran Yuran Tahunan</h2>}
+            header={
+                <div className="flex items-center gap-4">
+                    <Link
+                        href={route('children.index')}
+                        className="p-2 rounded-lg hover:bg-zinc-100 transition-colors"
+                    >
+                        <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </Link>
+                    <h2 className="text-xl sm:text-2xl font-semibold leading-tight text-zinc-900">
+                        Pengesahan Pembayaran
+                    </h2>
+                </div>
+            }
         >
-            <Head title="Pembayaran" />
+            <Head title="Pengesahan Pembayaran" />
 
-            <div className="py-12">
-                <div className="max-w-3xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-8">
-                            {/* Participant Info */}
-                            <div className="mb-8 pb-6 border-b border-zinc-200">
-                                <h3 className="text-2xl font-bold text-zinc-900 mb-4">Maklumat Peserta</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p className="text-sm text-zinc-500">Nama</p>
-                                        <p className="text-base font-medium text-zinc-900">{child.name}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-zinc-500">No. Kad Pengenalan</p>
-                                        <p className="text-base font-medium text-zinc-900">{child.ic_number || '-'}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-zinc-500">Pusat Latihan</p>
-                                        <p className="text-base font-medium text-zinc-900">
-                                            {child.training_center ? child.training_center.name : '-'}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-zinc-500">Yuran Tahunan ({ageCategory})</p>
-                                        <p className="text-2xl font-bold text-blue-600">RM {parseFloat(yearlyFee).toFixed(2)}</p>
-                                    </div>
+            <div className="py-6 sm:py-12 bg-zinc-50 min-h-screen">
+                <div className="mx-auto max-w-2xl px-4 sm:px-6">
+                    {/* Participant Info Card */}
+                    <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden mb-6">
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+                            <h3 className="text-lg font-bold text-white">Maklumat Peserta</h3>
+                        </div>
+                        <div className="p-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-sm text-zinc-500">Nama</p>
+                                    <p className="text-lg font-semibold text-zinc-900">{child.name}</p>
                                 </div>
-                            </div>
-
-                            {/* Payment Options */}
-                            <div>
-                                <h3 className="text-xl font-bold text-zinc-900 mb-4">Pilih Kaedah Pembayaran</h3>
-                                <p className="text-sm text-zinc-600 mb-6">
-                                    Sila pilih kaedah pembayaran yang sesuai untuk yuran tahunan peserta.
-                                </p>
-
-                                <div className="max-w-md mx-auto">
-                                    {/* Online Payment */}
-                                    <div className="border-2 border-blue-200 rounded-xl p-6 hover:border-blue-400 transition-colors cursor-pointer bg-blue-50"
-                                        onClick={handleOnlinePayment}>
-                                        <div className="flex flex-col items-center text-center">
-                                            <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4">
-                                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                                </svg>
-                                            </div>
-                                            <h4 className="text-lg font-bold text-zinc-900 mb-2">Bayar Online</h4>
-                                            <p className="text-sm text-zinc-600 mb-4">
-                                                Pembayaran melalui FPX menggunakan ToyyibPay
-                                            </p>
-                                            <ul className="text-xs text-zinc-500 mb-4 space-y-1 text-left w-full">
-                                                <li>✓ Proses segera</li>
-                                                <li>✓ Peserta diaktifkan automatik</li>
-                                                <li>✓ Resit digital</li>
-                                            </ul>
-                                            <button
-                                                onClick={handleOnlinePayment}
-                                                className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                                            >
-                                                Teruskan ke ToyyibPay
-                                            </button>
-                                        </div>
-                                    </div>
+                                <div>
+                                    <p className="text-sm text-zinc-500">Kategori</p>
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                        {ageCategory}
+                                    </span>
                                 </div>
-
-                                {/* Back Button */}
-                                <div className="mt-8 text-center">
-                                    <button
-                                        onClick={() => window.location.href = route('children.index')}
-                                        className="text-zinc-600 hover:text-zinc-900 text-sm font-medium"
-                                    >
-                                        ← Kembali ke Senarai Peserta
-                                    </button>
+                                <div>
+                                    <p className="text-sm text-zinc-500">Pusat Latihan</p>
+                                    <p className="font-medium text-zinc-900">
+                                        {child.training_center?.name || '-'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-zinc-500">No. Kad Pengenalan</p>
+                                    <p className="font-medium text-zinc-900">{child.ic_number || '-'}</p>
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Payment Details Card */}
+                    <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden mb-6">
+                        <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-4">
+                            <h3 className="text-lg font-bold text-white">Butiran Pembayaran</h3>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            {/* Yuran Tahunan */}
+                            <div className="flex items-center justify-between py-4 border-b border-zinc-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                                        <span className="text-xl">📅</span>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-zinc-900">Yuran Tahunan</p>
+                                        <p className="text-sm text-zinc-500">Yuran pendaftaran tahunan</p>
+                                    </div>
+                                </div>
+                                <p className="text-lg font-bold text-zinc-900">{formatCurrency(yearlyFee)}</p>
+                            </div>
+
+                            {/* Yuran Bulanan */}
+                            <div className="flex items-center justify-between py-4 border-b border-zinc-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <span className="text-xl">📆</span>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-zinc-900">Yuran Bulanan</p>
+                                        <p className="text-sm text-zinc-500">Bulan {currentMonth}</p>
+                                    </div>
+                                </div>
+                                <p className="text-lg font-bold text-zinc-900">{formatCurrency(monthlyFee)}</p>
+                            </div>
+
+                            {/* Total */}
+                            <div className="flex items-center justify-between py-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl px-4 -mx-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center">
+                                        <span className="text-xl text-white">💰</span>
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-zinc-900 text-lg">Jumlah Keseluruhan</p>
+                                        <p className="text-sm text-zinc-500">Termasuk semua yuran</p>
+                                    </div>
+                                </div>
+                                <p className="text-2xl font-black text-emerald-600">{formatCurrency(totalAmount)}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Payment Note */}
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+                        <div className="flex items-start gap-3">
+                            <span className="text-xl">💡</span>
+                            <div>
+                                <p className="font-medium text-amber-800">Nota Pembayaran</p>
+                                <p className="text-sm text-amber-700 mt-1">
+                                    Pembayaran akan diproses melalui ToyyibPay. Sila pastikan maklumat peserta adalah betul sebelum meneruskan pembayaran.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <Link
+                            href={route('children.index')}
+                            className="flex-1 px-6 py-4 text-center border border-zinc-300 rounded-xl text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors"
+                        >
+                            ← Kembali
+                        </Link>
+                        <button
+                            onClick={handlePayment}
+                            className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                        >
+                            <span>Teruskan Pembayaran</span>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>

@@ -147,5 +147,6 @@ Route::get('/storage-link', function () {
     }
 });
 
-require __DIR__.'/auth.php';
 
+
+require __DIR__.'/auth.php';

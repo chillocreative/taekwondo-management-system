@@ -175,8 +175,8 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
     };
 
     const handlePayment = (id) => {
-        // Redirect directly to online payment (ToyyibPay)
-        window.location.href = route('children.payment.online', id);
+        // Redirect to payment confirmation page
+        window.location.href = route('children.payment', id);
     };
 
     const getBeltLevelLabel = (value) => {

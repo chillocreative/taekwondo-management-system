@@ -146,7 +146,7 @@ class ChildController extends Controller
     }
 
     /**
-     * Show payment page
+     * Show payment confirmation page
      */
     public function payment(Child $child)
     {
@@ -161,21 +161,30 @@ class ChildController extends Controller
                 ->with('error', 'Peserta ini sudah membuat pembayaran.');
         }
 
-        // Calculate yearly fee based on age
+        // Calculate fees based on age
         $feeSettings = \App\Models\FeeSetting::current();
         
         if ($child->date_of_birth) {
             $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+            $monthlyFee = $feeSettings->getMonthlyFeeByDob($child->date_of_birth);
             $age = \Carbon\Carbon::parse($child->date_of_birth)->age;
-            $ageCategory = $age < 18 ? 'Bawah 18 tahun' : '18 tahun ke atas';
+            $ageCategory = $age < 18 ? 'Pelajar (Bawah 18 tahun)' : 'Dewasa (18 tahun ke atas)';
         } else {
             $yearlyFee = $feeSettings->yearly_fee_below_18;
-            $ageCategory = 'Bawah 18 tahun';
+            $monthlyFee = $feeSettings->monthly_fee_below_18;
+            $ageCategory = 'Pelajar (Bawah 18 tahun)';
         }
+
+        // Calculate total: Yuran Tahunan + Yuran Bulanan (current month)
+        $totalAmount = $yearlyFee + $monthlyFee;
+        $currentMonth = \Carbon\Carbon::now()->translatedFormat('F Y'); // e.g., "Januari 2026"
 
         return Inertia::render('Children/Payment', [
             'child' => $child->load('trainingCenter'),
-            'yearlyFee' => $yearlyFee,
+            'yearlyFee' => (float) $yearlyFee,
+            'monthlyFee' => (float) $monthlyFee,
+            'totalAmount' => (float) $totalAmount,
+            'currentMonth' => $currentMonth,
             'ageCategory' => $ageCategory,
         ]);
     }
