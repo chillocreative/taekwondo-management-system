@@ -45,7 +45,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
         const timeoutId = setTimeout(() => {
             if (search !== (filters?.search || '') || tcId !== (filters?.training_center_id || '')) {
                 router.get(route('admin.payments.index'), {
-                    ...filters,
+                    ...(filters || {}),
                     search: search,
                     training_center_id: tcId,
                 }, { preserveState: true, replace: true, preserveScroll: true });
@@ -158,7 +158,15 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                                     </td>
                                                 )}
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {new Date(payment.payment_date || payment.created_at).toLocaleDateString('ms-MY')}
+                                                    {(() => {
+                                                        const dateVal = payment.payment_date || payment.created_at;
+                                                        if (!dateVal) return '-';
+                                                        try {
+                                                            return new Date(dateVal).toLocaleDateString('ms-MY');
+                                                        } catch (e) {
+                                                            return '-';
+                                                        }
+                                                    })()}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                     {payment.receipt_number || '-'}
@@ -168,7 +176,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                                     <div className="text-xs">{payment.student?.no_siri}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    Yuran {payment.month}
+                                                    Yuran {payment.month || '-'}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
                                                     RM {parseFloat(payment.total || 0).toFixed(2)}
@@ -176,7 +184,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${payment.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                                                         }`}>
-                                                        {payment.status === 'paid' ? 'BERJAYA' : (payment.status ? payment.status.toUpperCase() : 'PENDING')}
+                                                        {payment.status === 'paid' ? 'BERJAYA' : (payment.status ? String(payment.status).toUpperCase() : 'PENDING')}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -244,6 +252,6 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </AuthenticatedLayout >
     );
 }
