@@ -296,15 +296,15 @@ export default function AuthenticatedLayout({ header, children }) {
                         <Dropdown.Trigger>
                             <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-50">
                                 <div className="h-8 w-8 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-600 font-bold text-sm">
-                                    {user.name.charAt(0).toUpperCase()}
+                                    {user?.name?.charAt(0)?.toUpperCase() || '?'}
                                 </div>
                             </button>
                         </Dropdown.Trigger>
 
                         <Dropdown.Content align="right" width="56" contentClasses="py-2 bg-white shadow-xl rounded-xl border border-zinc-100">
                             <div className="px-4 py-3 border-b border-zinc-100">
-                                <p className="text-sm font-semibold text-zinc-900 truncate">{user.name}</p>
-                                <p className="text-xs text-zinc-500 truncate">{user.phone_number}</p>
+                                <p className="text-sm font-semibold text-zinc-900 truncate">{user?.name || '-'}</p>
+                                <p className="text-xs text-zinc-500 truncate">{user?.phone_number || '-'}</p>
                             </div>
                             <Dropdown.Link
                                 href={route('profile.edit')}
@@ -471,8 +471,8 @@ export default function AuthenticatedLayout({ header, children }) {
                             <Dropdown.Trigger>
                                 <button className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-zinc-50 transition-colors">
                                     <div className="text-right">
-                                        <p className="text-sm font-semibold text-zinc-900">{user.name}</p>
-                                        <p className="text-xs text-zinc-500">{user.phone_number}</p>
+                                        <p className="text-sm font-semibold text-zinc-900">{user?.name || '-'}</p>
+                                        <p className="text-xs text-zinc-500">{user?.phone_number || '-'}</p>
                                     </div>
                                     <div className="h-10 w-10 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-600 font-bold">
                                         {user?.name?.charAt(0)?.toUpperCase() || '?'}
@@ -485,10 +485,10 @@ export default function AuthenticatedLayout({ header, children }) {
 
                             <Dropdown.Content align="right" width="56" contentClasses="py-2 bg-white shadow-xl rounded-xl border border-zinc-100">
                                 <div className="px-4 py-3 border-b border-zinc-100">
-                                    <p className="text-sm font-semibold text-zinc-900">{user.name}</p>
-                                    <p className="text-xs text-zinc-500">{user.phone_number}</p>
-                                    {user.training_center && (
-                                        <p className="text-xs text-zinc-400 mt-1">{user.training_center.name}</p>
+                                    <p className="text-sm font-semibold text-zinc-900">{user?.name || '-'}</p>
+                                    <p className="text-xs text-zinc-500">{user?.phone_number || '-'}</p>
+                                    {user?.training_center && (
+                                        <p className="text-xs text-zinc-400 mt-1">{user?.training_center?.name || '-'}</p>
                                     )}
                                 </div>
                                 <Dropdown.Link
