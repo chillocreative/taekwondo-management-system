@@ -3,8 +3,8 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 
 export default function AdminPaymentsIndex({ auth, payments, filters, trainingCenters }) {
-    const [search, setSearch] = useState(filters.search || '');
-    const [tcId, setTcId] = useState(filters.training_center_id || '');
+    const [search, setSearch] = useState(filters?.search || '');
+    const [tcId, setTcId] = useState(filters?.training_center_id || '');
     const [selectedIds, setSelectedIds] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -43,7 +43,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
     // Consolidated auto-filter logic
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            if (search !== (filters.search || '') || tcId !== (filters.training_center_id || '')) {
+            if (search !== (filters?.search || '') || tcId !== (filters?.training_center_id || '')) {
                 router.get(route('admin.payments.index'), {
                     ...filters,
                     search: search,
@@ -129,7 +129,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                                 <input
                                                     type="checkbox"
                                                     onChange={handleSelectAll}
-                                                    checked={selectedIds.length === payments.data.length && payments.data.length > 0}
+                                                    checked={selectedIds.length === payments?.data?.length && payments?.data?.length > 0}
                                                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                                 />
                                             </th>
@@ -144,7 +144,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-100">
-                                    {payments.data.length > 0 ? (
+                                    {payments?.data && payments.data.length > 0 ? (
                                         payments.data.map((payment) => (
                                             <tr key={payment.id} className={`hover:bg-blue-50/50 transition duration-150 ${selectedIds.includes(payment.id) ? 'bg-blue-50' : ''}`}>
                                                 {auth.user.role === 'admin' && (
@@ -171,12 +171,12 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                                     Yuran {payment.month}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                                                    RM {parseFloat(payment.total).toFixed(2)}
+                                                    RM {parseFloat(payment.total || 0).toFixed(2)}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${payment.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                                                         }`}>
-                                                        {payment.status === 'paid' ? 'BERJAYA' : payment.status.toUpperCase()}
+                                                        {payment.status === 'paid' ? 'BERJAYA' : (payment.status ? payment.status.toUpperCase() : 'PENDING')}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
