@@ -245,6 +245,12 @@ class ChildController extends Controller
         // ToyyibPay limits billName to 30 characters
         $billName = 'Yuran - ' . mb_substr($child->name, 0, 21);
         
+        // Generate placeholder email if user doesn't have one (required by ToyyibPay)
+        $userEmail = Auth::user()->email;
+        if (empty($userEmail)) {
+            $userEmail = Auth::user()->phone_number . '@taekwondoanz.com';
+        }
+
         $billData = [
             'billName' => $billName,
             'billDescription' => $billDescription,
@@ -253,7 +259,7 @@ class ChildController extends Controller
             'billCallbackUrl' => route('children.payment.callback.post'),
             'billExternalReferenceNo' => 'CHILD-' . $child->id . '-' . time(),
             'billTo' => mb_substr(Auth::user()->name, 0, 30),
-            'billEmail' => Auth::user()->email ?? '',
+            'billEmail' => $userEmail,
             'billPhone' => Auth::user()->phone_number ?? '',
         ];
 

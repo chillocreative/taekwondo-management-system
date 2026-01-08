@@ -177,6 +177,12 @@ class FeeController extends Controller
         $payment->status = 'pending';
         $payment->save();
 
+        // Generate placeholder email if parent doesn't have one (required by ToyyibPay)
+        $parentEmail = $child->parent->email ?? '';
+        if (empty($parentEmail)) {
+            $parentEmail = ($child->parent->phone_number ?? 'noemail') . '@taekwondoanz.com';
+        }
+
         // Initiate ToyyibPay
         $result = $this->toyyibPayService->createBill([
             'billName' => 'Yuran ' . $request->month,
@@ -185,7 +191,7 @@ class FeeController extends Controller
             'billReturnUrl' => route('fees.payment.return'),
             'billCallbackUrl' => route('fees.payment.callback'),
             'billTo' => $child->parent->name ?? '',
-            'billEmail' => $child->parent->email ?? '',
+            'billEmail' => $parentEmail,
             'billPhone' => $child->parent->phone_number ?? '',
             'billExternalReferenceNo' => 'FEE-' . $payment->id,
         ]);
