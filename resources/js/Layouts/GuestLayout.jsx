@@ -7,23 +7,13 @@ export default function GuestLayout({ children }) {
 
     const menuItems = [
         { name: 'Laman Utama', href: 'https://taekwondoanz.com/', external: true },
+        { name: 'Daftar & Bayaran', href: 'https://yuran.taekwondoanz.com', external: true },
         {
-            name: 'Daftar',
+            name: 'Jadual',
             submenu: [
-                { name: 'Pendaftaran 18 Tahun Ke Atas', href: 'https://taekwondoanz.com/pendaftaran-18-tahun-ke-atas/' },
-                { name: 'Pendaftaran 18 Tahun Ke Bawah', href: 'https://taekwondoanz.com/pendaftaran-18-tahun-ke-bawah/' },
-                { name: 'Pembaharuan Keahlian', href: 'https://taekwondoanz.com/pembaharuan/' },
-                { name: 'Ujian Kenaikan Tali Pinggang', href: 'https://taekwondoanz.com/ujian-kenaikan-tali-pinggang/' },
+                { name: 'Jadual Kelas', href: 'https://taekwondoanz.com/jadual-kelas/' },
             ],
         },
-        {
-            name: 'Bayaran',
-            submenu: [
-                { name: 'Yuran Bulanan', href: 'https://taekwondoanz.com/bayaran/' },
-                { name: 'QR Code', href: 'https://taekwondoanz.com/thank-you-page-2/' },
-            ],
-        },
-        { name: 'Jadual Kelas', href: 'https://taekwondoanz.com/jadual-kelas/', external: true },
         { name: 'Taekwondo Shop', href: 'https://taekwondoanz.com/shop/', external: true },
     ];
 
@@ -74,7 +64,7 @@ export default function GuestLayout({ children }) {
                                             </button>
                                             {openSubmenu === item.name && (
                                                 <div
-                                                    className="absolute left-0 top-full mt-1 w-64 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl py-2 z-50"
+                                                    className="absolute left-0 top-full mt-1 w-56 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl py-2 z-50"
                                                     onMouseEnter={() => setOpenSubmenu(item.name)}
                                                     onMouseLeave={() => setOpenSubmenu(null)}
                                                 >
