@@ -234,6 +234,35 @@ Route::get('/backfill-payments', function () {
     return nl2br($output);
 });
 
+// Cleanup Orphaned Data Route
+Route::get('/cleanup-orphaned-data', function () {
+    $output = "Cleanup Orphaned Data\n";
+    $output .= "=====================\n\n";
+
+    // 1. Find Students without Children
+    $orphanedStudents = \App\Models\Student::doesntHave('child')->get();
+    $output .= "Found " . $orphanedStudents->count() . " orphaned students (without child profiles).\n";
+    
+    foreach ($orphanedStudents as $student) {
+        $output .= "- Deleting Student: {$student->nama_pelajar} ({$student->no_siri})\n";
+        $student->delete();
+    }
+
+    // 2. Find Parents without Children (Role 'user')
+    // We only delete users with role 'user' who have no children
+    $orphanedParents = \App\Models\User::where('role', 'user')->doesntHave('children')->get();
+    $output .= "\nFound " . $orphanedParents->count() . " orphaned parents (role 'user' without children).\n";
+    
+    foreach ($orphanedParents as $parent) {
+        $output .= "- Deleting Parent: {$parent->name} ({$parent->phone_number})\n";
+        $parent->delete();
+    }
+
+    $output .= "\n✅ Cleanup complete.";
+    return nl2br($output);
+});
+
+
 
 require __DIR__.'/auth.php';
 

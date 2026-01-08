@@ -34,14 +34,23 @@ class DashboardController extends Controller
         $currentMonthNumeric = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
 
+        // Base query for active/paid students
+        $activeStudentsQuery = Student::whereHas('child', function($q) {
+            $q->where('payment_completed', true)
+              ->where('is_active', true);
+        });
+
         // Statistics calculation
-        $totalStudents = Student::count();
+        $totalStudents = $activeStudentsQuery->count();
         $totalCenters = \App\Models\TrainingCenter::count();
         $totalCoaches = \App\Models\User::where('role', 'coach')->count();
         $totalParents = \App\Models\User::where('role', 'user')->count();
         
-        // Pending registrations (approvals/payments)
-        $pendingApprovals = Child::where('payment_completed', false)->count();
+        // Pending registrations (approvals/payments/inactive)
+        $pendingApprovals = Child::where(function($q) {
+            $q->where('payment_completed', false)
+              ->orWhere('is_active', false);
+        })->count();
 
         // 1. Monthly Revenue (Current Month) - Sum of all MonthlyPayment records FOR this month
         $currentMonthRevenue = \App\Models\MonthlyPayment::where('year', $currentYear)
@@ -63,7 +72,7 @@ class DashboardController extends Controller
         $totalOverallCollection = $annualFees + $yearlyMonthlyFees;
 
         // 5. Top 5 Students by Attendance Percentage (Current Year)
-        $topStudents = Student::withCount([
+        $topStudents = (clone $activeStudentsQuery)->withCount([
             'attendances as total_attended' => function ($query) use ($currentYear) {
                 $query->whereYear('attendance_date', $currentYear)
                       ->where('status', 'hadir');
@@ -118,10 +127,13 @@ class DashboardController extends Controller
         $currentYear = Carbon::now()->year;
         $centerId = $user->training_center_id;
 
-        // Scopes for reuse - only show paid & active students
-        $studentsQuery = Student::whereHas('child', function($q) {
+        // Scopes for reuse - only show paid & active students for this coach's center
+        $studentsQuery = Student::whereHas('child', function($q) use ($centerId) {
             $q->where('payment_completed', true)
               ->where('is_active', true);
+            if ($centerId) {
+                $q->where('training_center_id', $centerId);
+            }
         });
 
         // 1. Student Stats
@@ -130,20 +142,30 @@ class DashboardController extends Controller
 
         // 2. Attendance Stats
         $todayAttendance = Attendance::where('attendance_date', Carbon::today()->toDateString());
+        if ($centerId) {
+            $todayAttendance->where('training_center_id', $centerId);
+        }
         
         $presentToday = (clone $todayAttendance)->where('status', 'hadir')->count();
         $totalToday = (clone $todayAttendance)->count();
 
         // Monthly Attendance Rate (Sessions Held)
-        $monthlySessions = Attendance::whereYear('attendance_date', $currentYear)
-            ->whereMonth('attendance_date', Carbon::now()->month)
-            ->distinct('attendance_date', 'training_center_id')
-            ->count();
+        $monthlySessionsQuery = Attendance::whereYear('attendance_date', $currentYear)
+            ->whereMonth('attendance_date', Carbon::now()->month);
+        
+        if ($centerId) {
+            $monthlySessionsQuery->where('training_center_id', $centerId);
+        }
+        
+        $monthlySessions = $monthlySessionsQuery->distinct('attendance_date', 'training_center_id')->count();
 
         // 3. Finance Stats - Using MonthlyPayment for more accuracy per month
-        $baseMonthlyPaymentQuery = \App\Models\MonthlyPayment::whereHas('child', function($q) {
+        $baseMonthlyPaymentQuery = \App\Models\MonthlyPayment::whereHas('child', function($q) use ($centerId) {
                 $q->where('payment_completed', true)
                   ->where('is_active', true);
+                if ($centerId) {
+                    $q->where('training_center_id', $centerId);
+                }
             })
             ->where('year', $currentYear)
             ->where('month', $currentMonthNumeric);

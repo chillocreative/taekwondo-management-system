@@ -9,6 +9,18 @@ class Child extends Model
 {
     use HasFactory;
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        // When a child is deleted, also delete the associated student record
+        static::deleting(function ($child) {
+            if ($child->student) {
+                $child->student->delete();
+            }
+        });
+    }
+
     protected $fillable = [
         'parent_id',
         'student_id',
