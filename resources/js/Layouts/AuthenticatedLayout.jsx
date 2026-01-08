@@ -449,7 +449,8 @@ export default function AuthenticatedLayout({ header, children }) {
                                                             <div className="flex items-start gap-3">
                                                                 <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${notification.type === 'registration' ? 'bg-blue-500' :
                                                                     notification.type === 'payment_due' ? 'bg-amber-500' :
-                                                                        'bg-green-500'
+                                                                        notification.type === 'absent' ? 'bg-red-500' :
+                                                                            'bg-green-500'
                                                                     }`}></div>
                                                                 <div className="flex-1">
                                                                     <p className="text-sm font-medium text-zinc-900">{notification.title}</p>

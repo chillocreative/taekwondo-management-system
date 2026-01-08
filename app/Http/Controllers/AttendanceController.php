@@ -84,7 +84,7 @@ class AttendanceController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        Attendance::updateOrCreate(
+        $att = Attendance::updateOrCreate(
             [
                 'student_id' => $validated['student_id'],
                 'attendance_date' => $validated['attendance_date'],
@@ -94,6 +94,11 @@ class AttendanceController extends Controller
                 'notes' => $validated['notes'],
             ]
         );
+
+        // Check for 3 consecutive absences
+        if ($validated['status'] === 'tidak_hadir') {
+            $this->checkConsecutiveAbsences($validated['student_id'], $validated['attendance_date']);
+        }
 
         return back()->with('success', 'Kehadiran berjaya dikemaskini.');
     }
@@ -122,6 +127,11 @@ class AttendanceController extends Controller
                     'notes' => $attendance['notes'] ?? null,
                 ]
             );
+
+            // Check for 3 consecutive absences
+            if ($attendance['status'] === 'tidak_hadir') {
+                $this->checkConsecutiveAbsences($attendance['student_id'], $validated['attendance_date']);
+            }
         }
 
         return back()->with('success', 'Kehadiran berjaya disimpan untuk ' . count($validated['attendances']) . ' peserta.');
@@ -268,5 +278,42 @@ class AttendanceController extends Controller
         }
 
         return back()->with('success', 'Rekod kehadiran berjaya dipadam.');
+    }
+    /**
+     * Check for 3 consecutive absences and create notification
+     */
+    private function checkConsecutiveAbsences($studentId, $date)
+    {
+        $pastAbsences = Attendance::where('student_id', $studentId)
+            ->where('attendance_date', '<', $date)
+            ->orderBy('attendance_date', 'desc')
+            ->take(2)
+            ->get();
+
+        if ($pastAbsences->count() === 2) {
+            $consecutive = true;
+            foreach ($pastAbsences as $pa) {
+                if ($pa->status !== 'tidak_hadir') {
+                    $consecutive = false;
+                    break;
+                }
+            }
+
+            if ($consecutive) {
+                $student = Student::with('child')->find($studentId);
+                if ($student && $student->child) {
+                    $name = $student->child->name;
+                    // Check if we already notified today to prevent spam during updates
+                    $alreadyNotified = \App\Models\Notification::where('type', 'absent')
+                        ->where('message', 'LIKE', "%$name%")
+                        ->where('created_at', '>=', Carbon::today())
+                        ->exists();
+                        
+                    if (!$alreadyNotified) {
+                        \App\Models\Notification::createAbsentNotification($name);
+                    }
+                }
+            }
+        }
     }
 }
