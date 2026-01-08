@@ -19,6 +19,14 @@ class Student extends Model
                 $student->no_siri = self::generateNoSiri();
             }
         });
+
+        // When a student is deleted, also delete the associated child record
+        static::deleting(function ($student) {
+            if ($student->child) {
+                // Delete associated child record to prevent orphaned records
+                $student->child->delete();
+            }
+        });
     }
 
     /**
