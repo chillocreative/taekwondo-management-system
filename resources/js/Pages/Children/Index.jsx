@@ -23,6 +23,15 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
         }
     }, [flash]);
 
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('add') === '1') {
+            openModal();
+            // Optional: Remove the param from URL without reloading if desired
+            // window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, []);
+
     const isPaymentValidForCurrentYear = (child) => {
         if (!child.payment_completed) return false;
         // If payment_completed is true but date is missing, assume valid (legacy data) or invalid? 

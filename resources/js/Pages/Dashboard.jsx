@@ -173,7 +173,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                             <h4 className="text-2xl font-black text-zinc-900 mb-2">Tiada Daftar Pelajar</h4>
                             <p className="text-zinc-500 mb-8">Anda belum mendaftarkan anak anda dalam sistem kami.</p>
                             <Link
-                                href={route('students.create')}
+                                href={route('children.index', { add: 1 })}
                                 className="inline-flex items-center px-8 py-3 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all"
                             >
                                 Daftar Sekarang
