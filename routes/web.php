@@ -234,44 +234,6 @@ Route::get('/backfill-payments', function () {
     return nl2br($output);
 });
 
-// Cleanup Orphaned Children Route
-Route::get('/cleanup-orphaned-children', function () {
-    // Find all children where student_id is null (orphaned after student deletion)
-    $orphanedChildren = \App\Models\Child::whereNull('student_id')->get();
-    
-    $output = "Cleanup Orphaned Children Records\n";
-    $output .= "==================================\n\n";
-    
-    if ($orphanedChildren->isEmpty()) {
-        $output .= "No orphaned children found.\n";
-    } else {
-        $output .= "Found " . $orphanedChildren->count() . " orphaned children:\n\n";
-        
-        foreach ($orphanedChildren as $child) {
-            $parentName = $child->parent->name ?? 'Unknown';
-            $output .= "- ID: {$child->id}, Name: {$child->name}, Parent: {$parentName}\n";
-        }
-        
-        $output .= "\nDeleting orphaned children...\n";
-        
-        // Delete orphaned children and their related records
-        foreach ($orphanedChildren as $child) {
-            // Delete monthly payments
-            $child->monthlyPayments()->delete();
-            
-            // Delete the child
-            $child->delete();
-        }
-        
-        $output .= "\n✅ Successfully deleted {$orphanedChildren->count()} orphaned children records.\n";
-    }
-    
-    return nl2br($output);
-});
-
-
-
-
-
 
 require __DIR__.'/auth.php';
+
