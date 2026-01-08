@@ -367,6 +367,9 @@ class ChildController extends Controller
             'payment_slip' => $path,
         ]);
 
+        // Notify Admin via WhatsApp
+        \App\Services\WhatsappService::notifyAdmin("Penerimaan Resit Offline Baru:\nPelajar: {$child->name}\nIbu Bapa: " . Auth::user()->name . "\nPusat Latihan: " . ($child->trainingCenter->name ?? '-'));
+
         return redirect()->route('children.index')
             ->with('success', 'Resit pembayaran telah dihantar. Sila tunggu kelulusan admin.');
     }
@@ -466,8 +469,14 @@ class ChildController extends Controller
                     }
                 }
 
-                // Notify Admin
+                // Notify Admin & User via WhatsApp
                 \App\Models\Notification::createPaymentPaidNotification($child);
+                
+                $parentPhone = $child->parent->phone_number ?? null;
+                $msg = "*[PENDAFTARAN BERJAYA]*\n\nPelajar: {$child->name}\nNo. Keahlian: " . ($child->student->no_siri ?? '-') . "\nJumlah: RM{$totalAmount}\n\nSelamat datang ke Taekwondo A&Z! Pendaftaran anda telah diaktifkan.";
+                
+                \App\Services\WhatsappService::send($parentPhone, $msg);
+                \App\Services\WhatsappService::notifyAdmin("Pendaftaran & Pembayaran Baru:\nPelajar: {$child->name}\nJumlah: RM{$totalAmount}");
 
                 return redirect()->route('children.index')
                     ->with('payment_success', 'Pembayaran berjaya! Peserta telah diaktifkan.');

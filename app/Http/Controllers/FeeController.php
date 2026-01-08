@@ -226,9 +226,15 @@ class FeeController extends Controller
                 $payment->save();
                 $this->updateMonthlyPaymentStatus($payment);
 
-                // Notify Admin
+                // Notify Admin & User via WhatsApp
                 $studentName = $payment->student->nama_pelajar ?? 'Unknown';
                 \App\Models\Notification::createMonthlyFeeNotification($studentName, $payment->month);
+                
+                $parentPhone = $payment->student->child->parent->phone_number ?? null;
+                $msg = "*[PEMBAYARAN YURAN BERJAYA]*\n\nPelajar: {$studentName}\nBulan: {$payment->month}\nJumlah: RM{$payment->total}\nNo. Resit: {$payment->receipt_number}\n\nTerima kasih atas pembayaran anda.";
+                
+                \App\Services\WhatsappService::send($parentPhone, $msg);
+                \App\Services\WhatsappService::notifyAdmin("Pembayaran Yuran Baru:\nPelajar: {$studentName}\nBulan: {$payment->month}\nJumlah: RM{$payment->total}");
             }
             return redirect()->route('fees.index')->with('success', 'Pembayaran berjaya! Resit telah dijana.');
         }
@@ -252,9 +258,15 @@ class FeeController extends Controller
                 $payment->save();
                 $this->updateMonthlyPaymentStatus($payment);
 
-                // Notify Admin
+                // Notify Admin & User via WhatsApp
                 $studentName = $payment->student->nama_pelajar ?? 'Unknown';
                 \App\Models\Notification::createMonthlyFeeNotification($studentName, $payment->month);
+                
+                $parentPhone = $payment->student->child->parent->phone_number ?? null;
+                $msg = "*[PEMBAYARAN YURAN BERJAYA]*\n\nPelajar: {$studentName}\nBulan: {$payment->month}\nJumlah: RM{$payment->total}\nNo. Resit: {$payment->receipt_number}\n\nTerima kasih atas pembayaran anda.";
+                
+                \App\Services\WhatsappService::send($parentPhone, $msg);
+                \App\Services\WhatsappService::notifyAdmin("Pembayaran Yuran Baru (Callback):\nPelajar: {$studentName}\nBulan: {$payment->month}\nJumlah: RM{$payment->total}");
             }
         }
     }

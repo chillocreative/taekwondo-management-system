@@ -98,10 +98,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/admin/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
 
     // Admin - Future Modules
-    Route::get('/admin/whatsapp', function () {
-        if (auth()->user()->role !== 'admin') abort(403);
-        return Inertia::render('Admin/ComingSoon', ['title' => 'Whatsapp Blaster']);
-    })->name('admin.whatsapp');
+    // Admin - Whatsapp Management
+    Route::get('/admin/whatsapp', [App\Http\Controllers\Admin\WhatsappController::class, 'index'])->name('admin.whatsapp');
+    Route::post('/admin/whatsapp/test', [App\Http\Controllers\Admin\WhatsappController::class, 'sendTest'])->name('admin.whatsapp.test');
 
     Route::get('/admin/grading', function () {
         if (auth()->user()->role !== 'admin') abort(403);
