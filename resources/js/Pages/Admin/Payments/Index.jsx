@@ -11,7 +11,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
     // Master checkbox logic
     const handleSelectAll = (e) => {
         if (e.target.checked) {
-            setSelectedIds(payments.data.map(p => p.id));
+            setSelectedIds(payments?.data?.map(p => p.id) || []);
         } else {
             setSelectedIds([]);
         }
@@ -124,12 +124,12 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        {auth.user.role === 'admin' && (
+                                        {auth?.user?.role === 'admin' && (
                                             <th className="px-6 py-4 w-10">
                                                 <input
                                                     type="checkbox"
                                                     onChange={handleSelectAll}
-                                                    checked={selectedIds.length === payments?.data?.length && payments?.data?.length > 0}
+                                                    checked={selectedIds?.length === (payments?.data?.length || 0) && (payments?.data?.length || 0) > 0}
                                                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                                 />
                                             </th>
@@ -146,20 +146,20 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                 <tbody className="bg-white divide-y divide-gray-100">
                                     {payments?.data && payments.data.length > 0 ? (
                                         payments.data.map((payment) => (
-                                            <tr key={payment.id} className={`hover:bg-blue-50/50 transition duration-150 ${selectedIds.includes(payment.id) ? 'bg-blue-50' : ''}`}>
-                                                {auth.user.role === 'admin' && (
+                                            <tr key={payment?.id || Math.random()} className={`hover:bg-blue-50/50 transition duration-150 ${selectedIds.includes(payment?.id) ? 'bg-blue-50' : ''}`}>
+                                                {auth?.user?.role === 'admin' && (
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <input
                                                             type="checkbox"
-                                                            checked={selectedIds.includes(payment.id)}
-                                                            onChange={() => handleSelectOne(payment.id)}
+                                                            checked={selectedIds.includes(payment?.id)}
+                                                            onChange={() => handleSelectOne(payment?.id)}
                                                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                                         />
                                                     </td>
                                                 )}
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                     {(() => {
-                                                        const dateVal = payment.payment_date || payment.created_at;
+                                                        const dateVal = payment?.payment_date || payment?.created_at;
                                                         if (!dateVal) return '-';
                                                         try {
                                                             return new Date(dateVal).toLocaleDateString('ms-MY');
@@ -169,29 +169,29 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                                     })()}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    {payment.receipt_number || '-'}
+                                                    {payment?.receipt_number || '-'}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                    <div className="font-bold text-gray-900">{payment.student?.nama_pelajar}</div>
-                                                    <div className="text-xs">{payment.student?.no_siri}</div>
+                                                    <div className="font-bold text-gray-900">{payment?.student?.nama_pelajar || '-'}</div>
+                                                    <div className="text-xs">{payment?.student?.no_siri || '-'}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    Yuran {payment.month || '-'}
+                                                    Yuran {payment?.month || '-'}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                                                    RM {parseFloat(payment.total || 0).toFixed(2)}
+                                                    RM {parseFloat(payment?.total || 0).toFixed(2)}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${payment.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${payment?.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                                                         }`}>
-                                                        {payment.status === 'paid' ? 'BERJAYA' : (payment.status ? String(payment.status).toUpperCase() : 'PENDING')}
+                                                        {payment?.status === 'paid' ? 'BERJAYA' : (payment?.status ? String(payment.status).toUpperCase() : 'PENDING')}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    {payment.status === 'paid' && (
+                                                    {payment?.status === 'paid' && (
                                                         <div className="flex justify-end gap-2">
                                                             <a
-                                                                href={route('receipts.stream', payment.id)}
+                                                                href={payment?.id ? route('receipts.stream', payment.id) : '#'}
                                                                 target="_blank"
                                                                 className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-colors focus:ring-2 focus:ring-zinc-200 focus:outline-none"
                                                                 title="Lihat Resit"
@@ -202,7 +202,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                                                 </svg>
                                                             </a>
                                                             <a
-                                                                href={route('receipts.download', payment.id)}
+                                                                href={payment?.id ? route('receipts.download', payment.id) : '#'}
                                                                 target="_blank"
                                                                 className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-colors focus:ring-2 focus:ring-zinc-200 focus:outline-none"
                                                                 title="Muat Turun"

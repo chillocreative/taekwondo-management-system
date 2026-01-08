@@ -475,7 +475,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                         <p className="text-xs text-zinc-500">{user.phone_number}</p>
                                     </div>
                                     <div className="h-10 w-10 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-600 font-bold">
-                                        {user.name.charAt(0).toUpperCase()}
+                                        {user?.name?.charAt(0)?.toUpperCase() || '?'}
                                     </div>
                                     <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
