@@ -57,7 +57,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
 
     return (
         <AuthenticatedLayout
-            user={auth.user}
+            user={auth?.user}
             header={<h2 className="font-bold text-2xl text-gray-800 leading-tight">Pengurusan Pembayaran</h2>}
         >
             <Head title="Pengurusan Pembayaran" />
@@ -104,7 +104,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                     </div>
 
                     {/* Bulk Actions */}
-                    {selectedIds.length > 0 && auth.user.role === 'admin' && (
+                    {selectedIds.length > 0 && auth?.user?.role === 'admin' && (
                         <div className="mb-4 flex items-center gap-4 bg-red-50 p-4 rounded-xl border border-red-100 animate-in fade-in slide-in-from-top-2 duration-300">
                             <span className="text-sm font-bold text-red-700">{selectedIds.length} rekod dipilih</span>
                             <button
@@ -240,9 +240,9 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                         {payments?.links?.map((link, k) => (
                                             <Link
                                                 key={k}
-                                                href={link.url}
-                                                className={`px-3 py-1 border rounded text-sm ${link.active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'} ${!link.url && 'opacity-50 cursor-not-allowed'}`}
-                                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                                href={link?.url || '#'}
+                                                className={`px-3 py-1 border rounded text-sm ${link?.active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'} ${!link?.url && 'opacity-50 cursor-not-allowed'}`}
+                                                dangerouslySetInnerHTML={{ __html: link?.label || '' }}
                                             />
                                         ))}
                                     </div>
