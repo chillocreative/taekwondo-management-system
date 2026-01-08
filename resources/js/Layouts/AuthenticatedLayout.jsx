@@ -119,8 +119,8 @@ export default function AuthenticatedLayout({ header, children }) {
                     },
                     {
                         name: 'Yuran',
-                        route: 'admin.payments.index',
-                        active: route().current('admin.payments.*'),
+                        route: 'coach.payments.index',
+                        active: route().current('coach.payments.*'),
                     },
                 ],
             },

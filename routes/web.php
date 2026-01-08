@@ -122,6 +122,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/coach/students', [App\Http\Controllers\Coach\StudentController::class, 'index'])->name('coach.students.index');
     Route::get('/coach/students/{student}', [App\Http\Controllers\Coach\StudentController::class, 'show'])->name('coach.students.show');
 
+    // Coach Payments (View-only)
+    Route::get('/coach/payments', [App\Http\Controllers\Coach\PaymentController::class, 'index'])->name('coach.payments.index');
+
     // Notification Routes
     Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
