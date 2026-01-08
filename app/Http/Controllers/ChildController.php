@@ -439,6 +439,16 @@ class ChildController extends Controller
                 if ($child->student) {
                     $currentMonth = \Carbon\Carbon::now()->translatedFormat('F Y');
                     
+                    // Calculate fees
+                    $feeSettings = \App\Models\FeeSetting::current();
+                    if ($child->date_of_birth) {
+                        $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+                        $monthlyFee = $feeSettings->getMonthlyFeeByDob($child->date_of_birth);
+                    } else {
+                        $yearlyFee = $feeSettings->yearly_fee_below_18;
+                        $monthlyFee = $feeSettings->monthly_fee_below_18;
+                    }
+
                     $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
                     
                     if ($isSpecialCenter) {
