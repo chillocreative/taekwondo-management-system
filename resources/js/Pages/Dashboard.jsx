@@ -309,7 +309,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                     <h4 className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-2 relative z-10">Jumlah Pelajar</h4>
                                     <div className="flex items-baseline gap-2 mt-4 relative z-10">
                                         <span className="text-5xl font-black text-zinc-900">{stats?.total_students || 0}</span>
-                                        <span className="text-xs font-bold text-indigo-600 uppercase">Pelatih</span>
+                                        <span className="text-xs font-bold text-indigo-600 uppercase">Pelajar</span>
                                     </div>
                                     <p className="text-xs text-zinc-400 mt-4 relative z-10">Aktif di platform</p>
                                 </div>
