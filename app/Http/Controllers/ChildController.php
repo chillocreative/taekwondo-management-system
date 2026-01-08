@@ -176,7 +176,15 @@ class ChildController extends Controller
         }
 
         // Calculate total: Yuran Tahunan + Yuran Bulanan (current month)
-        $totalAmount = $yearlyFee + $monthlyFee;
+        $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
+        
+        if ($isSpecialCenter) {
+            $monthlyFee = 0;
+            $totalAmount = $yearlyFee;
+        } else {
+            $totalAmount = $yearlyFee + $monthlyFee;
+        }
+
         $currentMonth = \Carbon\Carbon::now()->translatedFormat('F Y'); // e.g., "Januari 2026"
 
         return Inertia::render('Children/Payment', [
@@ -228,8 +236,16 @@ class ChildController extends Controller
         }
 
         // Calculate total payment: Yuran Tahunan + Yuran Bulanan (current month only)
+        $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
+        
         $currentMonth = \Carbon\Carbon::now()->format('F'); // e.g., "February"
-        $totalAmount = $yearlyFee + $monthlyFee;
+        
+        if ($isSpecialCenter) {
+            $monthlyFee = 0;
+            $totalAmount = $yearlyFee;
+        } else {
+            $totalAmount = $yearlyFee + $monthlyFee;
+        }
 
         // Create ToyyibPay bill
         $toyyibPay = new \App\Services\ToyyibPayService();
@@ -423,16 +439,14 @@ class ChildController extends Controller
                 if ($child->student) {
                     $currentMonth = \Carbon\Carbon::now()->translatedFormat('F Y');
                     
-                    // Calculate fees
-                    $feeSettings = \App\Models\FeeSetting::current();
-                    if ($child->date_of_birth) {
-                        $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
-                        $monthlyFee = $feeSettings->getMonthlyFeeByDob($child->date_of_birth);
+                    $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
+                    
+                    if ($isSpecialCenter) {
+                        $monthlyFee = 0;
+                        $totalAmount = $yearlyFee;
                     } else {
-                        $yearlyFee = $feeSettings->yearly_fee_below_18;
-                        $monthlyFee = $feeSettings->monthly_fee_below_18;
+                        $totalAmount = $yearlyFee + $monthlyFee;
                     }
-                    $totalAmount = $yearlyFee + $monthlyFee;
 
                     // Create payment record for registration
                     $payment = \App\Models\StudentPayment::create([
@@ -508,6 +522,12 @@ class ChildController extends Controller
         } else {
             $yearlyFee = $feeSettings->yearly_fee_below_18;
             $monthlyFee = $feeSettings->monthly_fee_below_18;
+        }
+
+        $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
+
+        if ($isSpecialCenter) {
+            $monthlyFee = 0;
         }
 
         $items = [

@@ -25,6 +25,7 @@
     "dependencies": {
         "body-parser": "^2.2.2",
         "express": "^5.2.1",
+        "puppeteer": "^24.34.0",
         "qrcode-terminal": "^0.12.0",
         "wbm": "^1.1.16"
     }

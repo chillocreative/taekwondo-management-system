@@ -17,19 +17,35 @@ let isConnected = false;
 // Initialize WhatsApp
 async function initWhatsApp() {
     try {
-        console.log('Starting WhatsApp Bot...');
-        // wbm.start() opens a browser windows and waits for QR scan
-        // In a server environment, this might need headless: false or specific userDataDir
+        console.log('Starting WhatsApp Bot using Chrome...');
+
+        const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+
+        // wbm.start() options
         await wbm.start({
             showBrowser: true,
             qrCodeData: true,
-            session: true // Try to reuse session if wbm supports it
+            session: true,
+            // Pass puppeteer options to use the local Chrome browser
+            puppeteerArgs: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu'
+            ],
+            // Use local Chrome path
+            executablePath: chromePath,
+            // Use a dedicated local directory for WhatsApp session to avoid EBUSY on main Chrome profile
+            userDataDir: path.join(__dirname, '.wbm-session')
         });
         isConnected = true;
         console.log('WhatsApp Bot is ready!');
     } catch (error) {
         console.error('Failed to start WhatsApp Bot:', error);
         isConnected = false;
+        if (error.message.includes('EBUSY') || error.message.includes('Cookies')) {
+            console.log('Error: Session files are locked. Close any other instances of this script or Chrome before restarting.');
+        }
     }
 }
 

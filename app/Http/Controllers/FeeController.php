@@ -27,13 +27,25 @@ class FeeController extends Controller
     {
         $user = auth()->user();
         
-        // Eager load monthly payments and student
-        $children = $user->children()->with(['student', 'monthlyPayments' => function($query) {
+        // Eager load monthly payments and student, and trainingCenter
+        $children = $user->children()->with(['student', 'trainingCenter', 'monthlyPayments' => function($query) {
             $query->where('year', Carbon::now()->year)
                   ->orderBy('month');
         }])->get();
 
         $feesData = $children->map(function ($child) {
+            $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
+
+            if ($isSpecialCenter) {
+                return [
+                    'id' => $child->id,
+                    'name' => $child->name,
+                    'is_special_center' => true,
+                    'fees' => [],
+                    'no_siri' => $child->student ? $child->student->no_siri : '-',
+                ];
+            }
+
             // Generate monthly payments if they don't exist
             if ($child->monthlyPayments->count() === 0) {
                 \App\Models\MonthlyPayment::generateForChild($child);
@@ -134,6 +146,7 @@ class FeeController extends Controller
                 'id' => $child->id,
                 'name' => $child->name,
                 'fees' => $fees,
+                'is_special_center' => false,
                 'no_siri' => $child->student ? $child->student->no_siri : '-',
             ];
         });
