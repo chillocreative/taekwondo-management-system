@@ -13,7 +13,7 @@ export default function CoachAttendanceSelect({ auth, trainingCenters }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {trainingCenters.map((center) => (
+                        {trainingCenters?.map((center) => (
                             <div key={center.id} className="bg-white rounded-2xl shadow-lg border border-zinc-200 overflow-hidden hover:shadow-xl transition-shadow duration-300">
                                 <div className="p-6">
                                     <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">

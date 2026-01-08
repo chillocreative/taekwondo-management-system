@@ -229,19 +229,19 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                             </table>
                         </div>
                         {/* Pagination if needed */}
-                        {payments.links && payments.links.length > 3 && (
+                        {payments?.links && payments?.links?.length > 3 && (
                             <div className="px-6 py-4 border-t border-gray-200">
                                 {/* Simple Pagination Implementation or use Link component from Inertia */}
                                 <div className="flex justify-between items-center">
-                                    <div>
-                                        Menunjukkan {payments.from} hingga {payments.to} daripada {payments.total} rekod
+                                    <div className="text-sm text-gray-500">
+                                        Menunjukkan {payments?.from || 0} hingga {payments?.to || 0} daripada {payments?.total || 0} rekod
                                     </div>
                                     <div className="flex gap-1">
-                                        {payments.links.map((link, k) => (
+                                        {payments?.links?.map((link, k) => (
                                             <Link
                                                 key={k}
                                                 href={link.url}
-                                                className={`px-3 py-1 border rounded ${link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'} ${!link.url && 'opacity-50 cursor-not-allowed'}`}
+                                                className={`px-3 py-1 border rounded text-sm ${link.active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'} ${!link.url && 'opacity-50 cursor-not-allowed'}`}
                                                 dangerouslySetInnerHTML={{ __html: link.label }}
                                             />
                                         ))}

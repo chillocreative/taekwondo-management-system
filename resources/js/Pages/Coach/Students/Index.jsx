@@ -3,9 +3,9 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
 
 export default function Index({ auth, students, filters, stats, trainingCenters }) {
-    const [search, setSearch] = useState(filters.search || '');
-    const [kategori, setKategori] = useState(filters.kategori || '');
-    const [trainingCenterId, setTrainingCenterId] = useState(filters.training_center_id || '');
+    const [search, setSearch] = useState(filters?.search || '');
+    const [kategori, setKategori] = useState(filters?.kategori || '');
+    const [trainingCenterId, setTrainingCenterId] = useState(filters?.training_center_id || '');
     const isFirstRender = useRef(true);
 
     // Auto-filter effect
@@ -149,7 +149,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-100">
-                                    {students.data.length > 0 ? (
+                                    {students?.data && students.data.length > 0 ? (
                                         students.data.map((student) => (
                                             <tr key={student.id} className="hover:bg-blue-50/50 transition duration-150 group">
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -213,7 +213,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                         </div>
 
                         {/* Pagination */}
-                        {students.links.length > 3 && (
+                        {students?.links && students?.links?.length > 3 && (
                             <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-center">
                                 <div className="flex gap-1">
                                     {students.links.map((link, index) => (

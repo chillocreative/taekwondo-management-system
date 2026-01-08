@@ -27,13 +27,15 @@ export default function CoachAttendanceIndex({ auth, trainingCenter, students, d
     useEffect(() => {
         // Initialize attendances state
         const initialStates = {};
-        students.forEach(student => {
-            initialStates[student.id] = {
-                // Default to 'hadir' if not set
-                status: student.status || 'hadir',
-                notes: student.notes || ''
-            };
-        });
+        if (students && Array.isArray(students)) {
+            students.forEach(student => {
+                initialStates[student.id] = {
+                    // Default to 'hadir' if not set
+                    status: student.status || 'hadir',
+                    notes: student.notes || ''
+                };
+            });
+        }
         setAttendances(initialStates);
     }, [students]);
 
@@ -80,9 +82,9 @@ export default function CoachAttendanceIndex({ auth, trainingCenter, students, d
         });
     };
 
-    const filteredStudents = students.filter(student =>
-        student.name.toLowerCase().includes(search.toLowerCase()) ||
-        student.no_siri.toLowerCase().includes(search.toLowerCase())
+    const filteredStudents = (students || []).filter(student =>
+        student?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        student?.no_siri?.toLowerCase().includes(search.toLowerCase())
     );
 
     const getStatusColor = (status, currentStatus) => {

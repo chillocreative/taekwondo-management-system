@@ -7,7 +7,7 @@ export default function Sheet({ auth, trainingCenter, attendances, date, day, st
             user={auth.user}
             header={<h2 className="font-bold text-2xl text-zinc-900 leading-tight">Rekod Kehadiran Sesi</h2>}
         >
-            <Head title={`Kehadiran - ${trainingCenter.name} (${date})`} />
+            <Head title={`Kehadiran - ${trainingCenter?.name || '-'} (${date})`} />
 
             <div className="py-12 bg-zinc-100 min-h-screen">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -53,7 +53,7 @@ export default function Sheet({ auth, trainingCenter, attendances, date, day, st
                             {/* Metadata Grid */}
                             <div className="grid grid-cols-2 gap-0 mb-8 border border-zinc-800">
                                 <div className="p-3 border-r border-b border-zinc-800 bg-zinc-50 font-bold text-xs uppercase tracking-widest text-zinc-600">Nama Pusat Latihan</div>
-                                <div className="p-3 border-b border-zinc-800 font-black text-sm uppercase">{trainingCenter.name}</div>
+                                <div className="p-3 border-b border-zinc-800 font-black text-sm uppercase">{trainingCenter?.name || '-'}</div>
 
                                 <div className="p-3 border-r border-zinc-800 bg-zinc-50 font-bold text-xs uppercase tracking-widest text-zinc-600">Tarikh / Hari</div>
                                 <div className="p-3 font-black text-sm uppercase">
@@ -69,19 +69,19 @@ export default function Sheet({ auth, trainingCenter, attendances, date, day, st
                                 </div>
                                 <div className="p-4 border-r border-zinc-800">
                                     <div className="text-[10px] font-black uppercase text-zinc-500 mb-1">Hadir</div>
-                                    <div className="text-xl font-black text-emerald-600">{stats.hadir}</div>
+                                    <div className="text-xl font-black text-emerald-600">{stats?.hadir || 0}</div>
                                 </div>
                                 <div className="p-4 border-r border-zinc-800">
                                     <div className="text-[10px] font-black uppercase text-zinc-500 mb-1">Tidak Hadir</div>
-                                    <div className="text-xl font-black text-rose-600">{stats.tidak_hadir}</div>
+                                    <div className="text-xl font-black text-rose-600">{stats?.tidak_hadir || 0}</div>
                                 </div>
                                 <div className="p-4 border-r border-zinc-800">
                                     <div className="text-[10px] font-black uppercase text-zinc-500 mb-1">Lain-lain (Sakit/Cuti)</div>
-                                    <div className="text-xl font-black text-amber-600">{stats.sakit + stats.cuti}</div>
+                                    <div className="text-xl font-black text-amber-600">{(stats?.sakit || 0) + (stats?.cuti || 0)}</div>
                                 </div>
                                 <div className="p-4 bg-zinc-900 text-white">
                                     <div className="text-[10px] font-black uppercase text-zinc-400 mb-1">Peratus Hadir</div>
-                                    <div className="text-xl font-black">{stats.percentage}%</div>
+                                    <div className="text-xl font-black">{stats?.percentage || 0}%</div>
                                 </div>
                             </div>
 
@@ -96,21 +96,21 @@ export default function Sheet({ auth, trainingCenter, attendances, date, day, st
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {attendances.map((att, index) => (
+                                    {attendances?.map((att, index) => (
                                         <tr key={index} className="border-b border-zinc-300 hover:bg-zinc-50">
                                             <td className="p-3 border-x border-zinc-800 text-center text-xs font-bold text-zinc-500">{index + 1}</td>
-                                            <td className="p-3 border-r border-zinc-800 text-sm font-black text-zinc-800 uppercase">{att.student_name}</td>
+                                            <td className="p-3 border-r border-zinc-800 text-sm font-black text-zinc-800 uppercase">{att?.student_name}</td>
                                             <td className="p-3 border-r border-zinc-800 text-center">
-                                                <span className={`text-[10px] font-black px-3 py-1 border rounded-sm tracking-tighter ${att.status === 'hadir' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                                    att.status === 'tidak_hadir' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                                                <span className={`text-[10px] font-black px-3 py-1 border rounded-sm tracking-tighter ${att?.status === 'hadir' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                    att?.status === 'tidak_hadir' ? 'bg-rose-50 text-rose-700 border-rose-200' :
                                                         'bg-amber-50 text-amber-700 border-amber-200'
                                                     }`}>
-                                                    {att.status_label.toUpperCase()}
+                                                    {att?.status_label?.toUpperCase() || ''}
                                                 </span>
                                             </td>
                                             <td className="p-3 text-center print:hidden">
                                                 <div className="flex justify-center">
-                                                    {att.status === 'hadir' ? (
+                                                    {att?.status === 'hadir' ? (
                                                         <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs">✓</div>
                                                     ) : (
                                                         <div className="w-6 h-6 rounded-full border border-zinc-300"></div>

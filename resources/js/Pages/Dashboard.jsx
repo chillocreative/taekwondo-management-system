@@ -41,7 +41,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-100 flex flex-col justify-between">
                                     <span className="text-zinc-500 text-sm font-bold uppercase tracking-wider mb-2">Anak Berdaftar</span>
                                     <div className="flex items-end justify-between">
-                                        <span className="text-4xl font-black text-zinc-900">{stats.total_anak}</span>
+                                        <span className="text-4xl font-black text-zinc-900">{stats?.total_anak || 0}</span>
                                         <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                                         </div>
@@ -50,7 +50,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-100 flex flex-col justify-between">
                                     <span className="text-zinc-500 text-sm font-bold uppercase tracking-wider mb-2">Jumlah Kehadiran</span>
                                     <div className="flex items-end justify-between">
-                                        <span className="text-4xl font-black text-emerald-600">{stats.total_hadir}</span>
+                                        <span className="text-4xl font-black text-emerald-600">{stats?.total_hadir || 0}</span>
                                         <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                                         </div>
@@ -191,11 +191,11 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                                     <div>
                                         <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider relative z-10">Jumlah Pelajar</p>
-                                        <h3 className="text-4xl font-black text-zinc-900 mt-2 relative z-10">{stats.total_students}</h3>
+                                        <h3 className="text-4xl font-black text-zinc-900 mt-2 relative z-10">{stats?.total_students || 0}</h3>
                                     </div>
                                     <div className="mt-4 flex items-center gap-2 relative z-10">
                                         <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-lg">
-                                            +{stats.new_students} Baru
+                                            +{stats?.new_students || 0} Baru
                                         </span>
                                         <span className="text-xs text-zinc-400 font-medium">Bulan Ini</span>
                                     </div>
@@ -206,11 +206,11 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                                     <div>
                                         <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider relative z-10">Kehadiran Hari Ini</p>
-                                        <h3 className="text-4xl font-black text-emerald-600 mt-2 relative z-10">{stats.present_today}</h3>
+                                        <h3 className="text-4xl font-black text-emerald-600 mt-2 relative z-10">{stats?.present_today || 0}</h3>
                                     </div>
                                     <div className="mt-4 flex items-center gap-2 relative z-10">
                                         <span className="text-xs text-zinc-500 font-medium">Daripada</span>
-                                        <span className="font-bold text-zinc-900">{stats.total_today_marked}</span>
+                                        <span className="font-bold text-zinc-900">{stats?.total_today_marked || 0}</span>
                                         <span className="text-xs text-zinc-500 font-medium">ditanda</span>
                                     </div>
                                 </div>
@@ -220,7 +220,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-violet-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                                     <div>
                                         <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider relative z-10">Sesi Latihan</p>
-                                        <h3 className="text-4xl font-black text-violet-600 mt-2 relative z-10">{stats.monthly_sessions}</h3>
+                                        <h3 className="text-4xl font-black text-violet-600 mt-2 relative z-10">{stats?.monthly_sessions || 0}</h3>
                                     </div>
                                     <div className="mt-4 relative z-10">
                                         <p className="text-xs text-zinc-400 font-medium">Sesi dijalankan bulan ini</p>
@@ -231,16 +231,16 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                 <div className="bg-white p-6 rounded-3xl shadow-lg border border-zinc-100 flex flex-col justify-between relative overflow-hidden group">
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-rose-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                                     <div>
-                                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider relative z-10">Yuran ({stats.current_month})</p>
+                                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider relative z-10">Yuran ({stats?.current_month || '-'})</p>
                                         <div className="flex items-baseline gap-2 mt-2 relative z-10">
-                                            <h3 className="text-4xl font-black text-zinc-900">{stats.paid_month}</h3>
+                                            <h3 className="text-4xl font-black text-zinc-900">{stats?.paid_month || 0}</h3>
                                             <span className="text-xs font-bold text-emerald-600 uppercase">Berjaya</span>
                                         </div>
                                     </div>
                                     <div className="mt-4 flex items-center gap-2 relative z-10">
                                         <span className="w-2 h-2 rounded-full bg-rose-500"></span>
                                         <span className="text-xs text-zinc-500 font-medium">
-                                            <span className="font-bold text-zinc-900">{stats.unpaid_month}</span> Belum Jelas
+                                            <span className="font-bold text-zinc-900">{stats?.unpaid_month || 0}</span> Belum Jelas
                                         </span>
                                     </div>
                                 </div>
@@ -308,7 +308,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                                     <h4 className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-2 relative z-10">Jumlah Pelajar</h4>
                                     <div className="flex items-baseline gap-2 mt-4 relative z-10">
-                                        <span className="text-5xl font-black text-zinc-900">{stats.total_students}</span>
+                                        <span className="text-5xl font-black text-zinc-900">{stats?.total_students || 0}</span>
                                         <span className="text-xs font-bold text-indigo-600 uppercase">Pelatih</span>
                                     </div>
                                     <p className="text-xs text-zinc-400 mt-4 relative z-10">Aktif di platform</p>
@@ -319,7 +319,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                                     <h4 className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-2 relative z-10">Pusat Latihan</h4>
                                     <div className="flex items-baseline gap-2 mt-4 relative z-10">
-                                        <span className="text-5xl font-black text-emerald-600">{stats.total_centers}</span>
+                                        <span className="text-5xl font-black text-emerald-600">{stats?.total_centers || 0}</span>
                                         <span className="text-xs font-bold text-emerald-700 uppercase">Lokasi</span>
                                     </div>
                                     <p className="text-xs text-zinc-400 mt-4 relative z-10">Beroperasi aktif</p>
@@ -332,11 +332,11 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                     <div className="space-y-2 mt-4 relative z-10">
                                         <div className="flex justify-between items-center text-sm">
                                             <span className="text-zinc-500 font-medium">Jurulatih:</span>
-                                            <span className="font-black text-zinc-900">{stats.total_coaches}</span>
+                                            <span className="font-black text-zinc-900">{stats?.total_coaches || 0}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-sm">
                                             <span className="text-zinc-500 font-medium">Ibu Bapa:</span>
-                                            <span className="font-black text-zinc-900">{stats.total_parents}</span>
+                                            <span className="font-black text-zinc-900">{stats?.total_parents || 0}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -374,11 +374,11 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                     {/* Monthly Collection (Current Month) */}
                                     <div className="bg-white p-6 rounded-3xl shadow-xl border border-zinc-100 relative overflow-hidden group">
                                         <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                                        <h4 className="text-zinc-400 text-[10px] font-black uppercase tracking-widest mb-2 relative z-10">Yuran Bulanan ({stats.current_month})</h4>
+                                        <h4 className="text-zinc-400 text-[10px] font-black uppercase tracking-widest mb-2 relative z-10">Yuran Bulanan ({stats?.current_month || '-'})</h4>
                                         <div className="flex items-baseline gap-1 mt-4 relative z-10">
                                             <span className="text-xs font-bold text-zinc-400">RM</span>
                                             <span className="text-3xl font-black text-zinc-900">
-                                                {new Intl.NumberFormat('ms-MY', { minimumFractionDigits: 0 }).format(stats.monthly_revenue)}
+                                                {new Intl.NumberFormat('ms-MY', { minimumFractionDigits: 0 }).format(stats?.monthly_revenue || 0)}
                                             </span>
                                         </div>
                                         <p className="text-[10px] text-zinc-400 mt-4 font-medium relative z-10">Kutipan untuk bulan semasa</p>
@@ -391,7 +391,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                         <div className="flex items-baseline gap-1 mt-4 relative z-10">
                                             <span className="text-xs font-bold text-zinc-400">RM</span>
                                             <span className="text-3xl font-black text-zinc-900">
-                                                {new Intl.NumberFormat('ms-MY', { minimumFractionDigits: 0 }).format(stats.annual_fees)}
+                                                {new Intl.NumberFormat('ms-MY', { minimumFractionDigits: 0 }).format(stats?.annual_fees || 0)}
                                             </span>
                                         </div>
                                         <p className="text-[10px] text-zinc-400 mt-4 font-medium relative z-10">Terkumpul dari pendaftaran baru</p>
@@ -404,7 +404,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                         <div className="flex items-baseline gap-1 mt-4 relative z-10">
                                             <span className="text-xs font-bold text-zinc-400">RM</span>
                                             <span className="text-3xl font-black text-emerald-600">
-                                                {new Intl.NumberFormat('ms-MY', { minimumFractionDigits: 0 }).format(stats.yearly_monthly_fees)}
+                                                {new Intl.NumberFormat('ms-MY', { minimumFractionDigits: 0 }).format(stats?.yearly_monthly_fees || 0)}
                                             </span>
                                         </div>
                                         <p className="text-[10px] text-zinc-400 mt-4 font-medium relative z-10">Jumlah kutipan bulanan tahun {new Date().getFullYear()}</p>
@@ -417,7 +417,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                         <div className="mt-4 relative z-10 flex items-baseline gap-1">
                                             <span className="text-xs font-bold text-zinc-400">RM</span>
                                             <span className="text-4xl font-black text-white">
-                                                {new Intl.NumberFormat('ms-MY', { minimumFractionDigits: 0 }).format(stats.total_revenue)}
+                                                {new Intl.NumberFormat('ms-MY', { minimumFractionDigits: 0 }).format(stats?.total_revenue || 0)}
                                             </span>
                                         </div>
                                         <p className="text-[10px] text-emerald-400 font-bold mt-4 uppercase tracking-widest relative z-10 group-hover:animate-pulse">Prestasi Cemerlang</p>
@@ -426,7 +426,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                             </div>
 
                             {/* Alert/Action Section */}
-                            {stats.pending_approvals > 0 && (
+                            {stats?.pending_approvals > 0 && (
                                 <div className="bg-rose-50 border border-rose-100 p-6 rounded-3xl flex items-center justify-between shadow-sm">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center animate-pulse">

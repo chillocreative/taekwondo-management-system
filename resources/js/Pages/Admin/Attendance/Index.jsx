@@ -84,27 +84,27 @@ export default function AdminAttendanceIndex({ auth, attendances, training_cente
                         {/* Stats Cards */}
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
                             <div className="bg-white rounded-xl border border-zinc-200 p-4">
-                                <div className="text-2xl font-bold text-zinc-900">{stats.yearly_sessions}</div>
-                                <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Jumlah Kelas Tahun {stats.current_year}</div>
+                                <div className="text-2xl font-bold text-zinc-900">{stats?.yearly_sessions || 0}</div>
+                                <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Jumlah Kelas Tahun {stats?.current_year}</div>
                             </div>
                             <div className="bg-white rounded-xl border border-zinc-200 p-4">
-                                <div className="text-2xl font-bold text-zinc-900">{stats.monthly_sessions}</div>
-                                <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Jumlah Kelas {stats.current_month_name} {stats.current_year}</div>
+                                <div className="text-2xl font-bold text-zinc-900">{stats?.monthly_sessions || 0}</div>
+                                <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Jumlah Kelas {stats?.current_month_name} {stats?.current_year}</div>
                             </div>
                             <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-4">
-                                <div className="text-2xl font-bold text-emerald-700">{stats.hadir}</div>
+                                <div className="text-2xl font-bold text-emerald-700">{stats?.hadir || 0}</div>
                                 <div className="text-[10px] text-emerald-600 uppercase tracking-wider font-bold">Hadir</div>
                             </div>
                             <div className="bg-rose-50 rounded-xl border border-rose-200 p-4">
-                                <div className="text-2xl font-bold text-rose-700">{stats.tidak_hadir}</div>
+                                <div className="text-2xl font-bold text-rose-700">{stats?.tidak_hadir || 0}</div>
                                 <div className="text-[10px] text-rose-600 uppercase tracking-wider font-bold">Tidak Hadir</div>
                             </div>
                             <div className="bg-amber-50 rounded-xl border border-amber-200 p-4">
-                                <div className="text-2xl font-bold text-amber-700">{stats.sakit}</div>
+                                <div className="text-2xl font-bold text-amber-700">{stats?.sakit || 0}</div>
                                 <div className="text-[10px] text-amber-600 uppercase tracking-wider font-bold">Sakit</div>
                             </div>
                             <div className="bg-purple-50 rounded-xl border border-purple-200 p-4">
-                                <div className="text-2xl font-bold text-purple-700">{stats.cuti}</div>
+                                <div className="text-2xl font-bold text-purple-700">{stats?.cuti || 0}</div>
                                 <div className="text-[10px] text-purple-600 uppercase tracking-wider font-bold">Cuti</div>
                             </div>
                         </div>
@@ -151,7 +151,7 @@ export default function AdminAttendanceIndex({ auth, attendances, training_cente
                                             <input
                                                 type="checkbox"
                                                 onChange={handleSelectAll}
-                                                checked={selectedIds.length === attendances.data?.length && attendances.data?.length > 0}
+                                                checked={selectedIds.length === (attendances?.data?.length || 0) && (attendances?.data?.length || 0) > 0}
                                                 className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
                                             />
                                         </th>
@@ -227,14 +227,14 @@ export default function AdminAttendanceIndex({ auth, attendances, training_cente
                         </div>
 
                         {/* Pagination */}
-                        {attendances.links && attendances.links.length > 3 && (
+                        {attendances?.links && attendances?.links?.length > 3 && (
                             <div className="px-6 py-4 border-t border-zinc-200 bg-zinc-50">
                                 <div className="flex items-center justify-between">
                                     <div className="text-sm text-zinc-600">
-                                        Menunjukkan {attendances.from} hingga {attendances.to} daripada {attendances.total} sesi
+                                        Menunjukkan {attendances?.from || 0} hingga {attendances?.to || 0} daripada {attendances?.total || 0} sesi
                                     </div>
                                     <div className="flex gap-1">
-                                        {attendances.links.map((link, k) => (
+                                        {attendances?.links?.map((link, k) => (
                                             <button
                                                 key={k}
                                                 onClick={() => link.url && router.get(link.url)}
