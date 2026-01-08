@@ -425,23 +425,7 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                 </div>
                             </div>
 
-                            {/* Alert/Action Section */}
-                            {stats?.pending_approvals > 0 && (
-                                <div className="bg-rose-50 border border-rose-100 p-6 rounded-3xl flex items-center justify-between shadow-sm">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center animate-pulse">
-                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                        </div>
-                                        <div>
-                                            <h5 className="text-rose-900 font-black text-lg">Pendaftaran Menunggu Tindakan</h5>
-                                            <p className="text-rose-600 font-medium">Terdapat {stats.pending_approvals} pelajar baru yang memerlukan pengesahan atau pembayaran pendaftaran.</p>
-                                        </div>
-                                    </div>
-                                    <Link href={route('students.index')} className="px-6 py-2.5 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-700 shadow-lg shadow-rose-200 transition-all">
-                                        Semak Sekarang
-                                    </Link>
-                                </div>
-                            )}
+
 
                             {/* Management Hub Section */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
