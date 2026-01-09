@@ -1,8 +1,11 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import wbm from 'wbm';
+import pkg from 'whatsapp-web.js';
+const { Client, LocalAuth } = pkg;
+import qrcode from 'qrcode';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import cors from 'cors';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,47 +13,65 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = 3001;
 
+app.use(cors());
 app.use(bodyParser.json());
 
 let isConnected = false;
+let currentQR = null;
+let clientStatus = 'initializing'; // initializing, qr, authenticated, ready, disconnected
 
-// Initialize WhatsApp
-async function initWhatsApp() {
-    try {
-        console.log('Starting WhatsApp Bot using Chrome...');
-
-        const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-
-        // wbm.start() options
-        await wbm.start({
-            showBrowser: true,
-            qrCodeData: true,
-            session: true,
-            // Pass puppeteer options to use the local Chrome browser
-            puppeteerArgs: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu'
-            ],
-            // Use local Chrome path
-            executablePath: chromePath,
-            // Use a dedicated local directory for WhatsApp session to avoid EBUSY on main Chrome profile
-            userDataDir: path.join(__dirname, '.wbm-session')
-        });
-        isConnected = true;
-        console.log('WhatsApp Bot is ready!');
-    } catch (error) {
-        console.error('Failed to start WhatsApp Bot:', error);
-        isConnected = false;
-        if (error.message.includes('EBUSY') || error.message.includes('Cookies')) {
-            console.log('Error: Session files are locked. Close any other instances of this script or Chrome before restarting.');
-        }
+const client = new Client({
+    authStrategy: new LocalAuth({
+        dataPath: path.join(__dirname, '.wbm-session')
+    }),
+    puppeteer: {
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu'
+        ]
     }
-}
+});
+
+client.on('qr', async (qr) => {
+    console.log('QR Received');
+    try {
+        currentQR = await qrcode.toDataURL(qr);
+        clientStatus = 'qr';
+        isConnected = false;
+    } catch (err) {
+        console.error('Failed to generate QR:', err);
+    }
+});
+
+client.on('authenticated', () => {
+    console.log('Authenticated');
+    clientStatus = 'authenticated';
+    currentQR = null;
+});
+
+client.on('ready', () => {
+    console.log('WhatsApp Client is ready!');
+    isConnected = true;
+    clientStatus = 'ready';
+    currentQR = null;
+});
+
+client.on('disconnected', (reason) => {
+    console.log('Client was logged out', reason);
+    isConnected = false;
+    clientStatus = 'disconnected';
+    client.initialize(); // Re-initialize to get new QR
+});
 
 app.get('/status', (req, res) => {
-    res.json({ connected: isConnected });
+    res.json({
+        connected: isConnected,
+        status: clientStatus,
+        qr: currentQR
+    });
 });
 
 app.post('/send', async (req, res) => {
@@ -61,8 +82,13 @@ app.post('/send', async (req, res) => {
     }
 
     try {
-        const contacts = [{ phone, message }];
-        await wbm.send(contacts, message);
+        // Format phone number: remove +, ensuring it starts with country code
+        let formattedPhone = phone.replace(/\D/g, '');
+        if (!formattedPhone.endsWith('@c.us')) {
+            formattedPhone += '@c.us';
+        }
+
+        await client.sendMessage(formattedPhone, message);
         res.json({ success: true });
     } catch (error) {
         console.error('Error sending message:', error);
@@ -72,5 +98,10 @@ app.post('/send', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`WhatsApp Server listening at http://localhost:${port}`);
-    initWhatsApp();
+    console.log('Initializing WhatsApp Client...');
+    client.initialize().then(() => {
+        console.log('Client.initialize() finished');
+    }).catch(err => {
+        console.error('Failed to initialize client:', err);
+    });
 });
