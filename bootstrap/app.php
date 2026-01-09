@@ -24,6 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         //
     })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        // Send monthly fee reminders on 16th and 21st of every month at 9:00 AM
+        $schedule->command('fees:send-reminders')
+            ->monthlyOn(16, '09:00')
+            ->monthlyOn(21, '09:00');
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

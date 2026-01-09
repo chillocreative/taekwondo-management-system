@@ -1,7 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import pkg from 'whatsapp-web.js';
-const { Client, LocalAuth } = pkg;
+const { Client, LocalAuth, MessageMedia } = pkg;
 import qrcode from 'qrcode';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -24,13 +24,18 @@ const client = new Client({
     authStrategy: new LocalAuth({
         dataPath: path.join(__dirname, '.wbm-session')
     }),
+    restartOnAuthFail: true,
+    authTimeoutMs: 60000, // 60 seconds timeout
     puppeteer: {
         headless: true,
+        takeoverOnConflict: true,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
-            '--disable-gpu'
+            '--disable-gpu',
+            '--disable-extensions',
+            '--no-first-run'
         ]
     }
 });
@@ -74,6 +79,13 @@ app.get('/status', (req, res) => {
     });
 });
 
+app.get('/me', (req, res) => {
+    if (!isConnected) {
+        return res.status(500).json({ error: 'WhatsApp not connected' });
+    }
+    res.json({ phone: client.info.wid.user });
+});
+
 app.post('/send', async (req, res) => {
     const { phone, message } = req.body;
 
@@ -92,6 +104,30 @@ app.post('/send', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('Error sending message:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/send-file', async (req, res) => {
+    const { phone, message, file, filename } = req.body;
+
+    if (!isConnected) {
+        return res.status(500).json({ error: 'WhatsApp not connected' });
+    }
+
+    try {
+        let formattedPhone = phone.replace(/\D/g, '');
+        if (!formattedPhone.endsWith('@c.us')) {
+            formattedPhone += '@c.us';
+        }
+
+        // Create media from base64
+        const media = new MessageMedia('application/pdf', file, filename);
+
+        await client.sendMessage(formattedPhone, media, { caption: message });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error sending file:', error);
         res.status(500).json({ error: error.message });
     }
 });

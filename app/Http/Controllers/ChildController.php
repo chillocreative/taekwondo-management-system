@@ -7,6 +7,8 @@ use App\Models\TrainingCenter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 
 class ChildController extends Controller
 {
@@ -473,6 +475,12 @@ class ChildController extends Controller
                         'payment_date' => now(),
                     ]);
 
+                    // Send WhatsApp Notification to Admin
+                    \App\Services\WhatsappService::notifyAdminNewPaidPeserta($child->name, $totalAmount);
+
+                    // Send PDF Receipt to Parent
+                    $this->sendReceiptViaWhatsapp($child, $yearlyFee, $monthlyFee, $payment->receipt_number);
+
                     // Update monthly payment record for current month
                     $currentMonthNum = \Carbon\Carbon::now()->month;
                     $currentYear = \Carbon\Carbon::now()->year;
@@ -553,5 +561,38 @@ class ChildController extends Controller
         ]);
 
         return $pdf->stream('Resit_Yuran_' . preg_replace('/[^A-Za-z0-9]/', '_', $child->name) . '.pdf');
+    }
+
+    private function sendReceiptViaWhatsapp($child, $yearlyFee, $monthlyFee, $receiptNumber)
+    {
+        try {
+            $items = [
+                'yearly_fee' => $yearlyFee,
+                'monthly_fee' => $monthlyFee,
+                'total' => $yearlyFee + $monthlyFee
+            ];
+
+            $pdf = Pdf::loadView('receipts.registration', [
+                'child' => $child,
+                'user' => $child->parent,
+                'items' => $items,
+            ]);
+            
+            $base64 = base64_encode($pdf->output());
+            
+            $parentPhone = $child->phone_number ?? $child->guardian_phone;
+            if ($parentPhone) {
+                $msg = "*[RESIT PENDAFTARAN]*\n\nPendaftaran bagi *{$child->name}* telah berjaya. Terima kasih atas pembayaran anda.\n\nSila simpan resit ini untuk rujukan anda.";
+                
+                \App\Services\WhatsappService::sendFile(
+                    $parentPhone, 
+                    $msg, 
+                    $base64, 
+                    "Resit-Pendaftaran-{$child->name}.pdf"
+                );
+            }
+        } catch (\Exception $e) {
+            Log::error('Gagal menghantar resit WhatsApp Pendaftaran: ' . $e->getMessage());
+        }
     }
 }

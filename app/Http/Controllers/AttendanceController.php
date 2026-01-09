@@ -311,6 +311,14 @@ class AttendanceController extends Controller
                         
                     if (!$alreadyNotified) {
                         \App\Models\Notification::createAbsentNotification($name);
+                        
+                        // WhatsApp Notifications
+                        \App\Services\WhatsappService::notifyConsecutiveAbsenceAdmin($name, $student->id);
+                        
+                        $parentPhone = $student->child->phone_number ?? $student->child->guardian_phone;
+                        if ($parentPhone) {
+                            \App\Services\WhatsappService::notifyConsecutiveAbsenceWaris($parentPhone, $name);
+                        }
                     }
                 }
             }

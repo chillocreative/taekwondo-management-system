@@ -248,6 +248,9 @@ class FeeController extends Controller
                 
                 \App\Services\WhatsappService::send($parentPhone, $msg);
                 \App\Services\WhatsappService::notifyAdmin("Pembayaran Yuran Baru:\nPelajar: {$studentName}\nBulan: {$payment->month}\nJumlah: RM{$payment->total}");
+                
+                // Send PDF Receipt
+                $this->sendReceiptViaWhatsapp($payment);
             }
             return redirect()->route('fees.index')->with('success', 'Pembayaran berjaya! Resit telah dijana.');
         }
@@ -280,6 +283,9 @@ class FeeController extends Controller
                 
                 \App\Services\WhatsappService::send($parentPhone, $msg);
                 \App\Services\WhatsappService::notifyAdmin("Pembayaran Yuran Baru (Callback):\nPelajar: {$studentName}\nBulan: {$payment->month}\nJumlah: RM{$payment->total}");
+                
+                // Send PDF Receipt
+                $this->sendReceiptViaWhatsapp($payment);
             }
         }
     }
@@ -338,6 +344,30 @@ class FeeController extends Controller
                 'payment_reference' => $payment->transaction_ref,
                 'receipt_number' => $payment->receipt_number,
             ]);
+        }
+    }
+
+    private function sendReceiptViaWhatsapp(StudentPayment $payment)
+    {
+        try {
+            $payment->load(['student.child.parent', 'student.child.trainingCenter']);
+            $pdf = Pdf::loadView('receipts.fee', ['payment' => $payment]);
+            $base64 = base64_encode($pdf->output());
+            
+            $parentPhone = $payment->student->child->parent->phone_number ?? null;
+            if ($parentPhone) {
+                $studentName = $payment->student->nama_pelajar ?? 'Peserta';
+                $msg = "*[RESIT PEMBAYARAN YURAN]*\n\nTerima kasih atas pembayaran yuran bagi *{$studentName}* untuk bulan *{$payment->month}*.\n\nSila simpan resit ini untuk rujukan anda.";
+                
+                \App\Services\WhatsappService::sendFile(
+                    $parentPhone, 
+                    $msg, 
+                    $base64, 
+                    "Resit-{$payment->receipt_number}.pdf"
+                );
+            }
+        } catch (\Exception $e) {
+            Log::error('Gagal menghantar resit WhatsApp: ' . $e->getMessage());
         }
     }
 }
