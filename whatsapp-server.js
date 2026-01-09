@@ -24,12 +24,13 @@ let clientStatus = 'initializing'; // initializing, qr, ready, disconnected
 let sock = null;
 
 async function connectToWhatsApp() {
+    console.log('Attempting to connect to WhatsApp...');
     const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, '.baileys-session'));
 
     sock = makeWASocket({
         auth: state,
         printQRInTerminal: true,
-        logger: pino({ level: 'silent' }),
+        logger: pino({ level: 'info' }), // Increased log level for debugging
         browser: ['TSMS Server', 'Chrome', '1.0.0']
     });
 
@@ -39,22 +40,25 @@ async function connectToWhatsApp() {
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
-            console.log('QR Code generated');
+            console.log('--- QR CODE READY ---');
             currentQR = await qrcode.toDataURL(qr);
             clientStatus = 'qr';
             isConnected = false;
         }
 
         if (connection === 'close') {
-            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('Connection closed. Reconnecting:', shouldReconnect);
+            const statusCode = lastDisconnect?.error?.output?.statusCode;
+            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+            console.log(`Connection closed (Status: ${statusCode}). Reconnecting: ${shouldReconnect}`);
+
             isConnected = false;
             clientStatus = 'disconnected';
+
             if (shouldReconnect) {
-                connectToWhatsApp();
+                setTimeout(() => connectToWhatsApp(), 3000); // Delay before reconnect
             }
         } else if (connection === 'open') {
-            console.log('WhatsApp connection is now open!');
+            console.log('--- WHATSAPP CONNECTED ---');
             isConnected = true;
             clientStatus = 'ready';
             currentQR = null;
