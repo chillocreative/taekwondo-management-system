@@ -49,7 +49,7 @@ async function connectToWhatsApp() {
             version,
             auth: state,
             logger: pino({ level: 'error' }),
-            browser: ['Windows', 'Chrome', '111.0.0.0'],
+            browser: ['Ubuntu', 'Chrome', '110.0.5481.178'],
             syncFullHistory: false,
             qrTimeout: 40000,
             connectTimeoutMs: 60000,
@@ -64,29 +64,39 @@ async function connectToWhatsApp() {
             if (qr) {
                 currentQR = await qrcode.toDataURL(qr);
                 clientStatus = 'qr';
+                lastError = null;
             }
 
             if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
-                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+                let shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
                 lastError = `Status ${statusCode || 'Unknown'}`;
                 isConnected = false;
                 clientStatus = 'disconnected';
                 currentQR = null;
 
-                // CRITICAL: If unauthorized (401), delete session to force new QR
-                if (statusCode === 401) {
-                    console.log('Unauthorized (401), clearing session...');
-                    if (fs.existsSync(sessionPath)) {
-                        fs.rmSync(sessionPath, { recursive: true, force: true });
+                console.log(`Connection closed with status ${statusCode}`);
+
+                // If unauthorized or logged out, clear session and force a fresh reconnect to show QR
+                if (statusCode === 401 || statusCode === DisconnectReason.loggedOut) {
+                    console.log('Session expired or logged out. Clearing .baileys-session...');
+                    try {
+                        if (fs.existsSync(sessionPath)) {
+                            fs.rmSync(sessionPath, { recursive: true, force: true });
+                        }
+                        shouldReconnect = true; // Force reconnect to generate new QR
+                    } catch (err) {
+                        console.error('Error clearing session folder:', err);
                     }
                 }
 
                 if (shouldReconnect) {
+                    console.log('Attempting to reconnect in 5 seconds...');
                     setTimeout(() => connectToWhatsApp(), 5000);
                 }
             } else if (connection === 'open') {
+                console.log('WhatsApp Connected Successfully!');
                 isConnected = true;
                 clientStatus = 'ready';
                 currentQR = null;
@@ -95,6 +105,7 @@ async function connectToWhatsApp() {
         });
 
     } catch (error) {
+        console.error('Connection logic error:', error);
         lastError = error.message;
         clientStatus = 'error';
         setTimeout(() => connectToWhatsApp(), 10000);
@@ -103,7 +114,7 @@ async function connectToWhatsApp() {
 
 // API Endpoints
 app.get(`${basePath}/status`, (req, res) => {
-    res.json({ connected: isConnected, status: clientStatus, qr: currentQR });
+    res.json({ connected: isConnected, status: clientStatus, qr: currentQR, error: lastError });
 });
 
 app.get(`${basePath}/debug`, (req, res) => {
@@ -111,7 +122,8 @@ app.get(`${basePath}/debug`, (req, res) => {
         uptime: Math.floor(process.uptime()),
         status: clientStatus,
         lastError: lastError,
-        has_qr: !!currentQR
+        has_qr: !!currentQR,
+        session_exists: fs.existsSync(sessionPath)
     });
 });
 
@@ -130,8 +142,9 @@ app.post(`${basePath}/send-file`, async (req, res) => {
     if (!isConnected) return res.status(500).json({ error: 'WhatsApp not connected' });
     try {
         let jid = phone.replace(/\D/g, '') + '@s.whatsapp.net';
+        const buffer = Buffer.from(file, 'base64');
         await sock.sendMessage(jid, {
-            document: Buffer.from(file, 'base64'),
+            document: buffer,
             fileName: filename,
             mimetype: 'application/pdf',
             caption: message
@@ -140,6 +153,9 @@ app.post(`${basePath}/send-file`, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get('/', (req, res) => res.send('WhatsApp Server Active'));
+app.get('/', (req, res) => res.send('WhatsApp Server is Live'));
 
-app.listen(port, () => connectToWhatsApp());
+app.listen(port, () => {
+    console.log(`Running on port ${port}`);
+    connectToWhatsApp();
+});
