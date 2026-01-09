@@ -24,53 +24,69 @@ let clientStatus = 'initializing'; // initializing, qr, ready, disconnected
 let sock = null;
 
 async function connectToWhatsApp() {
-    console.log('Fetching latest WhatsApp version...');
-    const { version, isLatest } = await fetchLatestBaileysVersion();
-    console.log(`Using WA version ${version.join('.')}, isLatest: ${isLatest}`);
+    try {
+        clientStatus = 'fetching_version';
+        console.log('Fetching latest WhatsApp version...');
 
-    const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, '.baileys-session'));
-
-    sock = makeWASocket({
-        version,
-        auth: state,
-        logger: pino({ level: 'error' }),
-        browser: ['Windows', 'Chrome', '111.0.0.0'],
-        syncFullHistory: false,
-        qrTimeout: 60000 // Give more time for scanning
-    });
-
-    sock.ev.on('creds.update', saveCreds);
-
-    sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect, qr } = update;
-
-        if (qr) {
-            console.log('--- QR CODE READY ---');
-            currentQR = await qrcode.toDataURL(qr);
-            clientStatus = 'qr';
-            isConnected = false;
+        let version = [2, 3000, 1015901307]; // Stable fallback
+        try {
+            const latest = await fetchLatestBaileysVersion();
+            if (latest && latest.version) version = latest.version;
+            console.log(`Using WA version ${version.join('.')}`);
+        } catch (vErr) {
+            console.log('Using fallback WA version due to fetch error');
         }
 
-        if (connection === 'close') {
-            const statusCode = lastDisconnect?.error?.output?.statusCode;
-            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-            console.log(`Connection closed (Status: ${statusCode}). Reconnecting: ${shouldReconnect}`);
+        clientStatus = 'initializing_session';
+        const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, '.baileys-session'));
 
-            isConnected = false;
-            clientStatus = 'disconnected';
+        sock = makeWASocket({
+            version,
+            auth: state,
+            logger: pino({ level: 'error' }),
+            browser: ['Windows', 'Chrome', '111.0.0.0'],
+            syncFullHistory: false,
+            qrTimeout: 60000,
+            connectTimeoutMs: 60000
+        });
 
-            if (shouldReconnect) {
-                setTimeout(() => connectToWhatsApp(), 3000); // Delay before reconnect
+        sock.ev.on('creds.update', saveCreds);
+
+        sock.ev.on('connection.update', async (update) => {
+            const { connection, lastDisconnect, qr } = update;
+
+            if (qr) {
+                console.log('--- QR CODE READY ---');
+                currentQR = await qrcode.toDataURL(qr);
+                clientStatus = 'qr';
+                isConnected = false;
             }
-        } else if (connection === 'open') {
-            console.log('--- WHATSAPP CONNECTED ---');
-            isConnected = true;
-            clientStatus = 'ready';
-            currentQR = null;
-        }
-    });
 
-    return sock;
+            if (connection === 'close') {
+                const statusCode = lastDisconnect?.error?.output?.statusCode;
+                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+                console.log(`Connection closed (Status: ${statusCode}). Reconnecting: ${shouldReconnect}`);
+
+                isConnected = false;
+                clientStatus = 'disconnected';
+
+                if (shouldReconnect) {
+                    setTimeout(() => connectToWhatsApp(), 3000); // Delay before reconnect
+                }
+            } else if (connection === 'open') {
+                console.log('--- WHATSAPP CONNECTED ---');
+                isConnected = true;
+                clientStatus = 'ready';
+                currentQR = null;
+            }
+        });
+
+        return sock;
+    } catch (error) {
+        console.error('Initialization error:', error);
+        clientStatus = 'error';
+        setTimeout(() => connectToWhatsApp(), 5000);
+    }
 }
 
 // API Endpoints
