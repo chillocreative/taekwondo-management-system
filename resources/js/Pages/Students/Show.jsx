@@ -3,7 +3,6 @@ import { Head, Link } from '@inertiajs/react';
 
 export default function Show({ auth, student, currentYear }) {
     const months = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
-    const monthlyFee = student.kategori === 'kanak-kanak' ? 30 : 50;
 
     const beltLevels = {
         'white': 'Putih',
@@ -244,7 +243,7 @@ export default function Show({ auth, student, currentYear }) {
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 border-r">
                                                             {months[payment.month - 1]}
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 border-r">RM {monthlyFee}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 border-r">RM {payment.amount}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-center border-r">
                                                             <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${payment.is_paid
                                                                 ? 'bg-green-100 text-green-800 border border-green-200'
