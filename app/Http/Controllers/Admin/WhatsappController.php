@@ -14,7 +14,9 @@ class WhatsappController extends Controller
         $serverUrl = env('WHATSAPP_SERVER_URL', 'http://localhost:3001');
         $status = ['connected' => false];
         try {
-            $response = Http::timeout(2)->get($serverUrl . '/status');
+            $response = Http::timeout(2)
+                ->withoutVerifying()
+                ->get($serverUrl . '/status');
             if ($response->successful()) {
                 $status = $response->json();
             }
