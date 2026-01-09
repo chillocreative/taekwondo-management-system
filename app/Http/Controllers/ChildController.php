@@ -580,7 +580,7 @@ class ChildController extends Controller
             
             $base64 = base64_encode($pdf->output());
             
-            $parentPhone = $child->phone_number ?? $child->guardian_phone;
+            $parentPhone = $child->phone_number ?? $child->guardian_phone ?? $child->parent->phone_number ?? null;
             if ($parentPhone) {
                 $msg = "*[RESIT PENDAFTARAN]*\n\nPendaftaran bagi *{$child->name}* telah berjaya. Terima kasih atas pembayaran anda.\n\nSila simpan resit ini untuk rujukan anda.";
                 

@@ -8,7 +8,10 @@ use Illuminate\Support\Facades\Cache;
 
 class WhatsappService
 {
-    protected static $baseUrl = 'http://localhost:3001';
+    protected static function getBaseUrl()
+    {
+        return rtrim(env('WHATSAPP_SERVER_URL', 'http://localhost:3001'), '/') . '/whatsapp-api';
+    }
 
     public static function send($phone, $message)
     {
@@ -23,7 +26,9 @@ class WhatsappService
         }
 
         try {
-            $response = Http::timeout(10)->post(self::$baseUrl . '/send', [
+            $response = Http::timeout(10)
+                ->withoutVerifying()
+                ->post(self::getBaseUrl() . '/send', [
                 'phone' => $phone,
                 'message' => $message
             ]);
@@ -52,7 +57,9 @@ class WhatsappService
         }
 
         try {
-            $response = Http::timeout(30)->post(self::$baseUrl . '/send-file', [
+            $response = Http::timeout(30)
+                ->withoutVerifying()
+                ->post(self::getBaseUrl() . '/send-file', [
                 'phone' => $phone,
                 'message' => $message,
                 'file' => $fileBase64,
@@ -80,7 +87,9 @@ class WhatsappService
 
         // Otherwise try to get from /me
         try {
-            $response = Http::timeout(2)->get(self::$baseUrl . '/me');
+            $response = Http::timeout(2)
+                ->withoutVerifying()
+                ->get(self::getBaseUrl() . '/me');
             if ($response->successful()) {
                 $phone = $response->json('phone');
                 if ($phone) {
