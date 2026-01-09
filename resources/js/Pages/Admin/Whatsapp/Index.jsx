@@ -96,7 +96,7 @@ export default function Index({ auth, serverUrl }) {
                                 <div className="mt-auto pt-8 border-t border-zinc-100 space-y-4">
                                     <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
                                         <p className="text-xs text-zinc-400 font-bold uppercase mb-1">Server Endpoint</p>
-                                        <p className="font-mono text-xs text-zinc-600 truncate">http://localhost:3001</p>
+                                        <p className="font-mono text-xs text-zinc-600 truncate">{serverUrl}</p>
                                     </div>
                                     <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
                                         <p className="text-xs text-zinc-400 font-bold uppercase mb-1">Status Enjin</p>
@@ -169,20 +169,28 @@ export default function Index({ auth, serverUrl }) {
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="flex items-center gap-3 text-sm font-bold">
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                            Notifikasi Pendaftaran Baru
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                                            Notifikasi Pendaftaran (Admin)
                                         </div>
                                         <div className="flex items-center gap-3 text-sm font-bold">
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                            Resit Yuran Bulanan Digital
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                                            Resit Pendaftaran (Ibu Bapa)
                                         </div>
                                         <div className="flex items-center gap-3 text-sm font-bold">
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                            Peringatan Yuran Tertunggak
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                                            Resit Yuran Bulanan (Ibu Bapa)
                                         </div>
                                         <div className="flex items-center gap-3 text-sm font-bold">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                                            Peringatan Yuran Bulanan
+                                        </div>
+                                        <div className="flex items-center gap-3 text-sm font-bold">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                                            Amaran Ketidakhadiran
+                                        </div>
+                                        <div className="flex items-center gap-3 text-sm font-bold opacity-50">
                                             <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                            Pengesahan Status Pelajar
+                                            Update Grading (Akan Datang)
                                         </div>
                                     </div>
                                 </div>
