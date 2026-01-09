@@ -1,7 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import { makeWASocket, useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
+import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
 import qrcode from 'qrcode';
 import pino from 'pino';
 import path from 'path';
@@ -24,14 +24,18 @@ let clientStatus = 'initializing'; // initializing, qr, ready, disconnected
 let sock = null;
 
 async function connectToWhatsApp() {
-    console.log('Attempting to connect to WhatsApp...');
+    console.log('Fetching latest WhatsApp version...');
+    const { version, isLatest } = await fetchLatestBaileysVersion();
+    console.log(`Using WA version ${version.join('.')}, isLatest: ${isLatest}`);
+
     const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, '.baileys-session'));
 
     sock = makeWASocket({
+        version,
         auth: state,
-        printQRInTerminal: true,
-        logger: pino({ level: 'info' }), // Increased log level for debugging
-        browser: ['TSMS Server', 'Chrome', '1.0.0']
+        printQRInTerminal: false,
+        logger: pino({ level: 'error' }),
+        browser: ['Ubuntu', 'Chrome', '110.0.5481.178']
     });
 
     sock.ev.on('creds.update', saveCreds);
