@@ -6,6 +6,7 @@ use App\Models\Student;
 use App\Models\Attendance;
 use App\Models\Child;
 use App\Models\MonthlyPayment;
+use App\Models\StudentPayment;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -34,14 +35,8 @@ class DashboardController extends Controller
         $currentMonthNumeric = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
 
-        // Base query for active/paid students
-        $activeStudentsQuery = Student::whereHas('child', function($q) {
-            $q->where('payment_completed', true)
-              ->where('is_active', true);
-        });
-
-        // Statistics calculation
-        $totalStudents = $activeStudentsQuery->count();
+        // Base query for active students (either via Child profile or those who have made payments)
+        $totalStudents = Student::count();
         $totalCenters = \App\Models\TrainingCenter::count();
         $totalCoaches = \App\Models\User::where('role', 'coach')->count();
         $totalParents = \App\Models\User::where('role', 'user')->count();
@@ -52,27 +47,38 @@ class DashboardController extends Controller
               ->orWhere('is_active', false);
         })->count();
 
-        // 1. Monthly Revenue (Current Month) - Sum of all MonthlyPayment records FOR this month
-        $currentMonthRevenue = \App\Models\MonthlyPayment::where('year', $currentYear)
-            ->where('month', $currentMonthNumeric)
-            ->where('is_paid', true)
-            ->sum('amount');
+        // --- ACTUAL FINANCIAL DATA SYNC ---
+        // We use StudentPayment as the primary transaction log for "Actual Data"
+        
+        // 1. Total Overall Collection (Year-to-Date) - Everything collected in the current year
+        $totalOverallCollection = StudentPayment::whereYear('payment_date', $currentYear)
+            ->where('status', 'paid')
+            ->sum('total');
 
-        // 2. Annual/Registration Fees (Year-to-Date)
-        $annualFees = \App\Models\Child::where('payment_completed', true)
+        // 2. Annual/Registration Fees (Year-to-Date) from Child records
+        $annualFees = Child::where('payment_completed', true)
             ->whereYear('payment_date', $currentYear)
             ->sum('registration_fee');
 
-        // 3. Cumulative Monthly Fees (Year-to-Date) - Sum of all MonthlyPayment records FOR this year
-        $yearlyMonthlyFees = \App\Models\MonthlyPayment::where('year', $currentYear)
-            ->where('is_paid', true)
-            ->sum('amount');
+        // 3. Yearly Monthly Fees (Total - Annual)
+        $yearlyMonthlyFees = max(0, $totalOverallCollection - $annualFees);
 
-        // 4. Total Overall Collection (Monthly Fees + Registration Fees)
-        $totalOverallCollection = $annualFees + $yearlyMonthlyFees;
+        // 4. Monthly Revenue (Current Month) - All collections within this month
+        $currentMonthTotalRevenue = StudentPayment::whereYear('payment_date', $currentYear)
+            ->whereMonth('payment_date', $currentMonthNumeric)
+            ->where('status', 'paid')
+            ->sum('total');
+            
+        // 4b. Subtract registration fees collected this month to get "strictly" monthly fee revenue
+        $currentMonthRegFees = Child::where('payment_completed', true)
+            ->whereYear('payment_date', $currentYear)
+            ->whereMonth('payment_date', $currentMonthNumeric)
+            ->sum('registration_fee');
+            
+        $currentMonthRevenue = max(0, $currentMonthTotalRevenue - $currentMonthRegFees);
 
         // 5. Top 5 Students by Attendance Percentage (Current Year)
-        $topStudents = (clone $activeStudentsQuery)->withCount([
+        $topStudents = Student::withCount([
             'attendances as total_attended' => function ($query) use ($currentYear) {
                 $query->whereYear('attendance_date', $currentYear)
                       ->where('status', 'hadir');
