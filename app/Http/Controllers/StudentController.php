@@ -15,13 +15,10 @@ class StudentController extends Controller
      */
     public function index(Request $request)
     {
-        // Initial query with eager loading - Only show fully paid and active students
+        // Initial query with eager loading
         $query = Student::query()->with(['child.parent', 'child.monthlyPayments' => function($q) {
             $q->where('year', now()->year);
-        }])->whereHas('child', function($q) {
-            $q->where('payment_completed', true)
-              ->where('is_active', true);
-        });
+        }]);
 
         // Apply search
         if ($request->filled('search')) {
@@ -60,17 +57,11 @@ class StudentController extends Controller
             return $student;
         });
 
-        // Calculate statistics (Only for paid students)
+        // Calculate statistics (Synced with Dashboard)
         $stats = [
-            'total_paid' => Student::whereHas('child', function($q) {
-                $q->where('payment_completed', true);
-            })->count(),
-            'total_below_18' => Student::whereHas('child', function($q) {
-                $q->where('payment_completed', true);
-            })->where('kategori', 'kanak-kanak')->count(),
-            'total_above_18' => Student::whereHas('child', function($q) {
-                $q->where('payment_completed', true);
-            })->where('kategori', 'dewasa')->count(),
+            'total_paid' => Student::count(),
+            'total_below_18' => Student::where('kategori', 'kanak-kanak')->count(),
+            'total_above_18' => Student::where('kategori', 'dewasa')->count(),
         ];
         
         $trainingCenters = \App\Models\TrainingCenter::all();
