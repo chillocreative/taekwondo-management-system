@@ -13,7 +13,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.use(cors());
+// Allow multiple origins
+const allowedOrigins = ['http://localhost:8000', 'http://localhost:3000', 'https://yuran.taekwondoanz.com'];
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    }
+}));
 app.use(bodyParser.json());
 
 let isConnected = false;

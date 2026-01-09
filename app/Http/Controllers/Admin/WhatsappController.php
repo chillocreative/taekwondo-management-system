@@ -9,13 +9,12 @@ use Illuminate\Support\Facades\Http;
 
 class WhatsappController extends Controller
 {
-    protected $whatsappServerUrl = 'http://localhost:3001';
-
     public function index()
     {
+        $serverUrl = env('WHATSAPP_SERVER_URL', 'http://localhost:3001');
         $status = ['connected' => false];
         try {
-            $response = Http::timeout(2)->get($this->whatsappServerUrl . '/status');
+            $response = Http::timeout(2)->get($serverUrl . '/status');
             if ($response->successful()) {
                 $status = $response->json();
             }
@@ -24,19 +23,21 @@ class WhatsappController extends Controller
         }
 
         return Inertia::render('Admin/Whatsapp/Index', [
-            'status' => $status
+            'status' => $status,
+            'serverUrl' => $serverUrl
         ]);
     }
 
     public function sendTest(Request $request)
     {
+        $serverUrl = env('WHATSAPP_SERVER_URL', 'http://localhost:3001');
         $request->validate([
             'phone' => 'required',
             'message' => 'required'
         ]);
 
         try {
-            $response = Http::post($this->whatsappServerUrl . '/send', [
+            $response = Http::post($serverUrl . '/send', [
                 'phone' => $request->phone,
                 'message' => $request->message
             ]);

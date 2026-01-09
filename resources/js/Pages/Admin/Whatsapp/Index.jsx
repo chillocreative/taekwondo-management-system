@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 
-export default function Index({ auth }) {
+export default function Index({ auth, serverUrl }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         phone: '',
         message: 'Hello! This is a test message from TSMS WhatsApp Server.'
@@ -17,7 +17,7 @@ export default function Index({ auth }) {
     useEffect(() => {
         const checkStatus = async () => {
             try {
-                const response = await fetch('http://localhost:3001/status');
+                const response = await fetch(`${serverUrl}/status`);
                 const data = await response.json();
                 setServerStatus(data);
             } catch (error) {
