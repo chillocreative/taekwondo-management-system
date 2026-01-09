@@ -29,8 +29,8 @@ async function connectToWhatsApp() {
         clientStatus = 'starting';
         console.log('Starting WhatsApp connection...');
 
-        // Use a known stable version directly to avoid network hangs
-        const version = [2, 3000, 1015901307];
+        // Slightly newer stable version
+        const version = [2, 3000, 1017531202];
 
         const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, '.baileys-session'));
 
@@ -38,11 +38,13 @@ async function connectToWhatsApp() {
             version,
             auth: state,
             logger: pino({ level: 'error' }),
-            browser: ['Windows', 'Chrome', '111.0.0.0'],
+            // More standard browser string to avoid bot detection
+            browser: ['Chrome', 'Windows', '114.0.5735.199'],
             syncFullHistory: false,
             qrTimeout: 40000,
             connectTimeoutMs: 60000,
             defaultQueryTimeoutMs: 60000,
+            retryRequestDelayMs: 5000,
         });
 
         sock.ev.on('creds.update', saveCreds);
@@ -59,13 +61,17 @@ async function connectToWhatsApp() {
 
             if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
-                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-                console.log(`Closed. Status: ${statusCode}. Reconnecting: ${shouldReconnect}`);
+                const errorMessage = lastDisconnect?.error?.message || 'Unknown Error';
 
+                console.log(`Closed. Status: ${statusCode}. Message: ${errorMessage}`);
+
+                lastError = `Status ${statusCode}: ${errorMessage}`;
                 isConnected = false;
                 clientStatus = 'disconnected';
                 currentQR = null;
 
+                // Reconnect if not logged out
+                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
                 if (shouldReconnect) {
                     setTimeout(() => connectToWhatsApp(), 5000);
                 }
@@ -103,7 +109,8 @@ app.get(`${basePath}/debug`, (req, res) => {
         uptime: process.uptime(),
         memory: process.memoryUsage(),
         status: clientStatus,
-        lastError: lastError
+        lastError: lastError,
+        has_qr: !!currentQR
     });
 });
 
@@ -139,10 +146,6 @@ app.post(`${basePath}/send-file`, async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
-});
-
-app.get('/', (req, res) => {
-    res.send('WhatsApp Baileys Server Active');
 });
 
 app.listen(port, () => {
