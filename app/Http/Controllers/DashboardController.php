@@ -48,34 +48,43 @@ class DashboardController extends Controller
         })->count();
 
         // --- ACTUAL FINANCIAL DATA SYNC ---
-        // We use StudentPayment as the primary transaction log for "Actual Data"
+        // Source of Truth: 
+        // 1. Registration Fees = registration_fee in Child model
+        // 2. Monthly Fees = portions of StudentPayment total that are NOT registration_fee
         
-        // 1. Total Overall Collection (Year-to-Date) - Everything collected in the current year
-        $totalOverallCollection = StudentPayment::whereYear('payment_date', $currentYear)
-            ->where('status', 'paid')
-            ->sum('total');
-
-        // 2. Annual/Registration Fees (Year-to-Date) from Child records
         $annualFees = Child::where('payment_completed', true)
             ->whereYear('payment_date', $currentYear)
             ->sum('registration_fee');
 
-        // 3. Yearly Monthly Fees (Total - Annual)
-        $yearlyMonthlyFees = max(0, $totalOverallCollection - $annualFees);
-
-        // 4. Monthly Revenue (Current Month) - All collections within this month
-        $currentMonthTotalRevenue = StudentPayment::whereYear('payment_date', $currentYear)
-            ->whereMonth('payment_date', $currentMonthNumeric)
+        $allSpThisYear = StudentPayment::whereYear('payment_date', $currentYear)
             ->where('status', 'paid')
-            ->sum('total');
+            ->get();
             
-        // 4b. Subtract registration fees collected this month to get "strictly" monthly fee revenue
-        $currentMonthRegFees = Child::where('payment_completed', true)
-            ->whereYear('payment_date', $currentYear)
-            ->whereMonth('payment_date', $currentMonthNumeric)
-            ->sum('registration_fee');
+        $yearlyMonthlyFees = 0;
+        $currentMonthRevenue = 0;
+        
+        foreach ($allSpThisYear as $sp) {
+            // Check if this payment matches a registration transaction
+            $regMatch = Child::where('payment_completed', true)
+                ->where('payment_reference', $sp->transaction_ref)
+                ->whereNotNull('payment_reference')
+                ->first();
+                
+            $monthlyPortion = $sp->total;
+            if ($regMatch) {
+                // Subtract registration part to get only the monthly fee component
+                $monthlyPortion = max(0, $sp->total - $regMatch->registration_fee);
+            }
             
-        $currentMonthRevenue = max(0, $currentMonthTotalRevenue - $currentMonthRegFees);
+            $yearlyMonthlyFees += $monthlyPortion;
+            
+            // Current month calculation
+            if ($sp->payment_date && $sp->payment_date->month == $currentMonthNumeric) {
+                $currentMonthRevenue += $monthlyPortion;
+            }
+        }
+
+        $totalOverallCollection = $annualFees + $yearlyMonthlyFees;
 
         // 5. Top 5 Students by Attendance Percentage (Current Year)
         $topStudents = Student::withCount([
