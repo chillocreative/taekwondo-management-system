@@ -146,7 +146,7 @@ class FeeController extends Controller
                 'id' => $child->id,
                 'name' => $child->name,
                 'fees' => $fees,
-                'is_special_center' => false,
+                'is_special_center' => $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum',
                 'no_siri' => $child->student ? $child->student->no_siri : '-',
             ];
         });
@@ -174,7 +174,8 @@ class FeeController extends Controller
 
         // Calculate amount from backend settings
         // Ensure student has access to fee settings
-        $amount = $child->student->monthly_fee;
+        $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
+        $amount = $isSpecialCenter ? 0 : $child->student->monthly_fee;
 
         // Create Pending Payment Record
         // Check if exists

@@ -34,6 +34,7 @@ class FeeSettingController extends Controller
 
         $settings = FeeSetting::current();
         $settings->update($validated);
+        $settings->syncWithExistingRecords();
 
         return redirect()->route('settings.fees.index')
             ->with('success', 'Tetapan yuran berjaya dikemaskini.');
