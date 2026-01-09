@@ -114,4 +114,12 @@ class Child extends Model
 
         return $levels[$this->belt_level] ?? $this->belt_level;
     }
+
+    /**
+     * Get the age based on date of birth
+     */
+    public function getAgeAttribute()
+    {
+        return $this->date_of_birth ? $this->date_of_birth->age : null;
+    }
 }
