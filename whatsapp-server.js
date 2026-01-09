@@ -38,16 +38,24 @@ const client = new Client({
     authTimeoutMs: 60000, // 60 seconds timeout
     puppeteer: {
         headless: true,
-        takeoverOnConflict: true,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--disable-extensions',
-            '--no-first-run'
-        ]
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process', // Crucial for shared hosting memory limits
+            '--disable-setuid-sandbox'
+        ],
+        executablePath: process.env.CHROME_PATH || null // Allows custom path if host requires it
     }
+});
+
+// Log server initialization errors
+process.on('uncaughtException', (err) => {
+    console.error('CRITICAL ERROR:', err);
 });
 
 client.on('qr', async (qr) => {
