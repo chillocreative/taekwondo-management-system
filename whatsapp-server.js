@@ -37,14 +37,17 @@ const client = new Client({
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--disable-extensions',
+            '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
-            '--single-process', // Crucial for shared hosting memory limits
-            '--disable-setuid-sandbox'
+            '--single-process',
+            '--disable-gpu',
+            '--disable-software-rasterizer',
+            '--disable-extensions',
+            '--disable-features=IsolateOrigins,site-per-process',
+            '--force-cpu-draw'
         ],
-        executablePath: process.env.CHROME_PATH || null // Allows custom path if host requires it
+        executablePath: process.env.CHROME_PATH || null
     }
 });
 
