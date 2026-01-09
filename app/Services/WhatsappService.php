@@ -10,7 +10,14 @@ class WhatsappService
 {
     protected static function getBaseUrl()
     {
-        return rtrim(env('WHATSAPP_SERVER_URL', 'http://localhost:3001'), '/') . '/whatsapp-api';
+        $url = rtrim(env('WHATSAPP_SERVER_URL', 'http://localhost:3001'), '/');
+        
+        // If the URL already ends with /whatsapp-api, don't append it again
+        if (str_ends_with($url, '/whatsapp-api')) {
+            return $url;
+        }
+        
+        return $url . '/whatsapp-api';
     }
 
     public static function send($phone, $message)
@@ -34,14 +41,14 @@ class WhatsappService
             ]);
 
             if ($response->successful()) {
-                Log::info("WhatsApp sent to {$phone}");
+                Log::info("WhatsApp sent successfully to {$phone}");
                 return true;
             }
 
-            Log::error("WhatsApp failed to {$phone}: " . $response->body());
+            Log::error("WhatsApp failed to {$phone}! URL: " . self::getBaseUrl() . "/send. Status: " . $response->status() . " Body: " . $response->body());
             return false;
         } catch (\Exception $e) {
-            Log::error("WhatsApp connection error: " . $e->getMessage());
+            Log::error("WhatsApp connection error to {$phone}: " . $e->getMessage() . " (URL: " . self::getBaseUrl() . ")");
             return false;
         }
     }
@@ -67,14 +74,14 @@ class WhatsappService
             ]);
 
             if ($response->successful()) {
-                Log::info("WhatsApp File sent to {$phone}");
+                Log::info("WhatsApp File sent successfully to {$phone}");
                 return true;
             }
 
-            Log::error("WhatsApp File failed to {$phone}: " . $response->body());
+            Log::error("WhatsApp File failed to {$phone}! URL: " . self::getBaseUrl() . "/send-file. Status: " . $response->status() . " Body: " . $response->body());
             return false;
         } catch (\Exception $e) {
-            Log::error("WhatsApp File connection error: " . $e->getMessage());
+            Log::error("WhatsApp File connection error to {$phone}: " . $e->getMessage() . " (URL: " . self::getBaseUrl() . ")");
             return false;
         }
     }
