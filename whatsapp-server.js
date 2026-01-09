@@ -1,7 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
+import { makeWASocket, useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
 import qrcode from 'qrcode';
 import pino from 'pino';
 import path from 'path';
@@ -20,24 +20,18 @@ app.use(bodyParser.json({ limit: '50mb' }));
 
 let isConnected = false;
 let currentQR = null;
-let clientStatus = 'initializing'; // initializing, qr, ready, disconnected
+let clientStatus = 'initializing';
+let lastError = null;
 let sock = null;
 
 async function connectToWhatsApp() {
     try {
-        clientStatus = 'fetching_version';
-        console.log('Fetching latest WhatsApp version...');
+        clientStatus = 'starting';
+        console.log('Starting WhatsApp connection...');
 
-        let version = [2, 3000, 1015901307]; // Stable fallback
-        try {
-            const latest = await fetchLatestBaileysVersion();
-            if (latest && latest.version) version = latest.version;
-            console.log(`Using WA version ${version.join('.')}`);
-        } catch (vErr) {
-            console.log('Using fallback WA version due to fetch error');
-        }
+        // Use a known stable version directly to avoid network hangs
+        const version = [2, 3000, 1015901307];
 
-        clientStatus = 'initializing_session';
         const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, '.baileys-session'));
 
         sock = makeWASocket({
@@ -46,8 +40,9 @@ async function connectToWhatsApp() {
             logger: pino({ level: 'error' }),
             browser: ['Windows', 'Chrome', '111.0.0.0'],
             syncFullHistory: false,
-            qrTimeout: 60000,
-            connectTimeoutMs: 60000
+            qrTimeout: 40000,
+            connectTimeoutMs: 60000,
+            defaultQueryTimeoutMs: 60000,
         });
 
         sock.ev.on('creds.update', saveCreds);
@@ -56,7 +51,7 @@ async function connectToWhatsApp() {
             const { connection, lastDisconnect, qr } = update;
 
             if (qr) {
-                console.log('--- QR CODE READY ---');
+                console.log('--- QR RECEIVED ---');
                 currentQR = await qrcode.toDataURL(qr);
                 clientStatus = 'qr';
                 isConnected = false;
@@ -65,27 +60,30 @@ async function connectToWhatsApp() {
             if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-                console.log(`Connection closed (Status: ${statusCode}). Reconnecting: ${shouldReconnect}`);
+                console.log(`Closed. Status: ${statusCode}. Reconnecting: ${shouldReconnect}`);
 
                 isConnected = false;
                 clientStatus = 'disconnected';
+                currentQR = null;
 
                 if (shouldReconnect) {
-                    setTimeout(() => connectToWhatsApp(), 3000); // Delay before reconnect
+                    setTimeout(() => connectToWhatsApp(), 5000);
                 }
             } else if (connection === 'open') {
-                console.log('--- WHATSAPP CONNECTED ---');
+                console.log('--- CONNECTED ---');
                 isConnected = true;
                 clientStatus = 'ready';
                 currentQR = null;
+                lastError = null;
             }
         });
 
         return sock;
     } catch (error) {
-        console.error('Initialization error:', error);
+        console.error('CRITICAL ERROR:', error);
+        lastError = error.message;
         clientStatus = 'error';
-        setTimeout(() => connectToWhatsApp(), 5000);
+        setTimeout(() => connectToWhatsApp(), 10000);
     }
 }
 
@@ -94,73 +92,60 @@ app.get(`${basePath}/status`, (req, res) => {
     res.json({
         connected: isConnected,
         status: clientStatus,
-        qr: currentQR
+        qr: currentQR,
+        error: lastError
     });
 });
 
-app.get(`${basePath}/me`, (req, res) => {
-    if (!isConnected || !sock?.user) {
-        return res.status(500).json({ error: 'WhatsApp not connected' });
-    }
-    const myNumber = sock.user.id.split(':')[0];
-    res.json({ phone: myNumber });
+app.get(`${basePath}/debug`, (req, res) => {
+    res.json({
+        node_version: process.version,
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        status: clientStatus,
+        lastError: lastError
+    });
 });
 
 app.post(`${basePath}/send`, async (req, res) => {
     const { phone, message } = req.body;
-
-    if (!isConnected) {
-        return res.status(500).json({ error: 'WhatsApp not connected' });
-    }
+    if (!isConnected) return res.status(500).json({ error: 'WhatsApp not connected' });
 
     try {
         let formattedPhone = phone.replace(/\D/g, '');
-        if (!formattedPhone.endsWith('@s.whatsapp.net')) {
-            formattedPhone += '@s.whatsapp.net';
-        }
-
+        if (!formattedPhone.endsWith('@s.whatsapp.net')) formattedPhone += '@s.whatsapp.net';
         await sock.sendMessage(formattedPhone, { text: message });
         res.json({ success: true });
     } catch (error) {
-        console.error('Error sending message:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
 app.post(`${basePath}/send-file`, async (req, res) => {
     const { phone, message, file, filename } = req.body;
-
-    if (!isConnected) {
-        return res.status(500).json({ error: 'WhatsApp not connected' });
-    }
+    if (!isConnected) return res.status(500).json({ error: 'WhatsApp not connected' });
 
     try {
         let formattedPhone = phone.replace(/\D/g, '');
-        if (!formattedPhone.endsWith('@s.whatsapp.net')) {
-            formattedPhone += '@s.whatsapp.net';
-        }
-
+        if (!formattedPhone.endsWith('@s.whatsapp.net')) formattedPhone += '@s.whatsapp.net';
         const buffer = Buffer.from(file, 'base64');
-
         await sock.sendMessage(formattedPhone, {
             document: buffer,
             fileName: filename,
             mimetype: 'application/pdf',
             caption: message
         });
-
         res.json({ success: true });
     } catch (error) {
-        console.error('Error sending file:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
 app.get('/', (req, res) => {
-    res.send('WhatsApp Baileys Server is running');
+    res.send('WhatsApp Baileys Server Active');
 });
 
 app.listen(port, () => {
-    console.log(`WhatsApp Baileys Server listening at http://localhost:${port}`);
+    console.log(`Server listening on port ${port}`);
     connectToWhatsApp();
 });
