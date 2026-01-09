@@ -89,7 +89,10 @@ client.on('disconnected', (reason) => {
     client.initialize(); // Re-initialize to get new QR
 });
 
-app.get('/status', (req, res) => {
+// Use a base path for cPanel compatibility
+const basePath = '/whatsapp-api';
+
+app.get(`${basePath}/status`, (req, res) => {
     res.json({
         connected: isConnected,
         status: clientStatus,
@@ -97,14 +100,14 @@ app.get('/status', (req, res) => {
     });
 });
 
-app.get('/me', (req, res) => {
+app.get(`${basePath}/me`, (req, res) => {
     if (!isConnected) {
         return res.status(500).json({ error: 'WhatsApp not connected' });
     }
     res.json({ phone: client.info.wid.user });
 });
 
-app.post('/send', async (req, res) => {
+app.post(`${basePath}/send`, async (req, res) => {
     const { phone, message } = req.body;
 
     if (!isConnected) {
@@ -126,7 +129,7 @@ app.post('/send', async (req, res) => {
     }
 });
 
-app.post('/send-file', async (req, res) => {
+app.post(`${basePath}/send-file`, async (req, res) => {
     const { phone, message, file, filename } = req.body;
 
     if (!isConnected) {
@@ -148,6 +151,10 @@ app.post('/send-file', async (req, res) => {
         console.error('Error sending file:', error);
         res.status(500).json({ error: error.message });
     }
+});
+
+app.get('/', (req, res) => {
+    res.send('WhatsApp Server is running');
 });
 
 app.listen(port, () => {
