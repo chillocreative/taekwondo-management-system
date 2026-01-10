@@ -81,8 +81,14 @@ class MonthlyPayment extends Model
         $year = $year ?? Carbon::now()->year;
         $feeSettings = FeeSetting::current();
         
-        // Get monthly fee based on child's age
-        if ($child->date_of_birth) {
+        // Determine if special center (Sek Ren Islam Bahrul Ulum)
+        $isSpecialCenter = $child->trainingCenter && 
+                          $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
+
+        // Get monthly fee based on child's age or special center status
+        if ($isSpecialCenter) {
+            $monthlyFee = 0;
+        } else if ($child->date_of_birth) {
             $monthlyFee = $feeSettings->getMonthlyFeeByDob($child->date_of_birth);
         } else {
             $monthlyFee = $feeSettings->monthly_fee_below_18;

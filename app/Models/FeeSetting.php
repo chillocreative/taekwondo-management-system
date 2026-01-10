@@ -103,9 +103,9 @@ class FeeSetting extends Model
      */
     public function syncWithExistingRecords()
     {
-        // 1. Update MonthlyPayment records for all children who haven't paid yet
-        $unpaidMonthlyPayments = MonthlyPayment::where('is_paid', false)->get();
-        foreach ($unpaidMonthlyPayments as $mp) {
+        // 1. Update MonthlyPayment records
+        $monthlyPayments = MonthlyPayment::all();
+        foreach ($monthlyPayments as $mp) {
             $child = $mp->child;
             if (!$child) continue;
 
@@ -116,6 +116,8 @@ class FeeSetting extends Model
             if ($isSpecialCenter) {
                 $newAmount = 0;
             } else {
+                // For regular centers, only update if not paid yet to avoid changing historic payment data
+                if ($mp->is_paid) continue;
                 $newAmount = $this->getMonthlyFeeByDob($child->date_of_birth);
             }
 

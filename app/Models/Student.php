@@ -70,6 +70,12 @@ class Student extends Model
      */
     public function getMonthlyFeeAttribute(): float
     {
+        // Check if special center (Sek Ren Islam Bahrul Ulum)
+        if ($this->child && $this->child->trainingCenter && 
+            $this->child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum') {
+            return 0.00;
+        }
+
         $feeSetting = FeeSetting::current();
         
         // Map kategori to age-based fee setting

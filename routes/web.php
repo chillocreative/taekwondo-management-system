@@ -164,6 +164,13 @@ Route::get('/storage-link', function () {
     }
 });
 
+// Sync Fees Route
+Route::get('/sync-fees', function () {
+    $settings = \App\Models\FeeSetting::current();
+    $settings->syncWithExistingRecords();
+    return "Fee synchronization complete! All records have been updated based on the latest settings.";
+});
+
 // Backfill Registration Payments Route
 Route::get('/backfill-payments', function () {
     $feeSettings = \App\Models\FeeSetting::current();
