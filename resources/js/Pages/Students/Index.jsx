@@ -223,7 +223,6 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 h-5 w-5"
                                             />
                                         </th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">No. Siri</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Peserta</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Penjaga</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Kategori</th>
@@ -242,11 +241,6 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                                         onChange={() => handleSelectOne(student.id)}
                                                         className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 h-5 w-5"
                                                     />
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <Link href={route('students.show', student.id)} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">
-                                                        {student.no_siri}
-                                                    </Link>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-gray-900">{student.child?.name || student.nama_pelajar}</div>

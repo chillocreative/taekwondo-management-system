@@ -106,8 +106,6 @@ function ParentView({ childrenData }) {
                                 <div>
                                     <h3 className="text-xl font-black text-zinc-900 tracking-tight">{child.name}</h3>
                                     <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500 font-medium">
-                                        <span>No. Siri: {child.no_siri}</span>
-                                        <span>•</span>
                                         <span className="text-blue-600">Pelajar Aktif</span>
                                     </div>
                                 </div>
@@ -411,7 +409,6 @@ function CoachView({ students, selectedDate, setToast }) {
                     <table className="w-full text-sm text-left">
                         <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-medium">
                             <tr>
-                                <th className="px-6 py-3 w-24">No.</th>
                                 <th className="px-6 py-3">Peserta</th>
                                 <th className="px-6 py-3 w-48">Status</th>
                                 <th className="px-6 py-3">Catatan</th>
@@ -420,7 +417,6 @@ function CoachView({ students, selectedDate, setToast }) {
                         <tbody className="divide-y divide-zinc-100">
                             {students.map((student) => (
                                 <tr key={student.id} className="hover:bg-zinc-50/50">
-                                    <td className="px-6 py-3 text-zinc-500 font-mono text-xs">{student.no_siri}</td>
                                     <td className="px-6 py-3">
                                         <div className="font-medium text-zinc-900">{student.nama_pelajar}</div>
                                         <div className="text-xs text-zinc-500 capitalize">{student.kategori}</div>

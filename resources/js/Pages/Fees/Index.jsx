@@ -68,7 +68,6 @@ export default function FeesIndex({ auth, feesData }) {
                                     >
                                         <div>
                                             <h3 className="text-lg font-bold text-zinc-900">{child.name}</h3>
-                                            <p className="text-sm text-zinc-500">No. Siri: {child.no_siri}</p>
                                         </div>
                                         <div className="text-zinc-400">
                                             <svg
