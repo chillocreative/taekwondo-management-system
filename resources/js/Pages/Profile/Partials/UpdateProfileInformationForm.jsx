@@ -4,6 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
+import Toast from '@/Components/Toast';
 
 export default function UpdateProfileInformation({
     mustVerifyEmail,
@@ -112,9 +113,16 @@ export default function UpdateProfileInformation({
                         leaveTo="opacity-0"
                     >
                         <p className="text-sm text-gray-600">
-                            Disimpan.
+                            Berjaya disimpan.
                         </p>
                     </Transition>
+
+                    {recentlySuccessful && (
+                        <Toast
+                            message="Kemaskini profil berjaya!"
+                            type="success"
+                        />
+                    )}
                 </div>
             </form>
         </section>
