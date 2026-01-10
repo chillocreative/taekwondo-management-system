@@ -59,7 +59,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     },
 
                     {
-                        name: 'Yuran',
+                        name: 'Konfigurasi Yuran',
                         route: 'settings.fees.index',
                         active: route().current('settings.fees.*'),
                     },

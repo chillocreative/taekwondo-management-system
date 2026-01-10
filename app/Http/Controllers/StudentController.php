@@ -298,7 +298,10 @@ class StudentController extends Controller
             'ids.*' => 'required|integer|exists:students,id'
         ]);
 
-        Student::whereIn('id', $validated['ids'])->delete();
+        $students = Student::whereIn('id', $validated['ids'])->get();
+        foreach ($students as $student) {
+            $student->delete();
+        }
 
         return redirect()->route('students.index')
             ->with('success', count($validated['ids']) . ' student records deleted successfully.');

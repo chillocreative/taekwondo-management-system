@@ -11,6 +11,8 @@ class FeeSetting extends Model
         'yearly_fee_above_18',
         'monthly_fee_below_18',
         'monthly_fee_above_18',
+        'renewal_fee_gup',
+        'renewal_fee_black_poom',
     ];
 
     protected $casts = [
@@ -18,6 +20,8 @@ class FeeSetting extends Model
         'yearly_fee_above_18' => 'decimal:2',
         'monthly_fee_below_18' => 'decimal:2',
         'monthly_fee_above_18' => 'decimal:2',
+        'renewal_fee_gup' => 'decimal:2',
+        'renewal_fee_black_poom' => 'decimal:2',
     ];
 
     /**
@@ -28,8 +32,10 @@ class FeeSetting extends Model
         return self::first() ?? self::create([
             'yearly_fee_below_18' => 100.00,
             'yearly_fee_above_18' => 200.00,
-            'monthly_fee_below_18' => 30.00,
-            'monthly_fee_above_18' => 50.00,
+            'monthly_fee_below_18' => 40.00,
+            'monthly_fee_above_18' => 60.00,
+            'renewal_fee_gup' => 30.00,
+            'renewal_fee_black_poom' => 50.00,
         ]);
     }
 

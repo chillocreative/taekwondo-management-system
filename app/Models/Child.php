@@ -15,9 +15,8 @@ class Child extends Model
 
         // When a child is deleted, also delete the associated student record
         static::deleting(function ($child) {
-            if ($child->student) {
-                $child->student->delete();
-            }
+            // Delete associated student record using query builder to avoid infinite loop
+            $child->student()->delete();
         });
     }
 

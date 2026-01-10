@@ -17,8 +17,10 @@ export default function Fees({ auth, settings, flash }) {
     const { data, setData, post, processing, errors } = useForm({
         yearly_fee_below_18: settings?.yearly_fee_below_18 || 100.00,
         yearly_fee_above_18: settings?.yearly_fee_above_18 || 200.00,
-        monthly_fee_below_18: settings?.monthly_fee_below_18 || 30.00,
-        monthly_fee_above_18: settings?.monthly_fee_above_18 || 50.00,
+        monthly_fee_below_18: settings?.monthly_fee_below_18 || 40.00,
+        monthly_fee_above_18: settings?.monthly_fee_above_18 || 60.00,
+        renewal_fee_gup: settings?.renewal_fee_gup || 30.00,
+        renewal_fee_black_poom: settings?.renewal_fee_black_poom || 50.00,
     });
 
     const handleSubmit = (e) => {
@@ -48,7 +50,7 @@ export default function Fees({ auth, settings, flash }) {
                                         <span className="text-blue-600">📅</span> Yuran Tahunan
                                     </h4>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <div>
                                             <label className="block text-sm font-medium text-zinc-700 mb-2">
                                                 Bawah 18 Tahun (RM) *
@@ -83,6 +85,47 @@ export default function Fees({ auth, settings, flash }) {
                                             {errors.yearly_fee_above_18 && (
                                                 <p className="text-red-500 text-xs mt-1">{errors.yearly_fee_above_18}</p>
                                             )}
+                                        </div>
+                                    </div>
+
+                                    <div className="border-t border-blue-200 pt-4 mt-4">
+                                        <h5 className="text-sm font-bold text-zinc-900 mb-3">Yuran Pembaharuan</h5>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                                    GUP: Putih - Merah (RM) *
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={data.renewal_fee_gup}
+                                                    onChange={(e) => setData('renewal_fee_gup', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    required
+                                                />
+                                                {errors.renewal_fee_gup && (
+                                                    <p className="text-red-500 text-xs mt-1">{errors.renewal_fee_gup}</p>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                                    Black & Poom (RM) *
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={data.renewal_fee_black_poom}
+                                                    onChange={(e) => setData('renewal_fee_black_poom', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    required
+                                                />
+                                                {errors.renewal_fee_black_poom && (
+                                                    <p className="text-red-500 text-xs mt-1">{errors.renewal_fee_black_poom}</p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -157,7 +200,7 @@ export default function Fees({ auth, settings, flash }) {
                     {/* Fee Summary */}
                     <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
                         <h3 className="text-lg font-bold text-zinc-900 mb-4">Ringkasan Yuran Semasa</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="border border-zinc-200 rounded-lg p-4">
                                 <h4 className="text-sm font-medium text-zinc-500 mb-2">Yuran Tahunan</h4>
                                 <div className="space-y-2">
@@ -181,6 +224,19 @@ export default function Fees({ auth, settings, flash }) {
                                     <div className="flex justify-between">
                                         <span className="text-sm text-zinc-600">18 tahun ke atas:</span>
                                         <span className="text-sm font-bold text-green-600">RM {parseFloat(data.monthly_fee_above_18).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="border border-zinc-200 rounded-lg p-4">
+                                <h4 className="text-sm font-medium text-zinc-500 mb-2">Yuran Pembaharuan</h4>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between">
+                                        <span className="text-sm text-zinc-600">GUP (Putih-Merah):</span>
+                                        <span className="text-sm font-bold text-purple-600">RM {parseFloat(data.renewal_fee_gup).toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-sm text-zinc-600">Black & Poom:</span>
+                                        <span className="text-sm font-bold text-purple-600">RM {parseFloat(data.renewal_fee_black_poom).toFixed(2)}</span>
                                     </div>
                                 </div>
                             </div>
