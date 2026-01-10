@@ -8,6 +8,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [openSubmenu, setOpenSubmenu] = useState(null);
     const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
     const [showNotifications, setShowNotifications] = useState(false);
 
     // Define menu structure based on user role
@@ -176,17 +177,9 @@ export default function AuthenticatedLayout({ header, children }) {
 
     const fetchNotifications = async () => {
         try {
-            const response = await fetch('/notifications', {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-            });
-            if (!response.ok) {
-                throw new Error('Failed to fetch notifications');
-            }
-            const data = await response.json();
-            setNotifications(data);
+            const response = await axios.get('/notifications');
+            setNotifications(response.data.notifications || []);
+            setUnreadCount(response.data.unread_count || 0);
         } catch (error) {
             console.error('Error fetching notifications:', error);
         }
@@ -194,19 +187,9 @@ export default function AuthenticatedLayout({ header, children }) {
 
     const handleMarkAllRead = async () => {
         try {
-            const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
-            const csrfToken = csrfTokenElement ? csrfTokenElement.content : '';
-
-            await fetch('/notifications/mark-all-read', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-            });
+            await axios.post('/notifications/mark-all-read');
             setNotifications([]);
+            setUnreadCount(0);
             setShowNotifications(false);
         } catch (error) {
             console.error('Error marking notifications as read:', error);
@@ -411,9 +394,9 @@ export default function AuthenticatedLayout({ header, children }) {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                     </svg>
                                     {/* Notification Badge */}
-                                    {notifications.length > 0 && (
-                                        <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center font-bold">
-                                            {notifications.length}
+                                    {unreadCount > 0 && (
+                                        <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-bold">
+                                            {unreadCount > 9 ? '9+' : unreadCount}
                                         </span>
                                     )}
                                 </button>

@@ -12,9 +12,12 @@ class NotificationController extends Controller
      */
     public function index()
     {
-        $notifications = Notification::where('is_read', false)
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
+        $query = Notification::where('is_read', false);
+        
+        $totalCount = $query->count();
+        
+        $notifications = $query->orderBy('created_at', 'desc')
+            ->limit(15)
             ->get()
             ->map(function ($notification) {
                 return [
@@ -27,7 +30,10 @@ class NotificationController extends Controller
                 ];
             });
 
-        return response()->json($notifications);
+        return response()->json([
+            'notifications' => $notifications,
+            'unread_count' => $totalCount
+        ]);
     }
 
     /**
@@ -35,7 +41,14 @@ class NotificationController extends Controller
      */
     public function markAllRead()
     {
-        Notification::where('is_read', false)->update(['is_read' => true]);
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        Notification::where('is_read', false)->update([
+            'is_read' => true,
+            'updated_at' => now()
+        ]);
         
         return response()->json(['message' => 'All notifications marked as read']);
     }
