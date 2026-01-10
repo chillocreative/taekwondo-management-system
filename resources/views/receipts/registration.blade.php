@@ -114,7 +114,7 @@
         </div>
         <div class="meta-right">
             <div class="receipt-box">
-                <div><strong>No. Resit:</strong> {{ $child->payment_reference ?? 'N/A' }}</div>
+                <div><strong>No. Resit:</strong> {{ $items['receipt_number'] ?? 'N/A' }}</div>
                 <div><strong>Tarikh:</strong> {{ $child->payment_date ? $child->payment_date->format('d/m/Y') : date('d/m/Y') }}</div>
             </div>
             <div style="margin-top: 10px;">
@@ -151,7 +151,7 @@
             @if(!($child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum'))
             <tr>
                 <td>
-                    <strong>Yuran Bulanan ({{ \Carbon\Carbon::now()->format('F Y') }})</strong><br>
+                    <strong>Yuran Bulanan ({{ \Carbon\Carbon::now()->translatedFormat('F Y') }})</strong><br>
                     <span style="font-size: 12px; color: #666;">Yuran latihan bulanan semasa.</span>
                 </td>
                 <td style="text-align: right;">

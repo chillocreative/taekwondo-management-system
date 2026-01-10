@@ -556,12 +556,16 @@ class ChildController extends Controller
                         'quantity' => 1,
                         'amount' => $totalAmount,
                         'total' => $totalAmount,
-                        'receipt_number' => 'REC-' . now()->format('ym') . '-' . str_pad($child->student->id, 4, '0', STR_PAD_LEFT),
+                        'receipt_number' => null, // Will be set after creation
                         'transaction_ref' => $billCode,
                         'payment_method' => 'online',
                         'status' => 'paid',
                         'payment_date' => now(),
                     ]);
+
+                    // Set receipt number as simple running number
+                    $payment->receipt_number = str_pad($payment->id, 4, '0', STR_PAD_LEFT);
+                    $payment->save();
 
                     // Send PDF Receipt to Parent
                     $this->sendReceiptViaWhatsapp($child, $mainFee, $monthlyFee, $payment->receipt_number, $outstandingAmount);
@@ -663,11 +667,23 @@ class ChildController extends Controller
             $outstandingAmount = 0;
         }
 
+        // Get receipt number from student payment
+        $receiptNumber = null;
+        if ($child->student) {
+            $studentPayment = \App\Models\StudentPayment::where('student_id', $child->student->id)
+                ->where('transaction_ref', $child->payment_reference)
+                ->first();
+            if ($studentPayment) {
+                $receiptNumber = $studentPayment->receipt_number;
+            }
+        }
+
         $items = [
             'yearly_fee' => (float) $mainFee,
             'monthly_fee' => (float) $monthlyFee,
             'outstanding_fee' => $outstandingAmount,
-            'total' => (float) ($mainFee + $monthlyFee + $outstandingAmount)
+            'total' => (float) ($mainFee + $monthlyFee + $outstandingAmount),
+            'receipt_number' => $receiptNumber
         ];
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('receipts.registration', [
@@ -686,7 +702,8 @@ class ChildController extends Controller
                 'yearly_fee' => $yearlyFee,
                 'monthly_fee' => $monthlyFee,
                 'outstanding_fee' => $outstandingFee,
-                'total' => $yearlyFee + $monthlyFee + $outstandingFee
+                'total' => $yearlyFee + $monthlyFee + $outstandingFee,
+                'receipt_number' => $receiptNumber
             ];
 
             $pdf = Pdf::loadView('receipts.registration', [
