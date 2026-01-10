@@ -17,7 +17,7 @@ export default function Index({ auth, serverUrl }) {
     useEffect(() => {
         const checkStatus = async () => {
             try {
-                const response = await fetch(`${serverUrl}/status`);
+                const response = await fetch(`${serverUrl}/whatsapp-api/status`);
                 const data = await response.json();
                 setServerStatus(data);
             } catch (error) {

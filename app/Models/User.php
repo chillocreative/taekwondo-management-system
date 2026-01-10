@@ -25,6 +25,7 @@ class User extends Authenticatable
         'password',
         'role',
         'training_center_id',
+        'last_notified_year',
     ];
 
     /**

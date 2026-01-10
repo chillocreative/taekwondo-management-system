@@ -318,6 +318,9 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                             <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                                                 Status Pembayaran
                                             </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                                                Jenis
+                                            </th>
                                             <th className="px-6 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">
                                                 Tindakan
                                             </th>
@@ -369,12 +372,25 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${child.payment_completed
-                                                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                                        : 'bg-zinc-100 text-zinc-600 border border-zinc-200'
-                                                        }`}>
-                                                        {child.payment_completed ? 'Aktif' : 'Tidak Aktif'}
-                                                    </span>
+                                                    {child.payment_completed ? (
+                                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-1 w-fit">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                            Aktif
+                                                        </span>
+                                                    ) : child.needs_update ? (
+                                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-50 text-red-600 border border-red-100 flex items-center gap-1 w-fit">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                                                            Data ({new Date().getFullYear() - 1})
+                                                            {new Date().getFullYear() >= 2027 && <span className="text-[9px] opacity-70 ml-1">(Profil perlu dikemaskini)</span>}
+                                                        </span>
+                                                    ) : (
+                                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${child.is_active
+                                                            ? 'bg-zinc-100 text-zinc-600 border border-zinc-200'
+                                                            : 'bg-zinc-100 text-zinc-600 border border-zinc-200 opacity-50'
+                                                            }`}>
+                                                            {child.is_active ? 'Aktif' : 'Tidak Aktif'}
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     {child.payment_completed ? (
@@ -382,8 +398,11 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                             <span className="px-2 py-1 text-xs font-medium rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
                                                                 Sudah Bayar
                                                             </span>
-
                                                         </div>
+                                                    ) : child.needs_update ? (
+                                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-rose-50 text-rose-500 border border-rose-100">
+                                                            Kemas kini data dahulu
+                                                        </span>
                                                     ) : child.payment_method === 'offline' && child.payment_reference ? (
                                                         <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-600 border border-blue-100">
                                                             Menunggu Pengesahan
@@ -391,6 +410,17 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                     ) : (
                                                         <span className="px-2 py-1 text-xs font-medium rounded-full bg-amber-50 text-amber-600 border border-amber-100">
                                                             Belum Bayar
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {(child.registration_type === 'renewal' || child.needs_update || (child.created_at && new Date(child.created_at).getFullYear() < new Date().getFullYear())) ? (
+                                                        <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-amber-50 text-amber-600 border border-amber-200 shadow-sm">
+                                                            🔄 Pembaharuan {new Date().getFullYear()}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-sm">
+                                                            ✨ Pendaftaran Baru
                                                         </span>
                                                     )}
                                                 </td>
@@ -420,11 +450,14 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                         )}
                                                         <button
                                                             onClick={() => openModal(child)}
-                                                            className="px-3 py-1.5 text-xs border border-zinc-300 rounded-lg text-zinc-700 hover:bg-zinc-50 transition-colors"
+                                                            className={`px-3 py-1.5 text-xs border rounded-lg transition-colors ${child.needs_update
+                                                                ? 'border-amber-400 bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold'
+                                                                : 'border-zinc-300 text-zinc-700 hover:bg-zinc-50'
+                                                                }`}
                                                         >
-                                                            Edit
+                                                            {child.needs_update ? 'Kemas Kini' : 'Edit'}
                                                         </button>
-                                                        {!isPaymentValidForCurrentYear(child) && (
+                                                        {!child.payment_completed && !child.needs_update && (
                                                             <button
                                                                 onClick={() => handlePayment(child.id)}
                                                                 className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -844,8 +877,8 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                         {errors.training_center_id && <p className="text-red-500 text-xs mt-1">{errors.training_center_id}</p>}
                                     </div>
 
-                                    {/* Tahap Tali Pinggang (Moved here) */}
-                                    {(data.registration_type === 'renewal' || data.from_other_club || (editingChild && editingChild.payment_completed)) && (
+                                    {/* Tahap Tali Pinggang (Only for paid students here) */}
+                                    {(editingChild && editingChild.payment_completed) && (
                                         <div className="p-4 bg-zinc-50 rounded-lg border border-zinc-200">
                                             <label className="block text-sm font-medium text-zinc-700 mb-1">
                                                 Tahap Tali Pinggang Terkini
@@ -917,15 +950,38 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                         />
                                                         <span className="ml-2 text-sm text-zinc-700">Membuat Pendaftaran Baru</span>
                                                     </label>
-                                                    <label className="flex items-center">
-                                                        <input
-                                                            type="radio"
-                                                            name="registration_type"
-                                                            checked={data.registration_type === 'renewal'}
-                                                            onChange={() => setData('registration_type', 'renewal')}
-                                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
-                                                        />
-                                                        <span className="ml-2 text-sm text-zinc-700">Membuat Pembaharuan Keahlian</span>
+                                                    <label className="flex flex-col">
+                                                        <div className="flex items-center">
+                                                            <input
+                                                                type="radio"
+                                                                name="registration_type"
+                                                                checked={data.registration_type === 'renewal'}
+                                                                onChange={() => setData('registration_type', 'renewal')}
+                                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
+                                                            />
+                                                            <span className="ml-2 text-sm text-zinc-700">Membuat Pembaharuan Keahlian</span>
+                                                        </div>
+                                                        {data.registration_type === 'renewal' && (
+                                                            <div className="mt-3 p-4 bg-zinc-50 rounded-lg border border-zinc-200 ml-6">
+                                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                                    Tahap Tali Pinggang Terkini
+                                                                </label>
+                                                                <select
+                                                                    value={data.belt_level}
+                                                                    onChange={(e) => setData('belt_level', e.target.value)}
+                                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                                                    required
+                                                                >
+                                                                    <option value="">Pilih Tahap Tali Pinggang</option>
+                                                                    {beltLevels.map((level) => (
+                                                                        <option key={level.value} value={level.value}>
+                                                                            {level.label}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                                {errors.belt_level && <p className="text-red-500 text-xs mt-1">{errors.belt_level}</p>}
+                                                            </div>
+                                                        )}
                                                     </label>
                                                 </div>
                                             </div>
@@ -937,7 +993,25 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                     {/* Conditional fields when from other club */}
                                     {data.from_other_club && (
                                         <div className="space-y-4 pl-4 border-l-2 border-blue-200 bg-blue-50 p-4 rounded-r-lg">
-
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                    Tahap Tali Pinggang Terkini
+                                                </label>
+                                                <select
+                                                    value={data.belt_level}
+                                                    onChange={(e) => setData('belt_level', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                                    required
+                                                >
+                                                    <option value="">Pilih Tahap Tali Pinggang</option>
+                                                    {beltLevels.map((level) => (
+                                                        <option key={level.value} value={level.value}>
+                                                            {level.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                {errors.belt_level && <p className="text-red-500 text-xs mt-1">{errors.belt_level}</p>}
+                                            </div>
 
                                             <div>
                                                 <label className="block text-sm font-medium text-zinc-700 mb-1">

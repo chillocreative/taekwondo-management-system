@@ -51,6 +51,7 @@ class Child extends Model
         'school_name',
         'school_class',
         'registration_type',
+        'last_updated_year',
     ];
 
     protected $casts = [
@@ -60,6 +61,7 @@ class Child extends Model
         'payment_completed' => 'boolean',
         'payment_date' => 'datetime',
         'registration_fee' => 'decimal:2',
+        'last_updated_year' => 'integer',
     ];
 
     /**

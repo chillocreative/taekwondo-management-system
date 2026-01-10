@@ -29,10 +29,42 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $currentYear = \Carbon\Carbon::now()->year;
+        
+        $needsYearlyNotification = false;
+        $allPesertaUpdated = true;
+        
+        if ($user && $user->role === 'user') {
+            // Check if user has been notified for this year
+            $needsYearlyNotification = $user->last_notified_year < $currentYear;
+            
+            // Re-check: only show if they still have unpaid children for this year
+            $unpaidChildrenCount = $user->children()
+                ->where(function($q) use ($currentYear) {
+                    $q->where('last_updated_year', '<', $currentYear)
+                      ->orWhereYear('payment_date', '<', $currentYear)
+                      ->orWhereNull('payment_date');
+                })->count();
+            
+            if ($unpaidChildrenCount === 0) {
+                $needsYearlyNotification = false;
+            }
+
+            $allPesertaUpdated = $user->children()
+                ->where('last_updated_year', '<', $currentYear)
+                ->count() === 0;
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user() ? $request->user()->load('trainingCenter') : null,
+            ],
+            'yearlyReset' => [
+                'currentYear' => $currentYear,
+                'needsNotification' => $needsYearlyNotification,
+                'allPesertaUpdated' => $allPesertaUpdated,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

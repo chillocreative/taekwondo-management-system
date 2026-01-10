@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 
-export default function Payment({ auth, child, yearlyFee, monthlyFee, totalAmount, currentMonth, ageCategory, feeLabel, beltLevelMalay }) {
+export default function Payment({ auth, child, yearlyFee, monthlyFee, outstandingAmount, outstandingCount, totalAmount, currentMonth, ageCategory, feeLabel, beltLevelMalay }) {
     const { flash } = usePage().props;
 
     const formatCurrency = (amount) => {
@@ -123,6 +123,22 @@ export default function Payment({ auth, child, yearlyFee, monthlyFee, totalAmoun
                                 </div>
                                 <p className="text-lg font-bold text-zinc-900">{formatCurrency(monthlyFee)}</p>
                             </div>
+
+                            {/* Outstanding Monthly Fee (Previous Year) */}
+                            {outstandingAmount > 0 && (
+                                <div className="flex items-center justify-between py-4 border-b border-zinc-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center">
+                                            <span className="text-xl">⏳</span>
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-rose-700">Tunggakan Yuran Bulanan</p>
+                                            <p className="text-sm text-zinc-500">Tahun Lepas ({outstandingCount} bulan)</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-lg font-bold text-rose-600">{formatCurrency(outstandingAmount)}</p>
+                                </div>
+                            )}
 
                             {/* Total */}
                             <div className="flex items-center justify-between py-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl px-4 -mx-2">

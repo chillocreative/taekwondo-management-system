@@ -17,7 +17,30 @@ class ChildController extends Controller
      */
     public function index()
     {
-        $children = Auth::user()->children()->with(['trainingCenter', 'student'])->latest()->get();
+        $currentYear = now()->year;
+        $children = Auth::user()->children()
+            ->with(['trainingCenter', 'student'])
+            ->latest()
+            ->get()
+            ->map(function($child) use ($currentYear) {
+                // Determine registration type for the current year
+                // If created in a previous year, it's a renewal
+                $createdYear = $child->created_at->year;
+                if ($createdYear < $currentYear) {
+                    $child->registration_type = 'renewal';
+                } else {
+                    $child->registration_type = 'new';
+                }
+
+                // Check if payment is valid for current year
+                $child->payment_completed = $child->payment_completed && 
+                                          $child->payment_date && 
+                                          $child->payment_date->year === $currentYear;
+                
+                $child->needs_update = $child->last_updated_year < $currentYear;
+                return $child;
+            });
+            
         $trainingCenters = TrainingCenter::active()->orderBy('name')->get();
 
         return Inertia::render('Children/Index', [
@@ -58,11 +81,14 @@ class ChildController extends Controller
 
         // Handle file upload
         if ($request->hasFile('belt_certificate')) {
-            $path = $request->file('belt_certificate')->store('belt_certificates', 'public');
+            $path = $request->file('belt_certificate')->store('certificates', 'public');
             $validated['belt_certificate'] = $path;
         }
 
-        $child = Auth::user()->children()->create($validated);
+        $validated['parent_id'] = Auth::id();
+        $validated['last_updated_year'] = now()->year;
+        
+        $child = Child::create($validated);
 
         // Create Student Record Immediately (Generate No Siri)
         $studentService = new \App\Services\StudentService();
@@ -114,10 +140,11 @@ class ChildController extends Controller
             if ($child->belt_certificate) {
                 \Storage::disk('public')->delete($child->belt_certificate);
             }
-            $path = $request->file('belt_certificate')->store('belt_certificates', 'public');
+            $path = $request->file('belt_certificate')->store('certificates', 'public');
             $validated['belt_certificate'] = $path;
         }
 
+        $validated['last_updated_year'] = now()->year;
         $child->update($validated);
 
         // Sync updates to Student
@@ -193,14 +220,18 @@ class ChildController extends Controller
             $ageCategory = 'Pelajar (Bawah 18 tahun)';
         }
 
-        // Calculate total: Main Fee + Yuran Bulanan (current month)
+        // Calculate total: Main Fee + Yuran Bulanan (current month) + Previous Outstanding
         $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
         
+        $outstandingFees = $this->getOutstandingFees($child);
+        $outstandingAmount = $outstandingFees->sum('amount');
+
         if ($isSpecialCenter) {
             $monthlyFee = 0;
+            $outstandingAmount = 0; // Don't charge outstanding for special center if any
             $totalAmount = $mainFee;
         } else {
-            $totalAmount = $mainFee + $monthlyFee;
+            $totalAmount = $mainFee + $monthlyFee + $outstandingAmount;
         }
 
         $currentMonth = \Carbon\Carbon::now()->translatedFormat('F Y'); // e.g., "Januari 2026"
@@ -210,6 +241,8 @@ class ChildController extends Controller
             'yearlyFee' => (float) $mainFee, // We keep the variable name yearlyFee for frontend compatibility or rename if needed
             'feeLabel' => $feeLabel,
             'monthlyFee' => (float) $monthlyFee,
+            'outstandingAmount' => (float) $outstandingAmount,
+            'outstandingCount' => $outstandingFees->count(),
             'totalAmount' => (float) $totalAmount,
             'currentMonth' => $currentMonth,
             'ageCategory' => $ageCategory,
@@ -272,24 +305,33 @@ class ChildController extends Controller
         $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
         $currentMonth = \Carbon\Carbon::now()->format('F');
         
+        $outstandingFees = $this->getOutstandingFees($child);
+        $outstandingAmount = (float) $outstandingFees->sum('amount');
+
         if ($isSpecialCenter) {
             $monthlyFee = 0;
+            $outstandingAmount = 0;
             $totalAmount = $mainFee;
         } else {
-            $totalAmount = $mainFee + $monthlyFee;
+            $totalAmount = $mainFee + $monthlyFee + $outstandingAmount;
         }
 
         // Create ToyyibPay bill
         $toyyibPay = new \App\Services\ToyyibPayService();
         
         $billDescription = sprintf(
-            '%s (RM%.2f) + Yuran Bulanan %s (RM%.2f) - %s',
+            '%s (RM%.2f) + Yuran Bulanan %s (RM%.2f)',
             $feeTitle,
             $mainFee,
             $currentMonth,
-            $monthlyFee,
-            $ageCategory
+            $monthlyFee
         );
+
+        if ($outstandingAmount > 0) {
+            $billDescription .= sprintf(' + Tunggakan (RM%.2f)', $outstandingAmount);
+        }
+
+        $billDescription .= ' - ' . $ageCategory;
         
         $billName = 'Yuran - ' . mb_substr($child->name, 0, 21);
         
@@ -358,9 +400,14 @@ class ChildController extends Controller
             $ageCategory = 'Bawah 18 tahun';
         }
 
+        $outstandingFees = $this->getOutstandingFees($child);
+        $outstandingAmount = (float) $outstandingFees->sum('amount');
+
         return Inertia::render('Children/OfflinePayment', [
             'child' => $child->load('trainingCenter'),
             'yearlyFee' => $yearlyFee,
+            'outstandingAmount' => $outstandingAmount,
+            'outstandingCount' => $outstandingFees->count(),
             'ageCategory' => $ageCategory,
         ]);
     }
@@ -482,11 +529,15 @@ class ChildController extends Controller
 
                     $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
                     
+                    $outstandingFees = $this->getOutstandingFees($child);
+                    $outstandingAmount = (float) $outstandingFees->sum('amount');
+
                     if ($isSpecialCenter) {
                         $monthlyFee = 0;
+                        $outstandingAmount = 0;
                         $totalAmount = $mainFee;
                     } else {
-                        $totalAmount = $mainFee + $monthlyFee;
+                        $totalAmount = $mainFee + $monthlyFee + $outstandingAmount;
                     }
 
                     // Save the actual fee used in child record if not already set (just in case)
@@ -509,11 +560,8 @@ class ChildController extends Controller
                         'payment_date' => now(),
                     ]);
 
-                    // Send WhatsApp Notification to Admin
-                    \App\Services\WhatsappService::notifyAdminNewPaidPeserta($child->name, $totalAmount);
-
                     // Send PDF Receipt to Parent
-                    $this->sendReceiptViaWhatsapp($child, $mainFee, $monthlyFee, $payment->receipt_number);
+                    $this->sendReceiptViaWhatsapp($child, $mainFee, $monthlyFee, $payment->receipt_number, $outstandingAmount);
 
                     // Update monthly payment record for current month
                     $currentMonthNum = \Carbon\Carbon::now()->month;
@@ -533,6 +581,21 @@ class ChildController extends Controller
                             'student_payment_id' => $payment->id,
                         ]);
                     }
+
+                    // Settle Outstanding Fees (Previous Years)
+                    foreach ($outstandingFees as $of) {
+                        $of->update([
+                            'is_paid' => true,
+                            'paid_date' => now(),
+                            'payment_method' => 'online',
+                            'payment_reference' => $billCode,
+                            'receipt_number' => $payment->receipt_number,
+                            'student_payment_id' => $payment->id,
+                        ]);
+                    }
+
+                    // Send WhatsApp Notification to Admin
+                    \App\Services\WhatsappService::notifyAdminNewPaidPeserta($child->name, $totalAmount);
                 }
 
                 // Notify Admin & User via WhatsApp
@@ -587,14 +650,21 @@ class ChildController extends Controller
 
         $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
 
+        $outstandingAmount = (float) \App\Models\MonthlyPayment::where('child_id', $child->id)
+            ->where('payment_reference', $child->payment_reference)
+            ->where('year', '<', now()->year)
+            ->sum('amount');
+
         if ($isSpecialCenter) {
             $monthlyFee = 0;
+            $outstandingAmount = 0;
         }
 
         $items = [
-            'yearly_fee' => $mainFee,
-            'monthly_fee' => $monthlyFee,
-            'total' => $mainFee + $monthlyFee
+            'yearly_fee' => (float) $mainFee,
+            'monthly_fee' => (float) $monthlyFee,
+            'outstanding_fee' => $outstandingAmount,
+            'total' => (float) ($mainFee + $monthlyFee + $outstandingAmount)
         ];
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('receipts.registration', [
@@ -606,13 +676,14 @@ class ChildController extends Controller
         return $pdf->stream('Resit_Yuran_' . preg_replace('/[^A-Za-z0-9]/', '_', $child->name) . '.pdf');
     }
 
-    private function sendReceiptViaWhatsapp($child, $yearlyFee, $monthlyFee, $receiptNumber)
+    private function sendReceiptViaWhatsapp($child, $yearlyFee, $monthlyFee, $receiptNumber, $outstandingFee = 0)
     {
         try {
             $items = [
                 'yearly_fee' => $yearlyFee,
                 'monthly_fee' => $monthlyFee,
-                'total' => $yearlyFee + $monthlyFee
+                'outstanding_fee' => $outstandingFee,
+                'total' => $yearlyFee + $monthlyFee + $outstandingFee
             ];
 
             $pdf = Pdf::loadView('receipts.registration', [
@@ -638,5 +709,17 @@ class ChildController extends Controller
         } catch (\Exception $e) {
             Log::error('Gagal menghantar resit WhatsApp Pendaftaran: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Get outstanding fees from previous years
+     */
+    private function getOutstandingFees(Child $child)
+    {
+        $currentYear = now()->year;
+        return \App\Models\MonthlyPayment::where('child_id', $child->id)
+            ->where('year', '<', $currentYear)
+            ->where('is_paid', false)
+            ->get();
     }
 }

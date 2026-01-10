@@ -28,3 +28,5 @@ create-deployment-package.ps1
 *.txt
 *.ps1 
 *.zip
+whatsapp-server.js
+.baileys-session/

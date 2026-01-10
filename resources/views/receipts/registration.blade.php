@@ -157,6 +157,18 @@
                     {{ number_format($items['monthly_fee'], 2) }}
                 </td>
             </tr>
+
+            @if(isset($items['outstanding_fee']) && $items['outstanding_fee'] > 0)
+            <tr>
+                <td>
+                    <strong>Tunggakan Yuran Bulanan (Tahun Lepas)</strong><br>
+                    <span style="font-size: 12px; color: #666;">Tunggakan yuran yang belum dijelaskan dari sesi sebelum ini.</span>
+                </td>
+                <td style="text-align: right;">
+                    {{ number_format($items['outstanding_fee'], 2) }}
+                </td>
+            </tr>
+            @endif
             
             <tr class="total-row">
                 <td style="text-align: right;">Jumlah Keseluruhan</td>

@@ -132,7 +132,7 @@ class WhatsappService
      */
     public static function notifyConsecutiveAbsenceWaris($phone, $studentName)
     {
-        $message = "*[TSMS NOTIFIKASI]*\n\n{$studentName} telah tidak hadir sebanyak 3 kali.\n\nHarap Maklum.";
+        $message = "*[TSMS NOTIFIKASI]*\n\n*{$studentName}* telah tidak hadir sebanyak 3 kali.\n\nMohon waris berhubung dengan jurulatih untuk memaklumkan sebab ketidakhadiran (jika masih belum berbuat demikian) atau berdepan pembatalan keahlian.\n\nHarap Maklum.";
         return self::send($phone, $message);
     }
 
