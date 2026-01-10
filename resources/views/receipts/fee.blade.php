@@ -131,8 +131,20 @@
         <tbody>
             <tr>
                 <td>
-                    <strong>Yuran Bulanan Taekwondo - {{ $payment->month }}</strong><br>
-                    <span style="font-size: 12px; color: #666;">Kategori: {{ ucfirst($payment->kategori) }}</span>
+                    @php
+                        $isSRIBahrulUlum = $payment->student->child && 
+                                          $payment->student->child->trainingCenter && 
+                                          $payment->student->child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
+                        $year = $payment->payment_date ? $payment->payment_date->format('Y') : date('Y');
+                    @endphp
+                    
+                    @if($isSRIBahrulUlum)
+                        <strong>Yuran Tahunan Taekwondo - {{ $year }}</strong><br>
+                        <span style="font-size: 12px; color: #666;">Kategori: {{ ucfirst($payment->kategori) }}</span>
+                    @else
+                        <strong>Yuran Bulanan Taekwondo - {{ $payment->month }}</strong><br>
+                        <span style="font-size: 12px; color: #666;">Kategori: {{ ucfirst($payment->kategori) }}</span>
+                    @endif
                 </td>
                 <td style="text-align: right;">{{ number_format($payment->amount, 2) }}</td>
             </tr>
