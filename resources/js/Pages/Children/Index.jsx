@@ -533,7 +533,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                 }}
                                                 className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
                                             />
-                                            <span className="text-xs text-zinc-500 group-hover:text-zinc-700 transition-colors">Sama seperti profil/sebelumnya</span>
+                                            <span className="text-xs text-blue-600 group-hover:text-blue-700 transition-colors">Sama seperti profil/sebelumnya</span>
                                         </label>
                                     </div>
 
