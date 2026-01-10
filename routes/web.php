@@ -126,6 +126,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Annual Statement Routes
     Route::get('/annual-statement', [App\Http\Controllers\AnnualStatementController::class, 'index'])->name('annual-statement.index');
+    Route::get('/annual-statement/{child}/download', [App\Http\Controllers\AnnualStatementController::class, 'downloadPdf'])->name('annual-statement.download');
 });
 
 // Temporary Migrate Route

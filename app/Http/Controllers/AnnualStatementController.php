@@ -63,6 +63,42 @@ class AnnualStatementController extends Controller
         ]);
     }
 
+    public function downloadPdf(Child $child)
+    {
+        // Ensure user owns the child
+        if ($child->parent_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $child->load(['trainingCenter', 'student']);
+
+        $payments = MonthlyPayment::where('child_id', $child->id)
+            ->where('year', now()->year)
+            ->orderBy('month')
+            ->get()
+            ->map(function ($payment) {
+                return [
+                    'month_name' => $payment->getMonthNameAttribute(),
+                    'year' => $payment->year,
+                    'amount' => $payment->amount,
+                    'is_paid' => $payment->is_paid,
+                    'payment_date' => $payment->payment_date ? $payment->payment_date->format('d/m/Y') : null,
+                    'receipt_number' => $payment->receipt_number,
+                ];
+            });
+
+        $data = [
+            'child_name' => $child->name,
+            'no_siri' => $child->student->no_siri ?? '-',
+            'training_center' => $child->trainingCenter->name ?? '-',
+            'payments' => $payments,
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('receipts.annual_statement', $data);
+        
+        return $pdf->download('Penyata_Tahunan_' . str_replace(' ', '_', $child->name) . '.pdf');
+    }
+
     private function getReceiptUrl($child, $monthlyPayment)
     {
         // 1. Check if there's a specific StudentPayment record for this month
