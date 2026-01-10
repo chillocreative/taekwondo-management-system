@@ -63,7 +63,7 @@ class ChildController extends Controller
 
         $child = Auth::user()->children()->create($validated);
 
-        // Create Student Record Immediately (Generate No. Keahlian)
+        // Create Student Record Immediately (Generate No Siri)
         $studentService = new \App\Services\StudentService();
         $studentService->syncChildToStudent($child);
 
@@ -430,7 +430,7 @@ class ChildController extends Controller
                     'is_active' => true, // Auto-activate after successful payment
                 ]);
 
-                // Create/Sync Student Record (Generate No. Keahlian)
+                // Create/Sync Student Record (Generate No Siri)
                 $studentService = new \App\Services\StudentService();
                 $studentService->syncChildToStudent($child);
                 
@@ -505,7 +505,7 @@ class ChildController extends Controller
                 \App\Models\Notification::createPaymentPaidNotification($child);
                 
                 $parentPhone = $child->parent->phone_number ?? null;
-                $msg = "*[PENDAFTARAN BERJAYA]*\n\nPelajar: {$child->name}\nNo. Keahlian: " . ($child->student->no_siri ?? '-') . "\nJumlah: RM{$totalAmount}\n\nSelamat datang ke Taekwondo A&Z! Pendaftaran anda telah diaktifkan.";
+                $msg = "*[PENDAFTARAN BERJAYA]*\n\nPelajar: {$child->name}\nNo Siri: " . ($child->student->no_siri ?? '-') . "\nJumlah: RM{$totalAmount}\n\nSelamat datang ke Taekwondo A&Z! Pendaftaran anda telah diaktifkan.";
                 
                 \App\Services\WhatsappService::send($parentPhone, $msg);
                 \App\Services\WhatsappService::notifyAdmin("Pendaftaran & Pembayaran Baru:\nPelajar: {$child->name}\nJumlah: RM{$totalAmount}");
