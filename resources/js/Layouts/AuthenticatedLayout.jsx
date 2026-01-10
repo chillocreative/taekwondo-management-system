@@ -342,8 +342,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         <Link href="/" className="flex items-center gap-3">
                             <ApplicationLogo className="h-12 w-12 rounded-full" />
                             <div>
-                                <h1 className="text-lg font-bold text-zinc-900">TSMS</h1>
-                                <p className="text-xs text-zinc-500">Taekwondo A&Z</p>
+                                <h1 className="text-lg font-bold text-zinc-900">Taekwondo A&Z</h1>
                             </div>
                         </Link>
                     </div>
