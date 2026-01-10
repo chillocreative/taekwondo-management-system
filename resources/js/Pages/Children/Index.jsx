@@ -936,8 +936,8 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
 
                                             {/* Registration Type Section */}
                                             <div className="pt-4 border-t border-zinc-200">
-                                                <label className="block text-sm font-medium text-zinc-700 mb-3">
-                                                    Adakah anda:
+                                                <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                                    Sila Pilih:
                                                 </label>
                                                 <div className="space-y-3">
                                                     <label className="flex items-center">
