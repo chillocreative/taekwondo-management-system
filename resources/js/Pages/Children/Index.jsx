@@ -948,7 +948,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                             onChange={() => setData('registration_type', 'new')}
                                                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
                                                         />
-                                                        <span className="ml-2 text-sm text-zinc-700">Membuat Pendaftaran Baru</span>
+                                                        <span className="ml-2 text-sm text-zinc-700">Pendaftaran Baru</span>
                                                     </label>
                                                     <label className="flex flex-col">
                                                         <div className="flex items-center">
@@ -959,7 +959,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                                 onChange={() => setData('registration_type', 'renewal')}
                                                                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
                                                             />
-                                                            <span className="ml-2 text-sm text-zinc-700">Membuat Pembaharuan Keahlian</span>
+                                                            <span className="ml-2 text-sm text-zinc-700">Pembaharuan Keahlian</span>
                                                         </div>
                                                         {data.registration_type === 'renewal' && (
                                                             <div className="mt-3 p-4 bg-zinc-50 rounded-lg border border-zinc-200 ml-6">
