@@ -39,7 +39,7 @@ class SendFeeReminders extends Command
 
         $month = Carbon::now()->month;
         $year = Carbon::now()->year;
-        $monthName = Carbon::now()->translatedFormat('F');
+        $monthName = \App\Models\MonthlyPayment::getMalayName(Carbon::now()->month);
 
         $this->info("Starting fee reminders for {$monthName} {$year}...");
 

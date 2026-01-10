@@ -33,7 +33,7 @@ class BackfillRegistrationPayments extends Command
 
             // Check if StudentPayment already exists for this registration
             $paymentDate = $child->payment_date instanceof Carbon ? $child->payment_date : Carbon::parse($child->payment_date);
-            $monthStr = $paymentDate->translatedFormat('F Y');
+            $monthStr = \App\Models\MonthlyPayment::getMalayName($paymentDate->month) . ' ' . $paymentDate->year;
 
             $existingPayment = StudentPayment::where('student_id', $child->student->id)
                 ->where('month', $monthStr)

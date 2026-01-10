@@ -30,8 +30,8 @@ class DashboardController extends Controller
 
     private function adminDashboard()
     {
-        Carbon::setLocale('ms');
-        $currentMonthName = Carbon::now()->translatedFormat('F Y');
+        \Carbon\Carbon::setLocale('ms');
+        $currentMonthName = \App\Models\MonthlyPayment::getMalayName(\Carbon\Carbon::now()->month) . ' ' . \Carbon\Carbon::now()->year;
         $currentMonthNumeric = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
 
@@ -175,7 +175,7 @@ class DashboardController extends Controller
     {
         Carbon::setLocale('ms');
         $currentMonthNumeric = Carbon::now()->month;
-        $currentMonthName = Carbon::now()->translatedFormat('F Y');
+        $currentMonthName = \App\Models\MonthlyPayment::getMalayName(\Carbon\Carbon::now()->month) . ' ' . \Carbon\Carbon::now()->year;
         $currentYear = Carbon::now()->year;
         $centerId = $user->training_center_id;
 

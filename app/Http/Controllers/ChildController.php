@@ -237,7 +237,7 @@ class ChildController extends Controller
             $totalAmount = $mainFee + $monthlyFee + $outstandingAmount;
         }
 
-        $currentMonth = \Carbon\Carbon::now()->translatedFormat('F Y'); // e.g., "Januari 2026"
+        $currentMonth = \App\Models\MonthlyPayment::getMalayName(now()->month) . ' ' . now()->year;
 
         return Inertia::render('Children/Payment', [
             'child' => $child->load('trainingCenter'),
@@ -306,7 +306,7 @@ class ChildController extends Controller
 
         // Calculate total payment
         $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
-        $currentMonth = \Carbon\Carbon::now()->translatedFormat('F');
+        $currentMonth = \App\Models\MonthlyPayment::getMalayName(now()->month);
         
         $outstandingFees = $this->getOutstandingFees($child);
         $outstandingAmount = (float) $outstandingFees->sum('amount');
@@ -509,7 +509,7 @@ class ChildController extends Controller
 
                 // Create StudentPayment record so it appears on admin payments page
                 if ($child->student) {
-                    $currentMonth = \Carbon\Carbon::now()->translatedFormat('F Y');
+                    $currentMonth = \App\Models\MonthlyPayment::getMalayName(now()->month) . ' ' . now()->year;
                     
                     // Calculate fees
                     $feeSettings = \App\Models\FeeSetting::current();

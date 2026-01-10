@@ -201,7 +201,7 @@ class AttendanceController extends Controller
             'filters' => $request->only(['training_center_id']),
             'stats' => [
                 'current_year' => $currentYear,
-                'current_month_name' => now()->translatedFormat('F'),
+                'current_month_name' => \App\Models\MonthlyPayment::getMalayName(now()->month),
                 'yearly_sessions' => $stats['yearly_sessions'],
                 'monthly_sessions' => $monthlySessionsQuery->distinct()->count(['attendance_date', 'training_center_id']),
                 'hadir' => (clone $baseStatsQuery)->where('status', 'hadir')->count(),
