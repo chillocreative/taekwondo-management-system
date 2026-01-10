@@ -28,25 +28,30 @@ class Student extends Model
         });
     }
 
+
     /**
-     * Generate unique No Siri (ANZ0001, ANZ0002, ..., ANZ9999, ANZ10000, ...)
+     * Generate unique No Siri with year prefix (ANZ260001, ANZ260002, ..., ANZ270001, ...)
+     * Format: ANZ{YY}{XXXX} where YY = last 2 digits of year, XXXX = running number
      */
     public static function generateNoSiri(): string
     {
-        $lastStudent = self::orderBy('id', 'desc')->first();
+        $currentYear = date('Y');
+        $yearSuffix = substr($currentYear, -2); // Get last 2 digits (e.g., "26" for 2026)
+        $prefix = 'ANZ' . $yearSuffix;
         
-        if ($lastStudent && preg_match('/^ANZ(\d+)$/', $lastStudent->no_siri, $matches)) {
+        // Find the last student with the same year prefix
+        $lastStudent = self::where('no_siri', 'LIKE', $prefix . '%')
+            ->orderBy('no_siri', 'desc')
+            ->first();
+        
+        if ($lastStudent && preg_match('/^ANZ\d{2}(\d+)$/', $lastStudent->no_siri, $matches)) {
             $nextNumber = intval($matches[1]) + 1;
         } else {
             $nextNumber = 1;
         }
 
-        // Format: ANZ0001 for numbers 1-9999, then ANZ10000, ANZ10001, etc.
-        if ($nextNumber <= 9999) {
-            return 'ANZ' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-        } else {
-            return 'ANZ' . $nextNumber;
-        }
+        // Format: ANZ260001, ANZ260002, etc.
+        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
     protected $fillable = [
