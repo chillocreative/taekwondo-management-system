@@ -98,6 +98,10 @@ export default function Show({ auth, student, currentYear }) {
                                                     <p className="text-xs font-bold text-blue-600 uppercase mb-1">Nama Penuh</p>
                                                     <p className="text-lg font-bold text-gray-900 uppercase">{student.nama_pelajar}</p>
                                                 </div>
+                                                <div className="text-right">
+                                                    <p className="text-xs font-bold text-blue-600 uppercase mb-1">No. Siri</p>
+                                                    <p className="text-md font-black text-gray-900">{student.no_siri}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

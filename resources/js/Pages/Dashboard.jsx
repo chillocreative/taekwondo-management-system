@@ -164,6 +164,7 @@ export default function Dashboard({ auth, pesertaData, stats, yearlyReset }) {
                                         <div className="p-8">
                                             <div className="flex items-start justify-between mb-6">
                                                 <div>
+                                                    <div className="text-zinc-400 text-xs font-bold uppercase mb-1">{child.no_siri}</div>
                                                     <h5 className="text-2xl font-black text-zinc-900 leading-tight">{child.name}</h5>
                                                     <div className="text-sm text-zinc-500 font-medium mt-1">{child.training_center}</div>
                                                 </div>

@@ -301,6 +301,9 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                 Nama
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                                                No. Siri
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
                                                 Pusat Latihan
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
@@ -329,6 +332,11 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-zinc-900">{child.name}</div>
                                                     <div className="text-xs text-zinc-500">{getBeltLevelLabel(child.belt_level)}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-zinc-900">
+                                                        {child.student ? child.student.no_siri : '-'}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm text-zinc-900">

@@ -82,7 +82,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                     type="text"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="Cari No. Resit atau Nama Peserta..."
+                                    placeholder="Cari No. Resit, No. Siri, atau Nama Peserta..."
                                     className="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm text-sm"
                                 />
                             </div>
@@ -173,6 +173,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                     <div className="font-bold text-gray-900">{payment?.student?.nama_pelajar || '-'}</div>
+                                                    <div className="text-xs">{payment?.student?.no_siri || '-'}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {payment?.month?.includes('Januari') || payment?.month?.includes('Februari') || payment?.month?.includes('Mac') || payment?.month?.includes('April') || payment?.month?.includes('Mei') || payment?.month?.includes('Jun') || payment?.month?.includes('Julai') || payment?.month?.includes('Ogos') || payment?.month?.includes('September') || payment?.month?.includes('Oktober') || payment?.month?.includes('November') || payment?.month?.includes('Disember') ? (
