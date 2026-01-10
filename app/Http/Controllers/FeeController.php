@@ -236,7 +236,7 @@ class FeeController extends Controller
             if ($payment && $payment->status !== 'paid') {
                 $payment->status = 'paid';
                 $payment->payment_date = now();
-                $payment->receipt_number = 'REC-' . now()->format('ym') . '-' . str_pad($payment->id, 4, '0', STR_PAD_LEFT);
+                $payment->receipt_number = str_pad($payment->id, 4, '0', STR_PAD_LEFT);
                 $payment->save();
                 $this->updateMonthlyPaymentStatus($payment);
 
@@ -271,7 +271,7 @@ class FeeController extends Controller
              if ($payment && $payment->status !== 'paid') {
                 $payment->status = 'paid';
                 $payment->payment_date = now();
-                $payment->receipt_number = 'REC-' . now()->format('ym') . '-' . str_pad($payment->id, 4, '0', STR_PAD_LEFT);
+                $payment->receipt_number = str_pad($payment->id, 4, '0', STR_PAD_LEFT);
                 $payment->save();
                 $this->updateMonthlyPaymentStatus($payment);
 

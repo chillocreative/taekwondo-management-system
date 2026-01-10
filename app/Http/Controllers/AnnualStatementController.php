@@ -32,7 +32,7 @@ class AnnualStatementController extends Controller
                 ->where('year', now()->year)
                 ->orderBy('month')
                 ->get()
-                ->map(function ($payment) {
+                ->map(function ($payment) use ($child) {
                     return [
                         'id' => $payment->id,
                         'month' => $payment->month,
@@ -42,7 +42,7 @@ class AnnualStatementController extends Controller
                         'is_paid' => $payment->is_paid,
                         'payment_date' => $payment->payment_date ? $payment->payment_date->format('d/m/Y') : null,
                         'receipt_number' => $payment->receipt_number,
-                        'receipt_url' => $payment->is_paid ? route('fees.receipt', ['child' => $child->id, 'month' => $payment->month]) : null,
+                        'receipt_url' => $payment->is_paid ? $this->getReceiptUrl($child, $payment) : null,
                     ];
                 });
 
@@ -61,5 +61,25 @@ class AnnualStatementController extends Controller
             'children' => $formattedChildren,
             'selectedChildId' => $selectedChildId,
         ]);
+    }
+
+    private function getReceiptUrl($child, $monthlyPayment)
+    {
+        // 1. Check if there's a specific StudentPayment record for this month
+        if ($child->student) {
+            $monthStr = $monthlyPayment->month_name . ' ' . $monthlyPayment->year;
+            $sp = \App\Models\StudentPayment::where('student_id', $child->student->id)
+                ->where('month', $monthStr)
+                ->where('status', 'paid')
+                ->first();
+
+            if ($sp) {
+                return route('receipts.stream', $sp->id);
+            }
+        }
+
+        // 2. Fallback to children.payment.receipt (Registration Receipt)
+        // If this month was paid as part of the initial registration
+        return route('children.payment.receipt', $child->id);
     }
 }
