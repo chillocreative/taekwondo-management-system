@@ -171,6 +171,16 @@ Route::get('/sync-fees', function () {
     return "Fee synchronization complete! All records have been updated based on the latest settings.";
 });
 
+// Fix ANZ0005 Registration Type
+Route::get('/fix-anz0005', function () {
+    $student = \App\Models\Student::where('no_siri', 'ANZ0005')->first();
+    if ($student && $student->child) {
+        $student->child->update(['registration_type' => 'renewal']);
+        return "Student ANZ0005 successfully updated to Pembaharuan Keahlian (Renewal).";
+    }
+    return "Student ANZ0005 or associated record not found.";
+});
+
 // Backfill Registration Payments Route
 Route::get('/backfill-payments', function () {
     $feeSettings = \App\Models\FeeSetting::current();

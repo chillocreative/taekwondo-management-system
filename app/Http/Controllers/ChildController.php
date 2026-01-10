@@ -24,12 +24,15 @@ class ChildController extends Controller
             ->get()
             ->map(function($child) use ($currentYear) {
                 // Determine registration type for the current year
-                // If created in a previous year, it's a renewal
-                $createdYear = $child->created_at->year;
-                if ($createdYear < $currentYear) {
-                    $child->registration_type = 'renewal';
-                } else {
-                    $child->registration_type = 'new';
+                // Priority: Respect the value in DB if it's already 'renewal'
+                // Otherwise fallback to year-based logic for older records
+                if ($child->registration_type !== 'renewal') {
+                    $createdYear = $child->created_at->year;
+                    if ($createdYear < $currentYear) {
+                        $child->registration_type = 'renewal';
+                    } else {
+                        $child->registration_type = 'new';
+                    }
                 }
 
                 // Check if payment is valid for current year
