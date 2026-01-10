@@ -326,6 +326,13 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                                         >
                                                             👁️
                                                         </Link>
+                                                        <Link
+                                                            href={route('students.edit', student.id)}
+                                                            className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
+                                                            title="Edit"
+                                                        >
+                                                            ✏️
+                                                        </Link>
                                                         <button
                                                             onClick={() => handleDelete(student.id)}
                                                             className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
