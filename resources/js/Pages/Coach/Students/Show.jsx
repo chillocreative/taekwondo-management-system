@@ -218,67 +218,126 @@ export default function Show({ auth, student, currentYear }) {
                             {/* Payment Schedule Table */}
                             <div className="mt-12">
                                 <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2 bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                    <span>💳</span> Jadual Pembayaran Yuran (Tahun {currentYear})
+                                    <span>💳</span> {student.child?.training_center?.name === 'Sek Ren Islam Bahrul Ulum' || student.child?.trainingCenter?.name === 'Sek Ren Islam Bahrul Ulum'
+                                        ? 'Senarai Pembayaran Yuran Tahunan'
+                                        : `Jadual Pembayaran Yuran (Tahun ${currentYear})`}
                                 </h3>
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                                    <div className="overflow-x-auto">
-                                        <table className="min-w-full divide-y divide-gray-200">
-                                            <thead className="bg-gray-50">
-                                                <tr>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Bulan</th>
-                                                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Yuran</th>
-                                                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                                                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Tarikh Bayaran</th>
-                                                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">No. Resit</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="bg-white divide-y divide-gray-200">
-                                                {student.child?.monthly_payments?.map((payment, idx) => (
-                                                    <tr key={idx} className={payment.is_paid ? 'bg-green-50/20' : 'hover:bg-gray-50'}>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 border-r">
-                                                            {months[payment.month - 1]}
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 border-r">RM {monthlyFee}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-center border-r">
-                                                            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${payment.is_paid
-                                                                ? 'bg-green-100 text-green-800 border border-green-200'
-                                                                : 'bg-red-50 text-red-600 border border-red-100'
-                                                                }`}>
-                                                                {payment.is_paid ? 'SUDAH DIBAYAR' : 'TERTUNGGAK'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center border-r">
-                                                            {payment.paid_date ? new Date(payment.paid_date).toLocaleDateString('ms-MY') : '-'}
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-center text-gray-700 font-mono text-xs font-bold uppercase">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <span>{payment.receipt_number || '-'}</span>
-                                                                {payment.is_paid && (
+
+                                {student.child?.training_center?.name === 'Sek Ren Islam Bahrul Ulum' || student.child?.trainingCenter?.name === 'Sek Ren Islam Bahrul Ulum' ? (
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                        <div className="overflow-x-auto">
+                                            <table className="min-w-full divide-y divide-gray-200">
+                                                <thead className="bg-gray-50">
+                                                    <tr>
+                                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Perkara</th>
+                                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Jumlah</th>
+                                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Tarikh Bayaran</th>
+                                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">No. Resit</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="bg-white divide-y divide-gray-200">
+                                                    {student.payments?.length > 0 ? student.payments.map((payment, idx) => (
+                                                        <tr key={idx} className="bg-green-50/20">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 border-r uppercase">
+                                                                Yuran Tahunan {payment.payment_date ? new Date(payment.payment_date).getFullYear() : currentYear}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 border-r">
+                                                                RM {payment.total || payment.amount}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-center border-r">
+                                                                <span className="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-green-100 text-green-800 border border-green-200 uppercase">
+                                                                    Sudah Dibayar
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center border-r">
+                                                                {payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('ms-MY') : '-'}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-center text-gray-700 font-mono text-xs font-bold uppercase">
+                                                                <div className="flex items-center justify-center gap-2">
+                                                                    <span>{payment.receipt_number || '-'}</span>
                                                                     <a
-                                                                        href={payment.student_payment_id
-                                                                            ? route('receipts.stream', payment.student_payment_id)
-                                                                            : route('children.payment.receipt', student.child.id)
-                                                                        }
+                                                                        href={route('receipts.stream', payment.id)}
                                                                         target="_blank"
                                                                         className="ml-2 px-2 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded text-[10px] font-bold hover:bg-blue-100 transition-colors"
                                                                     >
                                                                         Lihat Resit
                                                                     </a>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )) || (
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )) : (
                                                         <tr>
                                                             <td colSpan="5" className="px-6 py-12 text-center text-sm text-gray-500 italic">
-                                                                Tiada rekod pembayaran dijumpai untuk tahun ini.
+                                                                Tiada rekod pembayaran dijumpai.
                                                             </td>
                                                         </tr>
                                                     )}
-                                            </tbody>
-                                        </table>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                        <div className="overflow-x-auto">
+                                            <table className="min-w-full divide-y divide-gray-200">
+                                                <thead className="bg-gray-50">
+                                                    <tr>
+                                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Bulan</th>
+                                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Yuran</th>
+                                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Tarikh Bayaran</th>
+                                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">No. Resit</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="bg-white divide-y divide-gray-200">
+                                                    {student.child?.monthly_payments?.map((payment, idx) => (
+                                                        <tr key={idx} className={payment.is_paid ? 'bg-green-50/20' : 'hover:bg-gray-50'}>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 border-r">
+                                                                {months[payment.month - 1]}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 border-r">RM {monthlyFee}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-center border-r">
+                                                                <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${payment.is_paid
+                                                                    ? 'bg-green-100 text-green-800 border border-green-200'
+                                                                    : 'bg-red-50 text-red-600 border border-red-100'
+                                                                    }`}>
+                                                                    {payment.is_paid ? 'SUDAH DIBAYAR' : 'TERTUNGGAK'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center border-r">
+                                                                {payment.paid_date ? new Date(payment.paid_date).toLocaleDateString('ms-MY') : '-'}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-center text-gray-700 font-mono text-xs font-bold uppercase">
+                                                                <div className="flex items-center justify-center gap-2">
+                                                                    <span>{payment.receipt_number || '-'}</span>
+                                                                    {payment.is_paid && (
+                                                                        <a
+                                                                            href={payment.student_payment_id
+                                                                                ? route('receipts.stream', payment.student_payment_id)
+                                                                                : route('children.payment.receipt', student.child.id)
+                                                                            }
+                                                                            target="_blank"
+                                                                            className="ml-2 px-2 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded text-[10px] font-bold hover:bg-blue-100 transition-colors"
+                                                                        >
+                                                                            Lihat Resit
+                                                                        </a>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )) || (
+                                                            <tr>
+                                                                <td colSpan="5" className="px-6 py-12 text-center text-sm text-gray-500 italic">
+                                                                    Tiada rekod pembayaran dijumpai untuk tahun ini.
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="mt-10 pt-6 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
