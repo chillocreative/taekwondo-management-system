@@ -25,10 +25,16 @@ class StudentController extends Controller
             $q->where('year', now()->year);
         }]);
 
-        // Only show students with completed payment
+        // Show students with completed payment OR from SRI Bahrul Ulum
         $query->whereHas('child', function($q) {
-            $q->where('payment_completed', true)
-              ->where('is_active', true);
+            $q->where(function($subQ) {
+                $subQ->where(function($activeQ) {
+                    $activeQ->where('payment_completed', true)
+                           ->where('is_active', true);
+                })->orWhereHas('trainingCenter', function($tcQ) {
+                    $tcQ->where('name', 'Sek Ren Islam Bahrul Ulum');
+                });
+            });
         });
 
         // Apply search
@@ -63,10 +69,16 @@ class StudentController extends Controller
             return $student;
         });
 
-        // Calculate statistics
+        // Calculate statistics - include SRI Bahrul Ulum students
         $statsQuery = Student::whereHas('child', function($q) {
-            $q->where('payment_completed', true)
-              ->where('is_active', true);
+            $q->where(function($subQ) {
+                $subQ->where(function($activeQ) {
+                    $activeQ->where('payment_completed', true)
+                           ->where('is_active', true);
+                })->orWhereHas('trainingCenter', function($tcQ) {
+                    $tcQ->where('name', 'Sek Ren Islam Bahrul Ulum');
+                });
+            });
         });
 
         $stats = [
@@ -94,14 +106,18 @@ class StudentController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        // Verify student is active and paid
+        // Verify student is active and paid OR from SRI Bahrul Ulum
+        $isSRIBahrulUlum = $student->child && 
+                          $student->child->trainingCenter && 
+                          $student->child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
+        
         $hasAccess = $student->child && 
-                     $student->child->payment_completed && 
-                     $student->child->is_active;
+                     (($student->child->payment_completed && $student->child->is_active) || $isSRIBahrulUlum);
         
         if (!$hasAccess) {
             abort(403, 'Rekod pelajar ini belum aktif atau belum berbayar.');
         }
+
 
         $student->load([
             'payments' => function($q) {
