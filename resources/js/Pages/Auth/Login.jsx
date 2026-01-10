@@ -43,8 +43,12 @@ export default function Login({ status, canResetPassword }) {
                         className="mt-1 block w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         autoComplete="username"
                         isFocused={true}
-                        onChange={(e) => setData('phone_number', e.target.value)}
+                        onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '').slice(0, 11);
+                            setData('phone_number', value);
+                        }}
                         placeholder="Contoh: 0123456789"
+                        maxLength={11}
                     />
 
                     <InputError message={errors.phone_number} className="mt-2" />
