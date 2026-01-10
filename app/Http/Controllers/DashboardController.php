@@ -153,6 +153,7 @@ class DashboardController extends Controller
 
         // 1. Student Stats
         $totalStudents = $studentsQuery->count();
+        $studentIds = (clone $studentsQuery)->pluck('id');
         $newStudentsMonth = (clone $studentsQuery)->whereMonth('students.created_at', Carbon::now()->month)->count();
 
         // 2. Attendance Stats
@@ -162,7 +163,8 @@ class DashboardController extends Controller
         }
         
         $presentToday = (clone $todayAttendance)->where('status', 'hadir')->count();
-        $totalToday = (clone $todayAttendance)->count();
+        // Set totalToday to total active students who should be marked
+        $totalToday = $totalStudents;
 
         // Monthly Attendance Rate (Sessions Held)
         $monthlySessionsQuery = Attendance::whereYear('attendance_date', $currentYear)
@@ -175,7 +177,16 @@ class DashboardController extends Controller
         $monthlySessions = $monthlySessionsQuery->distinct('attendance_date', 'training_center_id')->count();
 
         // 3. Finance Stats - Using MonthlyPayment for more accuracy per month
-        $baseMonthlyPaymentQuery = \App\Models\MonthlyPayment::whereHas('child', function($q) use ($centerId) {
+        // Count students who should pay (excluding those in special centers like SRI Bahrul Ulum)
+        $payingStudentsQuery = clone $studentsQuery;
+        $payingStudentsQuery->whereHas('child', function($q) {
+            $q->whereHas('trainingCenter', function($q2) {
+                $q2->where('name', '!=', 'Sek Ren Islam Bahrul Ulum');
+            });
+        });
+        $totalPayingStudents = $payingStudentsQuery->count();
+
+        $paidCount = \App\Models\MonthlyPayment::whereHas('child', function($q) use ($centerId) {
                 $q->where('payment_completed', true)
                   ->where('is_active', true);
                 if ($centerId) {
@@ -183,10 +194,12 @@ class DashboardController extends Controller
                 }
             })
             ->where('year', $currentYear)
-            ->where('month', $currentMonthNumeric);
+            ->where('month', $currentMonthNumeric)
+            ->where('is_paid', true)
+            ->count();
 
-        $paidCount = (clone $baseMonthlyPaymentQuery)->where('is_paid', true)->count();
-        $unpaidCount = (clone $baseMonthlyPaymentQuery)->where('is_paid', false)->count();
+        // Unpaid is total expected minus actual paid
+        $unpaidCount = max(0, $totalPayingStudents - $paidCount);
 
         return Inertia::render('Dashboard', [
             'studentCount' => $totalStudents, 
