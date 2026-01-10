@@ -66,6 +66,12 @@
 </head>
 <body>
     <div class="header">
+        <div style="margin-bottom: 5px;">
+            <img src="{{ public_path('images/logo.png') }}" alt="Logo" style="max-height: 80px;">
+        </div>
+        <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px; text-transform: uppercase;">TAEKWONDO A&Z</div>
+        <div style="border-bottom: 1px solid #ccc; margin-bottom: 20px; width: 300px; margin-left: auto; margin-right: auto;"></div>
+        
         <h1 class="title">PENYATA PEMBAYARAN BAGI TAHUN {{ $year }}</h1>
     </div>
 
