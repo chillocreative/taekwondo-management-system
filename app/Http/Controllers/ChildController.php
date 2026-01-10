@@ -306,7 +306,7 @@ class ChildController extends Controller
 
         // Calculate total payment
         $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
-        $currentMonth = \Carbon\Carbon::now()->format('F');
+        $currentMonth = \Carbon\Carbon::now()->translatedFormat('F');
         
         $outstandingFees = $this->getOutstandingFees($child);
         $outstandingAmount = (float) $outstandingFees->sum('amount');

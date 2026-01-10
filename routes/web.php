@@ -175,6 +175,22 @@ Route::get('/sync-fees', function () {
     return "Fee synchronization complete! All records have been updated based on the latest settings.";
 });
 
+Route::get('/fix-january', function () {
+    $payments = \App\Models\StudentPayment::where('month', 'LIKE', '%January%')->get();
+    $count = 0;
+    foreach ($payments as $payment) {
+        $payment->month = str_ireplace('January', 'Januari', $payment->month);
+        try {
+            $payment->save();
+            $count++;
+        } catch (\Exception $e) {
+            // Handle unique constraint if Januari already exists
+            \Illuminate\Support\Facades\Log::warning("Could not fix payment ID {$payment->id}: " . $e->getMessage());
+        }
+    }
+    return "Fixed $count payment records.";
+});
+
 // Fix ANZ0005 Registration Type
 Route::get('/fix-anz0005', function () {
     $student = \App\Models\Student::where('no_siri', 'LIKE', '%0005%')->first();
