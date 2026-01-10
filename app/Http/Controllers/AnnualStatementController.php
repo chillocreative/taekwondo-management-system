@@ -87,11 +87,18 @@ class AnnualStatementController extends Controller
                 ];
             });
 
+        $totalPaid = $payments->where('is_paid', true)->sum('amount');
+
         $data = [
             'child_name' => $child->name,
+            'child_ic' => $child->ic_number,
+            'guardian_name' => $child->guardian_name ?? $child->parent->name,
+            'guardian_ic' => $child->guardian_ic_number ?? '-',
             'no_siri' => $child->student->no_siri ?? '-',
             'training_center' => $child->trainingCenter->name ?? '-',
             'payments' => $payments,
+            'total_paid' => $totalPaid,
+            'year' => now()->year,
         ];
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('receipts.annual_statement', $data);
