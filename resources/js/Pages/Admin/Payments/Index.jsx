@@ -176,7 +176,13 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                                     <div className="text-xs">{payment?.student?.no_siri || '-'}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    Yuran {payment?.month || '-'}
+                                                    {payment?.month?.includes('Januari') || payment?.month?.includes('Februari') || payment?.month?.includes('Mac') || payment?.month?.includes('April') || payment?.month?.includes('Mei') || payment?.month?.includes('Jun') || payment?.month?.includes('Julai') || payment?.month?.includes('Ogos') || payment?.month?.includes('September') || payment?.month?.includes('Oktober') || payment?.month?.includes('November') || payment?.month?.includes('Disember') ? (
+                                                        <span>Yuran {payment?.month || '-'}</span>
+                                                    ) : (
+                                                        <span className="font-medium text-blue-600">
+                                                            {payment?.student?.child?.registration_type === 'renewal' ? 'Pembaharuan' : 'Pendaftaran'}
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
                                                     RM {parseFloat(payment?.total || 0).toFixed(2)}

@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 
-export default function Payment({ auth, child, yearlyFee, monthlyFee, totalAmount, currentMonth, ageCategory }) {
+export default function Payment({ auth, child, yearlyFee, monthlyFee, totalAmount, currentMonth, ageCategory, feeLabel, beltLevelMalay }) {
     const { flash } = usePage().props;
 
     const formatCurrency = (amount) => {
@@ -96,8 +96,15 @@ export default function Payment({ auth, child, yearlyFee, monthlyFee, totalAmoun
                                         <span className="text-xl">📅</span>
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-zinc-900">Yuran Tahunan</p>
-                                        <p className="text-sm text-zinc-500">Yuran pendaftaran tahunan</p>
+                                        <p className="font-semibold text-zinc-900">{feeLabel || 'Yuran Tahunan'}</p>
+                                        <div className="text-sm text-zinc-500">
+                                            {child.registration_type === 'renewal' ? 'Pembaharuan keahlian tahunan' : 'Yuran pendaftaran tahunan'}
+                                            {child.registration_type === 'renewal' && (
+                                                <div className="mt-1 font-bold text-amber-700">
+                                                    Tahap: {beltLevelMalay}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <p className="text-lg font-bold text-zinc-900">{formatCurrency(yearlyFee)}</p>

@@ -33,6 +33,9 @@ class AttendanceController extends Controller
                     'stats' => [
                         'total_classes' => $child->student?->attendances()->count() ?? 0,
                         'present' => $child->student?->attendances()->where('status', 'hadir')->count() ?? 0,
+                        'absent' => $child->student?->attendances()->where('status', 'tidak_hadir')->count() ?? 0,
+                        'sick' => $child->student?->attendances()->where('status', 'sakit')->count() ?? 0,
+                        'leave' => $child->student?->attendances()->where('status', 'cuti')->count() ?? 0,
                     ]
                 ];
             });

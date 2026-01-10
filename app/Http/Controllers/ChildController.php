@@ -37,7 +37,8 @@ class ChildController extends Controller
             'date_of_birth' => 'required|date',
             'age' => 'required|integer',
             'ic_number' => 'required|string|max:12|unique:children,ic_number',
-            'belt_level' => 'required|in:white,yellow,green,blue,red,black_1,black_2,black_3,black_4,black_5',
+            'belt_level' => 'required|string|max:50',
+            'registration_type' => 'required|in:new,renewal',
             'from_other_club' => 'boolean',
             'tm_number' => 'nullable|string|max:50',
             'belt_certificate' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
@@ -87,7 +88,8 @@ class ChildController extends Controller
             'date_of_birth' => 'required|date',
             'age' => 'required|integer',
             'ic_number' => 'required|string|max:12|unique:children,ic_number,' . $child->id,
-            'belt_level' => 'required|in:white,yellow,green,blue,red,black_1,black_2,black_3,black_4,black_5',
+            'belt_level' => 'required|string|max:50',
+            'registration_type' => 'required|in:new,renewal',
             'is_active' => 'boolean',
             'from_other_club' => 'boolean',
             'tm_number' => 'nullable|string|max:50',
@@ -163,39 +165,55 @@ class ChildController extends Controller
                 ->with('error', 'Peserta ini sudah membuat pembayaran.');
         }
 
-        // Calculate fees based on age
+        // Calculate fees
         $feeSettings = \App\Models\FeeSetting::current();
         
         if ($child->date_of_birth) {
-            $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
             $monthlyFee = $feeSettings->getMonthlyFeeByDob($child->date_of_birth);
+            
+            if ($child->registration_type === 'renewal') {
+                $mainFee = $feeSettings->getRenewalFeeByBelt($child->belt_level);
+                $feeLabel = 'Yuran Pembaharuan Keahlian';
+            } else {
+                $mainFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+                $feeLabel = 'Yuran Pendaftaran (Tahunan)';
+            }
+            
             $age = \Carbon\Carbon::parse($child->date_of_birth)->age;
             $ageCategory = $age < 18 ? 'Pelajar (Bawah 18 tahun)' : 'Dewasa (18 tahun ke atas)';
         } else {
-            $yearlyFee = $feeSettings->yearly_fee_below_18;
             $monthlyFee = $feeSettings->monthly_fee_below_18;
+            if ($child->registration_type === 'renewal') {
+                $mainFee = $feeSettings->renewal_fee_gup;
+                $feeLabel = 'Yuran Pembaharuan Keahlian';
+            } else {
+                $mainFee = $feeSettings->yearly_fee_below_18;
+                $feeLabel = 'Yuran Pendaftaran (Tahunan)';
+            }
             $ageCategory = 'Pelajar (Bawah 18 tahun)';
         }
 
-        // Calculate total: Yuran Tahunan + Yuran Bulanan (current month)
+        // Calculate total: Main Fee + Yuran Bulanan (current month)
         $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
         
         if ($isSpecialCenter) {
             $monthlyFee = 0;
-            $totalAmount = $yearlyFee;
+            $totalAmount = $mainFee;
         } else {
-            $totalAmount = $yearlyFee + $monthlyFee;
+            $totalAmount = $mainFee + $monthlyFee;
         }
 
         $currentMonth = \Carbon\Carbon::now()->translatedFormat('F Y'); // e.g., "Januari 2026"
 
         return Inertia::render('Children/Payment', [
             'child' => $child->load('trainingCenter'),
-            'yearlyFee' => (float) $yearlyFee,
+            'yearlyFee' => (float) $mainFee, // We keep the variable name yearlyFee for frontend compatibility or rename if needed
+            'feeLabel' => $feeLabel,
             'monthlyFee' => (float) $monthlyFee,
             'totalAmount' => (float) $totalAmount,
             'currentMonth' => $currentMonth,
             'ageCategory' => $ageCategory,
+            'beltLevelMalay' => $child->belt_level_malay,
         ]);
     }
 
@@ -222,48 +240,59 @@ class ChildController extends Controller
                 ->with('error', 'Sistem pembayaran belum dikonfigurasi. Sila hubungi pentadbir.');
         }
 
-        // Calculate fees based on age
+        // Calculate fees
         $feeSettings = \App\Models\FeeSetting::current();
         
         if ($child->date_of_birth) {
-            $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
             $monthlyFee = $feeSettings->getMonthlyFeeByDob($child->date_of_birth);
-            $age = \Carbon\Carbon::parse($child->date_of_birth)->age;
-            $ageCategory = $age < 18 ? 'Bawah 18 tahun' : '18 tahun ke atas';
+            
+            if ($child->registration_type === 'renewal') {
+                $mainFee = $feeSettings->getRenewalFeeByBelt($child->belt_level);
+                $feeTitle = 'Yuran Pembaharuan';
+            } else {
+                $mainFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+                $feeTitle = 'Yuran Tahunan';
+            }
+            
+            $ageCount = \Carbon\Carbon::parse($child->date_of_birth)->age;
+            $ageCategory = $ageCount < 18 ? 'Bawah 18 tahun' : '18 tahun ke atas';
         } else {
-            // Default to below 18 if no DOB
-            $yearlyFee = $feeSettings->yearly_fee_below_18;
             $monthlyFee = $feeSettings->monthly_fee_below_18;
+            if ($child->registration_type === 'renewal') {
+                $mainFee = $feeSettings->renewal_fee_gup;
+                $feeTitle = 'Yuran Pembaharuan';
+            } else {
+                $mainFee = $feeSettings->yearly_fee_below_18;
+                $feeTitle = 'Yuran Tahunan';
+            }
             $ageCategory = 'Bawah 18 tahun (tiada tarikh lahir)';
         }
 
-        // Calculate total payment: Yuran Tahunan + Yuran Bulanan (current month only)
+        // Calculate total payment
         $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
-        
-        $currentMonth = \Carbon\Carbon::now()->format('F'); // e.g., "February"
+        $currentMonth = \Carbon\Carbon::now()->format('F');
         
         if ($isSpecialCenter) {
             $monthlyFee = 0;
-            $totalAmount = $yearlyFee;
+            $totalAmount = $mainFee;
         } else {
-            $totalAmount = $yearlyFee + $monthlyFee;
+            $totalAmount = $mainFee + $monthlyFee;
         }
 
         // Create ToyyibPay bill
         $toyyibPay = new \App\Services\ToyyibPayService();
         
         $billDescription = sprintf(
-            'Yuran Tahunan (RM%.2f) + Yuran Bulanan %s (RM%.2f) - %s',
-            $yearlyFee,
+            '%s (RM%.2f) + Yuran Bulanan %s (RM%.2f) - %s',
+            $feeTitle,
+            $mainFee,
             $currentMonth,
             $monthlyFee,
             $ageCategory
         );
         
-        // ToyyibPay limits billName to 30 characters
         $billName = 'Yuran - ' . mb_substr($child->name, 0, 21);
         
-        // Generate placeholder email if user doesn't have one (required by ToyyibPay)
         $userEmail = Auth::user()->email;
         if (empty($userEmail)) {
             $userEmail = Auth::user()->phone_number . '@taekwondoanz.com';
@@ -284,30 +313,21 @@ class ChildController extends Controller
         $result = $toyyibPay->createBill($billData);
 
         if ($result['success']) {
-            // Update child with payment reference and registration fee
+            // Update child with payment reference and fee amount
             $child->update([
-                'registration_fee' => $yearlyFee,
+                'registration_fee' => $mainFee,
                 'payment_reference' => $result['billCode'],
             ]);
 
-            // Redirect to ToyyibPay payment page
             return redirect($result['paymentUrl']);
         }
 
-        // Log the error for debugging
         \Illuminate\Support\Facades\Log::error('ToyyibPay Error for Child ID ' . $child->id, [
-            'result' => $result,
-            'billData' => $billData
+            'result' => $result
         ]);
 
-        // Redirect back to payment page with error message
-        $errorMessage = $result['message'] ?? 'Ralat tidak diketahui';
-        if (isset($result['response'])) {
-            $errorMessage .= ' - ' . json_encode($result['response']);
-        }
-
         return redirect()->route('children.payment', $child->id)
-            ->with('error', 'Gagal memulakan pembayaran: ' . $errorMessage);
+            ->with('error', 'Gagal menghubungi ToyyibPay. Sila cuba sebentar lagi.');
     }
 
     /**
@@ -444,20 +464,34 @@ class ChildController extends Controller
                     // Calculate fees
                     $feeSettings = \App\Models\FeeSetting::current();
                     if ($child->date_of_birth) {
-                        $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
                         $monthlyFee = $feeSettings->getMonthlyFeeByDob($child->date_of_birth);
+                        
+                        if ($child->registration_type === 'renewal') {
+                            $mainFee = $feeSettings->getRenewalFeeByBelt($child->belt_level);
+                        } else {
+                            $mainFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+                        }
                     } else {
-                        $yearlyFee = $feeSettings->yearly_fee_below_18;
                         $monthlyFee = $feeSettings->monthly_fee_below_18;
+                        if ($child->registration_type === 'renewal') {
+                            $mainFee = $feeSettings->renewal_fee_gup;
+                        } else {
+                            $mainFee = $feeSettings->yearly_fee_below_18;
+                        }
                     }
 
                     $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
                     
                     if ($isSpecialCenter) {
                         $monthlyFee = 0;
-                        $totalAmount = $yearlyFee;
+                        $totalAmount = $mainFee;
                     } else {
-                        $totalAmount = $yearlyFee + $monthlyFee;
+                        $totalAmount = $mainFee + $monthlyFee;
+                    }
+
+                    // Save the actual fee used in child record if not already set (just in case)
+                    if ($child->registration_fee != $mainFee) {
+                        $child->update(['registration_fee' => $mainFee]);
                     }
 
                     // Create payment record for registration
@@ -479,7 +513,7 @@ class ChildController extends Controller
                     \App\Services\WhatsappService::notifyAdminNewPaidPeserta($child->name, $totalAmount);
 
                     // Send PDF Receipt to Parent
-                    $this->sendReceiptViaWhatsapp($child, $yearlyFee, $monthlyFee, $payment->receipt_number);
+                    $this->sendReceiptViaWhatsapp($child, $mainFee, $monthlyFee, $payment->receipt_number);
 
                     // Update monthly payment record for current month
                     $currentMonthNum = \Carbon\Carbon::now()->month;
@@ -535,11 +569,20 @@ class ChildController extends Controller
         $feeSettings = \App\Models\FeeSetting::current();
         
         if ($child->date_of_birth) {
-            $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
             $monthlyFee = $feeSettings->getMonthlyFeeByDob($child->date_of_birth);
+            
+            if ($child->registration_type === 'renewal') {
+                $mainFee = $feeSettings->getRenewalFeeByBelt($child->belt_level);
+            } else {
+                $mainFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+            }
         } else {
-            $yearlyFee = $feeSettings->yearly_fee_below_18;
             $monthlyFee = $feeSettings->monthly_fee_below_18;
+            if ($child->registration_type === 'renewal') {
+                $mainFee = $feeSettings->renewal_fee_gup;
+            } else {
+                $mainFee = $feeSettings->yearly_fee_below_18;
+            }
         }
 
         $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
@@ -549,9 +592,9 @@ class ChildController extends Controller
         }
 
         $items = [
-            'yearly_fee' => $yearlyFee,
+            'yearly_fee' => $mainFee,
             'monthly_fee' => $monthlyFee,
-            'total' => $yearlyFee + $monthlyFee
+            'total' => $mainFee + $monthlyFee
         ];
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('receipts.registration', [
@@ -582,13 +625,14 @@ class ChildController extends Controller
             
             $parentPhone = $child->phone_number ?? $child->guardian_phone ?? $child->parent->phone_number ?? null;
             if ($parentPhone) {
-                $msg = "*[RESIT PENDAFTARAN]*\n\nPendaftaran bagi *{$child->name}* telah berjaya. Terima kasih atas pembayaran anda.\n\nSila simpan resit ini untuk rujukan anda.";
+                $type = $child->registration_type === 'renewal' ? 'PEMBAHARUAN' : 'PENDAFTARAN';
+                $msg = "*[RESIT $type]*\n\n$type bagi *{$child->name}* telah berjaya. Terima kasih atas pembayaran anda.\n\nSila simpan resit ini untuk rujukan anda.";
                 
                 \App\Services\WhatsappService::sendFile(
                     $parentPhone, 
                     $msg, 
                     $base64, 
-                    "Resit-Pendaftaran-{$child->name}.pdf"
+                    "Resit-$type-{$child->name}.pdf"
                 );
             }
         } catch (\Exception $e) {

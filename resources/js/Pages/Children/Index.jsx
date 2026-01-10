@@ -7,7 +7,6 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChild, setEditingChild] = useState(null);
     const [popupState, setPopupState] = useState({ show: false, type: 'success', message: '' });
-
     useEffect(() => {
         if (flash?.payment_success) {
             setPopupState({ show: true, type: 'success', message: flash.payment_success });
@@ -74,19 +73,54 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
         state: '',
         school_name: '',
         school_class: '',
+        registration_type: 'new',
     });
 
+    const [postcodes, setPostcodes] = useState([]);
+
+    useEffect(() => {
+        // Load Malaysia postcodes data
+        fetch('/data/postcodes.json')
+            .then(res => res.json())
+            .then(data => setPostcodes(data))
+            .catch(err => console.error('Failed to load postcodes:', err));
+    }, []);
+
+    // Auto-fill city and state based on postcode
+    useEffect(() => {
+        if (data.postcode && data.postcode.length === 5) {
+            const found = postcodes.find(p => p.postcode === data.postcode);
+            if (found) {
+                const mappedState = {
+                    'Kuala Lumpur': 'Wilayah Persekutuan (Kuala Lumpur)',
+                    'Labuan': 'Wilayah Persekutuan (Labuan)',
+                    'Putrajaya': 'Wilayah Persekutuan (Putrajaya)'
+                }[found.state] || found.state;
+
+                setData(prev => ({
+                    ...prev,
+                    city: found.city.toUpperCase(),
+                    state: mappedState
+                }));
+            }
+        }
+    }, [data.postcode, postcodes]);
+
     const beltLevels = [
-        { value: 'white', label: 'Putih' },
-        { value: 'yellow', label: 'Kuning' },
-        { value: 'green', label: 'Hijau' },
-        { value: 'blue', label: 'Biru' },
-        { value: 'red', label: 'Merah' },
-        { value: 'black_1', label: 'Hitam 1 Dan' },
-        { value: 'black_2', label: 'Hitam 2 Dan' },
-        { value: 'black_3', label: 'Hitam 3 Dan' },
-        { value: 'black_4', label: 'Hitam 4 Dan' },
-        { value: 'black_5', label: 'Hitam 5 Dan' },
+        { value: 'white', label: 'Putih (Gred 9)' },
+        { value: 'yellow_1', label: 'Kuning 1 (Gred 8)' },
+        { value: 'yellow_2', label: 'Kuning 2 (Gred 7)' },
+        { value: 'green_1', label: 'Hijau 1 (Gred 6)' },
+        { value: 'green_2', label: 'Hijau 2 (Gred 5)' },
+        { value: 'blue_1', label: 'Biru 1 (Gred 4)' },
+        { value: 'blue_2', label: 'Biru 2 (Gred 3)' },
+        { value: 'red_1', label: 'Merah 1 (Gred 2)' },
+        { value: 'red_2', label: 'Merah 2 (Gred 1)' },
+        { value: 'poom_1', label: '1st Poom' },
+        { value: 'poom_2', label: '2nd Poom' },
+        { value: 'dan_1', label: '1st DAN' },
+        { value: 'dan_2', label: '2nd DAN' },
+        { value: 'dan_3', label: '3rd DAN' },
     ];
 
     const openModal = (child = null) => {
@@ -138,6 +172,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                 state: child.state || '',
                 school_name: child.school_name || '',
                 school_class: child.school_class || '',
+                registration_type: child.registration_type || 'new',
             });
 
             // Calculate child age on load
@@ -720,10 +755,13 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                             <input
                                                 type="text"
                                                 value={data.postcode}
-                                                onChange={(e) => setData('postcode', e.target.value)}
+                                                onChange={(e) => setData('postcode', e.target.value.replace(/\D/g, '').slice(0, 5))}
                                                 className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                placeholder="Contoh: 50480"
+                                                maxLength="5"
                                                 required
                                             />
+                                            <p className="text-xs text-zinc-500 mt-1">Isi poskod untuk isi Bandar & Negeri secara automatik</p>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-zinc-700 mb-1">
@@ -806,58 +844,100 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                         {errors.training_center_id && <p className="text-red-500 text-xs mt-1">{errors.training_center_id}</p>}
                                     </div>
 
-                                    {/* From Other Club Section */}
-                                    <div className="pt-4 border-t border-zinc-200">
-                                        <label className="block text-sm font-medium text-zinc-700 mb-3">
-                                            Adakah anda dari kelab lain?
-                                        </label>
-                                        <div className="flex gap-4">
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="radio"
-                                                    name="from_other_club"
-                                                    checked={data.from_other_club === true}
-                                                    onChange={() => setData('from_other_club', true)}
-                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
-                                                />
-                                                <span className="ml-2 text-sm text-zinc-700">Ya</span>
+                                    {/* Tahap Tali Pinggang (Moved here) */}
+                                    {(data.registration_type === 'renewal' || data.from_other_club || (editingChild && editingChild.payment_completed)) && (
+                                        <div className="p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+                                            <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                Tahap Tali Pinggang Terkini
                                             </label>
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="radio"
-                                                    name="from_other_club"
-                                                    checked={data.from_other_club === false}
-                                                    onChange={() => {
-                                                        setData(prev => ({ ...prev, from_other_club: false, belt_level: 'white' }));
-                                                    }}
-                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
-                                                />
-                                                <span className="ml-2 text-sm text-zinc-700">Tidak</span>
-                                            </label>
+                                            <select
+                                                value={data.belt_level}
+                                                onChange={(e) => setData('belt_level', e.target.value)}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                                required
+                                            >
+                                                <option value="">Pilih Tahap Tali Pinggang</option>
+                                                {beltLevels.map((level) => (
+                                                    <option key={level.value} value={level.value}>
+                                                        {level.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {errors.belt_level && <p className="text-red-500 text-xs mt-1">{errors.belt_level}</p>}
                                         </div>
-                                    </div>
+                                    )}
+
+                                    {/* Hide registration questions if already paid */}
+                                    {(!editingChild || !editingChild.payment_completed) && (
+                                        <>
+                                            {/* From Other Club Section */}
+                                            <div className="pt-4 border-t border-zinc-200">
+                                                <label className="block text-sm font-medium text-zinc-700 mb-3">
+                                                    Adakah anda dari kelab lain?
+                                                </label>
+                                                <div className="flex gap-4">
+                                                    <label className="flex items-center">
+                                                        <input
+                                                            type="radio"
+                                                            name="from_other_club"
+                                                            checked={data.from_other_club === true}
+                                                            onChange={() => setData('from_other_club', true)}
+                                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
+                                                        />
+                                                        <span className="ml-2 text-sm text-zinc-700">Ya</span>
+                                                    </label>
+                                                    <label className="flex items-center">
+                                                        <input
+                                                            type="radio"
+                                                            name="from_other_club"
+                                                            checked={data.from_other_club === false}
+                                                            onChange={() => {
+                                                                setData(prev => ({ ...prev, from_other_club: false, belt_level: 'white' }));
+                                                            }}
+                                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
+                                                        />
+                                                        <span className="ml-2 text-sm text-zinc-700">Tidak</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            {/* Registration Type Section */}
+                                            <div className="pt-4 border-t border-zinc-200">
+                                                <label className="block text-sm font-medium text-zinc-700 mb-3">
+                                                    Adakah anda:
+                                                </label>
+                                                <div className="space-y-3">
+                                                    <label className="flex items-center">
+                                                        <input
+                                                            type="radio"
+                                                            name="registration_type"
+                                                            checked={data.registration_type === 'new'}
+                                                            onChange={() => setData('registration_type', 'new')}
+                                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
+                                                        />
+                                                        <span className="ml-2 text-sm text-zinc-700">Membuat Pendaftaran Baru</span>
+                                                    </label>
+                                                    <label className="flex items-center">
+                                                        <input
+                                                            type="radio"
+                                                            name="registration_type"
+                                                            checked={data.registration_type === 'renewal'}
+                                                            onChange={() => setData('registration_type', 'renewal')}
+                                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
+                                                        />
+                                                        <span className="ml-2 text-sm text-zinc-700">Membuat Pembaharuan Keahlian</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+
+
 
                                     {/* Conditional fields when from other club */}
                                     {data.from_other_club && (
                                         <div className="space-y-4 pl-4 border-l-2 border-blue-200 bg-blue-50 p-4 rounded-r-lg">
-                                            {/* Tahap Tali Pinggang */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                                    Tahap Tali Pinggang
-                                                </label>
-                                                <select
-                                                    value={data.belt_level}
-                                                    onChange={(e) => setData('belt_level', e.target.value)}
-                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                >
-                                                    {beltLevels.map((level) => (
-                                                        <option key={level.value} value={level.value}>
-                                                            {level.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {errors.belt_level && <p className="text-red-500 text-xs mt-1">{errors.belt_level}</p>}
-                                            </div>
+
 
                                             <div>
                                                 <label className="block text-sm font-medium text-zinc-700 mb-1">
@@ -933,40 +1013,43 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                             </div>
                         </form>
                     </div>
-                </div>
-            )}
+                </div >
+            )
+            }
             {/* Notification Popup */}
-            {popupState.show && (
-                <div className="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none px-4">
-                    <div className={`bg-white rounded-xl shadow-2xl border ${popupState.type === 'success' ? 'border-emerald-100' : 'border-red-100'} p-6 max-w-sm w-full transform transition-all duration-300 pointer-events-auto relative animate-fade-in-up`}>
-                        <button
-                            onClick={() => setPopupState(prev => ({ ...prev, show: false }))}
-                            className="absolute top-2 right-2 text-zinc-400 hover:text-zinc-600 p-1 rounded-full hover:bg-zinc-100 transition-colors"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                        <div className="flex flex-col items-center text-center">
-                            <div className={`w-16 h-16 ${popupState.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'} rounded-full flex items-center justify-center mb-4`}>
-                                {popupState.type === 'success' ? (
-                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                ) : (
-                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                )}
+            {
+                popupState.show && (
+                    <div className="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none px-4">
+                        <div className={`bg-white rounded-xl shadow-2xl border ${popupState.type === 'success' ? 'border-emerald-100' : 'border-red-100'} p-6 max-w-sm w-full transform transition-all duration-300 pointer-events-auto relative animate-fade-in-up`}>
+                            <button
+                                onClick={() => setPopupState(prev => ({ ...prev, show: false }))}
+                                className="absolute top-2 right-2 text-zinc-400 hover:text-zinc-600 p-1 rounded-full hover:bg-zinc-100 transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                            <div className="flex flex-col items-center text-center">
+                                <div className={`w-16 h-16 ${popupState.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'} rounded-full flex items-center justify-center mb-4`}>
+                                    {popupState.type === 'success' ? (
+                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    )}
+                                </div>
+                                <h3 className="text-xl font-bold text-zinc-900 mb-2">
+                                    {popupState.type === 'success' ? 'Pembayaran Berjaya!' : 'Pembayaran Gagal!'}
+                                </h3>
+                                <p className="text-zinc-600">{popupState.message}</p>
                             </div>
-                            <h3 className="text-xl font-bold text-zinc-900 mb-2">
-                                {popupState.type === 'success' ? 'Pembayaran Berjaya!' : 'Pembayaran Gagal!'}
-                            </h3>
-                            <p className="text-zinc-600">{popupState.message}</p>
                         </div>
                     </div>
-                </div>
-            )}
-        </AuthenticatedLayout>
+                )
+            }
+        </AuthenticatedLayout >
     );
 }

@@ -133,8 +133,16 @@
         <tbody>
             <tr>
                 <td>
-                    <strong>Yuran Pendaftaran / Tahunan ({{ date('Y') }})</strong><br>
-                    <span style="font-size: 12px; color: #666;">Pendaftaran ahli baru dan pembaharuan tahunan.</span>
+                    @if($child->registration_type === 'renewal')
+                        <strong>Yuran Pembaharuan Keahlian ({{ date('Y') }})</strong><br>
+                        <span style="font-size: 12px; color: #666;">Pembaharuan keahlian tahunan.</span>
+                        <div style="font-size: 11px; margin-top: 5px; color: #D4AF37; font-weight: bold;">
+                            TAHAP: {{ strtoupper($child->belt_level_malay) }}
+                        </div>
+                    @else
+                        <strong>Yuran Pendaftaran / Tahunan ({{ date('Y') }})</strong><br>
+                        <span style="font-size: 12px; color: #666;">Pendaftaran ahli baru dan pembaharuan tahunan.</span>
+                    @endif
                 </td>
                 <td style="text-align: right;">
                     {{ number_format($items['yearly_fee'], 2) }}

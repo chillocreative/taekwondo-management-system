@@ -145,7 +145,7 @@ function ParentView({ childrenData }) {
                                             <span className="w-2 h-2 rounded-full bg-blue-500"></span> Hadir
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <span className="w-2 h-2 rounded-full bg-rose-400"></span> Ponteng
+                                            <span className="w-2 h-2 rounded-full bg-rose-400"></span> Tidak Hadir
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <span className="w-2 h-2 rounded-full bg-amber-400"></span> Sakit
@@ -171,7 +171,7 @@ function ParentView({ childrenData }) {
                                 />
                                 <InfoCard
                                     label="Tidak Hadir"
-                                    value={(stats.total_classes - stats.present) + " Kelas"}
+                                    value={(stats.absent || 0) + " Kelas"}
                                     desc="Sila beri tumpuan"
                                     icon="⚠️"
                                     bg="bg-rose-50"
@@ -272,7 +272,7 @@ const MonthlyChart = ({ attendances }) => {
                     <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group cursor-pointer relative">
                         {/* Tooltip */}
                         <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-800 text-white text-[10px] py-1 px-2 rounded pointer-events-none z-20 whitespace-nowrap">
-                            {months[idx]}: {data.present} Hadir, {data.sick} Sakit, {data.leave} Cuti, {data.absent} Ponteng
+                            {months[idx]}: {data.present} Hadir, {data.sick} Sakit, {data.leave} Cuti, {data.absent} Tidak Hadir
                         </div>
 
                         {/* Bars Container - Stacked */}
@@ -393,7 +393,7 @@ function CoachView({ students, selectedDate, setToast }) {
                             <span className="w-2 h-2 rounded-full bg-green-500"></span> Hadir: {stats.hadir}
                         </span>
                         <span className="flex items-center gap-1 text-red-700 font-medium">
-                            <span className="w-2 h-2 rounded-full bg-red-500"></span> Absent: {stats.tidak_hadir}
+                            <span className="w-2 h-2 rounded-full bg-red-500"></span> Tidak Hadir: {stats.tidak_hadir}
                         </span>
                     </div>
                     <button

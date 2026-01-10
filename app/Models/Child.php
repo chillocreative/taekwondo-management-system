@@ -50,6 +50,7 @@ class Child extends Model
         'phone_number',
         'school_name',
         'school_class',
+        'registration_type',
     ];
 
     protected $casts = [
@@ -99,7 +100,21 @@ class Child extends Model
     public function getBeltLevelMalayAttribute(): string
     {
         $levels = [
-            'white' => 'Putih',
+            'white' => 'Putih (Gred 9)',
+            'yellow_1' => 'Kuning 1 (Gred 8)',
+            'yellow_2' => 'Kuning 2 (Gred 7)',
+            'green_1' => 'Hijau 1 (Gred 6)',
+            'green_2' => 'Hijau 2 (Gred 5)',
+            'blue_1' => 'Biru 1 (Gred 4)',
+            'blue_2' => 'Biru 2 (Gred 3)',
+            'red_1' => 'Merah 1 (Gred 2)',
+            'red_2' => 'Merah 2 (Gred 1)',
+            'poom_1' => '1st Poom',
+            'poom_2' => '2nd Poom',
+            'dan_1' => '1st DAN',
+            'dan_2' => '2nd DAN',
+            'dan_3' => '3rd DAN',
+            // Legacy/Fallback mapping
             'yellow' => 'Kuning',
             'green' => 'Hijau',
             'blue' => 'Biru',

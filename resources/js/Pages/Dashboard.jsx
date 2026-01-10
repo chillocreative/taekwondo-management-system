@@ -1,6 +1,28 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
+// Belt Color Helper logic
+const getBeltColor = (beltName) => {
+    const belt = beltName?.toLowerCase() || '';
+    if (belt.includes('putih')) return '#FFFFFF';
+    if (belt.includes('kuning')) return '#FACC15';
+    if (belt.includes('hijau')) return '#10B981';
+    if (belt.includes('biru')) return '#3B82F6';
+    if (belt.includes('merah')) return '#EF4444';
+    if (belt.includes('poom') || belt.includes('dan')) return '#000000';
+    return '#E4E4E7';
+};
+
+// Custom Belt Icon Component
+const BeltIcon = ({ color }) => (
+    <div className="flex items-center justify-center p-1.5 bg-zinc-50 rounded-xl border border-zinc-100 shadow-sm">
+        <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8" style={{ color: color, filter: color === '#FFFFFF' ? 'drop-shadow(0 0 1px rgba(0,0,0,0.2))' : 'none' }}>
+            <path d="M3 10h18v2.5H3V10z" />
+            <path d="M10.5 11l-2.5 7h3.5l1-2.5 1 2.5h3.5l-2.5-7h-4z" />
+        </svg>
+    </div>
+);
+
 export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
     const user = auth.user;
 
@@ -103,9 +125,8 @@ export default function Dashboard({ auth, pesertaData, stats, studentCount }) {
                                                         }`}>
                                                         {child.status_bayaran}
                                                     </span>
-                                                    <div className="flex items-center gap-2 mt-2">
-                                                        <div className="w-8 h-8 rounded-full border-4 flex items-center justify-center font-bold text-[10px]" style={{ borderColor: child.belt.toLowerCase().includes('black') ? '#000' : child.belt.toLowerCase().includes('red') ? '#ef4444' : child.belt.toLowerCase().includes('blue') ? '#3b82f6' : child.belt.toLowerCase().includes('green') ? '#10b981' : child.belt.toLowerCase().includes('yellow') ? '#facc15' : '#e4e4e7' }}>
-                                                        </div>
+                                                    <div className="flex items-center gap-3 mt-2">
+                                                        <BeltIcon color={getBeltColor(child.belt)} />
                                                         <span className="text-sm font-bold text-zinc-700 uppercase">{child.belt}</span>
                                                     </div>
                                                 </div>

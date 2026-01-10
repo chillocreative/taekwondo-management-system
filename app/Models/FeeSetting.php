@@ -74,6 +74,31 @@ class FeeSetting extends Model
     }
 
     /**
+     * Calculate renewal fee based on belt level
+     */
+    public function getRenewalFeeByBelt($beltLevel)
+    {
+        $gupLevels = [
+            'white', 'yellow_1', 'yellow_2', 'green_1', 'green_2', 
+            'blue_1', 'blue_2', 'red_1', 'red_2'
+        ];
+        
+        $blackPoomLevels = [
+            'poom_1', 'poom_2', 'dan_1', 'dan_2', 'dan_3'
+        ];
+
+        if (in_array($beltLevel, $gupLevels)) {
+            return $this->renewal_fee_gup;
+        }
+
+        if (in_array($beltLevel, $blackPoomLevels)) {
+            return $this->renewal_fee_black_poom;
+        }
+
+        return $this->renewal_fee_gup; // Default
+    }
+
+    /**
      * Sync updated fees with existing unpaid records
      */
     public function syncWithExistingRecords()
