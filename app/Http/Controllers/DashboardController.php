@@ -143,7 +143,7 @@ class DashboardController extends Controller
         $centerId = $user->training_center_id;
 
         // Scopes for reuse - show paid & active students OR those from SRI Bahrul Ulum
-        $studentsQuery = Student::whereHas('child', function($q) use ($centerId) {
+        $studentsQuery = Student::whereHas('child', function($q) {
             $q->where(function($subQ) {
                 $subQ->where(function($activeQ) {
                     $activeQ->where('payment_completed', true)
@@ -152,10 +152,6 @@ class DashboardController extends Controller
                     $tcQ->where('name', 'Sek Ren Islam Bahrul Ulum');
                 });
             });
-
-            if ($centerId) {
-                $q->where('training_center_id', $centerId);
-            }
         });
 
         // 1. Student Stats
@@ -165,9 +161,6 @@ class DashboardController extends Controller
 
         // 2. Attendance Stats
         $todayAttendance = Attendance::where('attendance_date', Carbon::today()->toDateString());
-        if ($centerId) {
-            $todayAttendance->where('training_center_id', $centerId);
-        }
         
         $presentToday = (clone $todayAttendance)->where('status', 'hadir')->count();
         // Set totalToday to total active students who should be marked
@@ -176,10 +169,6 @@ class DashboardController extends Controller
         // Monthly Attendance Rate (Sessions Held)
         $monthlySessionsQuery = Attendance::whereYear('attendance_date', $currentYear)
             ->whereMonth('attendance_date', Carbon::now()->month);
-        
-        if ($centerId) {
-            $monthlySessionsQuery->where('training_center_id', $centerId);
-        }
         
         $monthlySessions = $monthlySessionsQuery->distinct('attendance_date', 'training_center_id')->count();
 
@@ -193,15 +182,12 @@ class DashboardController extends Controller
         });
         $totalPayingStudents = $payingStudentsQuery->count();
 
-        $paidCount = \App\Models\MonthlyPayment::whereHas('child', function($q) use ($centerId) {
+        $paidCount = \App\Models\MonthlyPayment::whereHas('child', function($q) {
                 $q->where('payment_completed', true)
                   ->where('is_active', true)
                   ->whereHas('trainingCenter', function($tcQ) {
                       $tcQ->where('name', '!=', 'Sek Ren Islam Bahrul Ulum');
                   });
-                if ($centerId) {
-                    $q->where('training_center_id', $centerId);
-                }
             })
             ->where('year', $currentYear)
             ->where('month', $currentMonthNumeric)
