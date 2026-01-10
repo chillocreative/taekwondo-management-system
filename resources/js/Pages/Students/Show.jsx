@@ -238,32 +238,29 @@ export default function Show({ auth, student, currentYear }) {
                                                 </tr>
                                             </thead>
                                             <tbody className="bg-white divide-y divide-gray-200">
-                                                {student.child?.monthly_payments?.map((payment, idx) => (
-                                                    <tr key={idx} className={payment.is_paid ? 'bg-green-50/20' : 'hover:bg-gray-50'}>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 border-r">
-                                                            {months[payment.month - 1]}
+                                                {(student.child?.trainingCenter?.name === 'Sek Ren Islam Bahrul Ulum' || student.child?.training_center?.name === 'Sek Ren Islam Bahrul Ulum') ? (
+                                                    <tr className={student.child?.payment_completed ? 'bg-green-50/20' : 'hover:bg-gray-50'}>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 border-r uppercase">
+                                                            Yuran Tahunan ({currentYear})
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 border-r">RM {payment.amount}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 border-r">RM {student.child?.registration_fee || '0.00'}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-center border-r">
-                                                            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${payment.is_paid
+                                                            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${student.child?.payment_completed
                                                                 ? 'bg-green-100 text-green-800 border border-green-200'
                                                                 : 'bg-red-50 text-red-600 border border-red-100'
                                                                 }`}>
-                                                                {payment.is_paid ? 'SUDAH DIBAYAR' : 'TERTUNGGAK'}
+                                                                {student.child?.payment_completed ? 'SUDAH DIBAYAR' : 'BELUM BAYAR'}
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center border-r">
-                                                            {payment.paid_date ? new Date(payment.paid_date).toLocaleDateString('ms-MY') : '-'}
+                                                            {student.child?.payment_date ? new Date(student.child.payment_date).toLocaleDateString('ms-MY') : '-'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-center text-gray-700 font-mono text-xs font-bold uppercase">
                                                             <div className="flex items-center justify-center gap-2">
-                                                                <span>{payment.receipt_number || '-'}</span>
-                                                                {payment.is_paid && (
+                                                                <span>{student.child?.payment_reference || '-'}</span>
+                                                                {student.child?.payment_completed && (
                                                                     <a
-                                                                        href={payment.student_payment_id
-                                                                            ? route('receipts.stream', payment.student_payment_id)
-                                                                            : route('children.payment.receipt', student.child.id)
-                                                                        }
+                                                                        href={route('children.payment.receipt', student.child.id)}
                                                                         target="_blank"
                                                                         className="ml-2 px-2 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded text-[10px] font-bold hover:bg-blue-100 transition-colors"
                                                                     >
@@ -273,13 +270,50 @@ export default function Show({ auth, student, currentYear }) {
                                                             </div>
                                                         </td>
                                                     </tr>
-                                                )) || (
+                                                ) : (
+                                                    student.child?.monthly_payments?.map((payment, idx) => (
+                                                        <tr key={idx} className={payment.is_paid ? 'bg-green-50/20' : 'hover:bg-gray-50'}>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 border-r">
+                                                                {months[payment.month - 1]}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 border-r">RM {payment.amount}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-center border-r">
+                                                                <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${payment.is_paid
+                                                                    ? 'bg-green-100 text-green-800 border border-green-200'
+                                                                    : 'bg-red-50 text-red-600 border border-red-100'
+                                                                    }`}>
+                                                                    {payment.is_paid ? 'SUDAH DIBAYAR' : 'TERTUNGGAK'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center border-r">
+                                                                {payment.paid_date ? new Date(payment.paid_date).toLocaleDateString('ms-MY') : '-'}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-center text-gray-700 font-mono text-xs font-bold uppercase">
+                                                                <div className="flex items-center justify-center gap-2">
+                                                                    <span>{payment.receipt_number || '-'}</span>
+                                                                    {payment.is_paid && (
+                                                                        <a
+                                                                            href={payment.student_payment_id
+                                                                                ? route('receipts.stream', payment.student_payment_id)
+                                                                                : route('children.payment.receipt', student.child.id)
+                                                                            }
+                                                                            target="_blank"
+                                                                            className="ml-2 px-2 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded text-[10px] font-bold hover:bg-blue-100 transition-colors"
+                                                                        >
+                                                                            Lihat Resit
+                                                                        </a>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )) || (
                                                         <tr>
                                                             <td colSpan="5" className="px-6 py-12 text-center text-sm text-gray-500 italic">
                                                                 Tiada rekod pembayaran dijumpai untuk tahun ini.
                                                             </td>
                                                         </tr>
-                                                    )}
+                                                    )
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>
