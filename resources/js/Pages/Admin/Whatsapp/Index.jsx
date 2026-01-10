@@ -56,9 +56,9 @@ export default function Index({ auth, serverUrl }) {
                                     <p className="text-zinc-500 font-medium mb-8">Pantau status sambungan WhatsApp server anda.</p>
 
                                     <div className="flex items-center gap-4 mb-8">
-                                        <div className={`w-4 h-4 rounded-full ${serverStatus.connected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
-                                        <span className={`font-black uppercase tracking-widest text-sm ${serverStatus.connected ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                            {serverStatus.connected ? 'Bersambung' : (serverStatus.status === 'offline' ? 'Offline' : 'Terputus')}
+                                        <div className={`w-4 h-4 rounded-full ${serverStatus.connected ? 'bg-emerald-500 animate-pulse' : (serverStatus.status === 'starting' || serverStatus.status === 'initializing' ? 'bg-amber-400 animate-bounce' : 'bg-rose-500')}`}></div>
+                                        <span className={`font-black uppercase tracking-widest text-sm ${serverStatus.connected ? 'text-emerald-600' : (serverStatus.status === 'starting' || serverStatus.status === 'initializing' ? 'text-amber-600' : 'text-rose-600')}`}>
+                                            {serverStatus.connected ? 'Bersambung' : (serverStatus.status === 'offline' ? 'Server Offline' : (serverStatus.status === 'starting' || serverStatus.status === 'initializing' ? 'Menyambung...' : 'Terputus'))}
                                         </span>
                                     </div>
 
@@ -79,12 +79,15 @@ export default function Index({ auth, serverUrl }) {
                                                                 </svg>
                                                             </div>
                                                             <p className="text-sm font-bold text-zinc-900">Server Offline</p>
-                                                            <p className="text-xs text-zinc-500 mt-1">Sila pastikan `node whatsapp-server.js` sedang berjalan.</p>
+                                                            <p className="text-xs text-zinc-500 mt-1">Sila pastikan `node whatsapp-server.js` sedang berjalan di cPanel.</p>
                                                         </div>
                                                     ) : (
                                                         <div className="text-center">
                                                             <div className="w-10 h-10 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin mx-auto mb-4"></div>
-                                                            <p className="text-sm font-bold text-zinc-900 italic tracking-widest">Menjana Kod QR...</p>
+                                                            <p className="text-sm font-bold text-zinc-900 italic tracking-widest">
+                                                                {serverStatus.status === 'starting' || serverStatus.status === 'initializing' ? 'WhatsApp Sedang Bermula...' : 'Menjana Kod QR...'}
+                                                            </p>
+                                                            {serverStatus.error && <p className="text-[10px] text-zinc-400 mt-4 font-mono uppercase tracking-widest">Log: {serverStatus.error}</p>}
                                                         </div>
                                                     )}
                                                 </div>

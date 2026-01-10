@@ -12,7 +12,13 @@ class WhatsappService
     {
         $url = rtrim(env('WHATSAPP_SERVER_URL', 'http://localhost:3001'), '/');
         
-        // If the URL already ends with /whatsapp-api, don't append it again
+        // Internal status check shows user hit /whatsapp-api/status
+        // Our updated server supports both / and /whatsapp-api
+        // We will stick to the standard /whatsapp-api suffix for clarity
+        if (str_contains($url, 'yuran.taekwondoanz.com')) {
+             return $url . '/whatsapp-api';
+        }
+
         if (str_ends_with($url, '/whatsapp-api')) {
             return $url;
         }
