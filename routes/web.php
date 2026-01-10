@@ -123,6 +123,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
     Route::post('/notifications/{id}/mark-read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+
+    // Annual Statement Routes
+    Route::get('/annual-statement', [App\Http\Controllers\AnnualStatementController::class, 'index'])->name('annual-statement.index');
 });
 
 // Temporary Migrate Route

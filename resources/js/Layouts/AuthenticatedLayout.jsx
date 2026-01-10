@@ -145,6 +145,12 @@ export default function AuthenticatedLayout({ header, children }) {
                 route: 'fees.index',
                 active: route().current('fees.*'),
             },
+            {
+                name: 'Penyata Tahunan',
+                icon: '📊',
+                route: 'annual-statement.index',
+                active: route().current('annual-statement.*'),
+            },
         ];
 
         if (user.role === 'admin') {
