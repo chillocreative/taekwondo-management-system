@@ -750,7 +750,7 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                     }}
                                                     className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
                                                 />
-                                                <span className="text-xs text-zinc-500">Sama seperti waris</span>
+                                                <span className="text-xs text-blue-600">Sama seperti waris</span>
                                             </label>
                                         </div>
                                         <input
