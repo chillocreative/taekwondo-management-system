@@ -142,10 +142,17 @@ class DashboardController extends Controller
         $currentYear = Carbon::now()->year;
         $centerId = $user->training_center_id;
 
-        // Scopes for reuse - only show paid & active students for this coach's center
+        // Scopes for reuse - show paid & active students OR those from SRI Bahrul Ulum
         $studentsQuery = Student::whereHas('child', function($q) use ($centerId) {
-            $q->where('payment_completed', true)
-              ->where('is_active', true);
+            $q->where(function($subQ) {
+                $subQ->where(function($activeQ) {
+                    $activeQ->where('payment_completed', true)
+                           ->where('is_active', true);
+                })->orWhereHas('trainingCenter', function($tcQ) {
+                    $tcQ->where('name', 'Sek Ren Islam Bahrul Ulum');
+                });
+            });
+
             if ($centerId) {
                 $q->where('training_center_id', $centerId);
             }
@@ -188,7 +195,10 @@ class DashboardController extends Controller
 
         $paidCount = \App\Models\MonthlyPayment::whereHas('child', function($q) use ($centerId) {
                 $q->where('payment_completed', true)
-                  ->where('is_active', true);
+                  ->where('is_active', true)
+                  ->whereHas('trainingCenter', function($tcQ) {
+                      $tcQ->where('name', '!=', 'Sek Ren Islam Bahrul Ulum');
+                  });
                 if ($centerId) {
                     $q->where('training_center_id', $centerId);
                 }
