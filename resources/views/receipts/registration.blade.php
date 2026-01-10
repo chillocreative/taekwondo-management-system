@@ -148,6 +148,7 @@
                     {{ number_format($items['yearly_fee'], 2) }}
                 </td>
             </tr>
+            @if(!($child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum'))
             <tr>
                 <td>
                     <strong>Yuran Bulanan ({{ \Carbon\Carbon::now()->format('F Y') }})</strong><br>
@@ -168,6 +169,7 @@
                     {{ number_format($items['outstanding_fee'], 2) }}
                 </td>
             </tr>
+            @endif
             @endif
             
             <tr class="total-row">
