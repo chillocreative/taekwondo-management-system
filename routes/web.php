@@ -175,95 +175,36 @@ Route::get('/sync-fees', function () {
     return "Fee synchronization complete! All records have been updated based on the latest settings.";
 });
 
-Route::get('/fix-january', function () {
-    $payments = \App\Models\StudentPayment::where('month', 'LIKE', '%January%')->get();
-    $count = 0;
-    foreach ($payments as $payment) {
-        $payment->month = str_ireplace('January', 'Januari', $payment->month);
-        try {
-            $payment->save();
-            $count++;
-        } catch (\Exception $e) {
-            // Handle unique constraint if Januari already exists
-            \Illuminate\Support\Facades\Log::warning("Could not fix payment ID {$payment->id}: " . $e->getMessage());
-        }
-    }
-    return "Fixed $count payment records.";
+Route::get('/reset-receipts', function () {
+    if (auth()->user()->role !== 'admin') abort(403);
+    
+    \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+    
+    // 1. Clear all StudentPayment records
+    \App\Models\StudentPayment::truncate();
+    
+    // 2. Reset all MonthlyPayment records
+    \App\Models\MonthlyPayment::query()->update([
+        'is_paid' => false,
+        'paid_date' => null,
+        'payment_method' => null,
+        'payment_reference' => null,
+        'receipt_number' => null,
+        'student_payment_id' => null
+    ]);
+    
+    // 3. Reset Children payment statuses
+    \App\Models\Child::query()->update([
+        'payment_completed' => false,
+        'payment_date' => null,
+        'payment_method' => null,
+        'payment_reference' => null,
+        'payment_slip' => null
+    ]);
+    
+    \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+    
+    return "✅ Semua rekod pembayaran telah direset. Nombor resit baru akan bermula dari 0001.";
 });
-
-// Fix ANZ0005 Registration Type
-Route::get('/fix-anz0005', function () {
-    $student = \App\Models\Student::where('no_siri', 'LIKE', '%0005%')->first();
-    if ($student && $student->child) {
-        $student->child->update(['registration_type' => 'renewal']);
-        return "Student {$student->no_siri} ({$student->nama_pelajar}) successfully updated to Pembaharuan Keahlian (Renewal).";
-    }
-    return "Student with serial containing '0005' or associated record not found.";
-});
-
-// Backfill Registration Payments Route
-Route::get('/backfill-payments', function () {
-    $feeSettings = \App\Models\FeeSetting::current();
-    $paidChildren = \App\Models\Child::where('payment_completed', true)
-        ->whereNotNull('payment_date')
-        ->with('student')
-        ->get();
-
-    $output = "Starting backfill of registration payments...\n\n";
-    $created = 0;
-
-    foreach ($paidChildren as $child) {
-        if (!$child->student) {
-            $output .= "Skipping child {$child->id} ({$child->name}) - no student record\n";
-            continue;
-        }
-
-        // Check if StudentPayment already exists for this registration
-        $paymentDate = $child->payment_date instanceof \Carbon\Carbon ? $child->payment_date : \Carbon\Carbon::parse($child->payment_date);
-        $monthStr = $paymentDate->translatedFormat('F Y');
-
-        $existingPayment = \App\Models\StudentPayment::where('student_id', $child->student->id)
-            ->where('month', $monthStr)
-            ->where('status', 'paid')
-            ->first();
-
-        if ($existingPayment) {
-            $output .= "Payment already exists for {$child->name} ({$monthStr})\n";
-            continue;
-        }
-
-        // Calculate fees
-        if ($child->date_of_birth) {
-            $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
-            $monthlyFee = $feeSettings->getMonthlyFeeByDob($child->date_of_birth);
-        } else {
-            $yearlyFee = $feeSettings->yearly_fee_below_18;
-            $monthlyFee = $feeSettings->monthly_fee_below_18;
-        }
-        $totalAmount = $yearlyFee + $monthlyFee;
-
-        // Create payment record
-        $payment = \App\Models\StudentPayment::create([
-            'student_id' => $child->student->id,
-            'month' => $monthStr,
-            'kategori' => $child->student->kategori ?? 'kanak-kanak',
-            'quantity' => 1,
-            'amount' => $totalAmount,
-            'total' => $totalAmount,
-            'receipt_number' => 'REC-' . $paymentDate->format('ym') . '-' . str_pad($child->student->id, 4, '0', STR_PAD_LEFT),
-            'transaction_ref' => $child->payment_reference ?? 'REGBACKFILL-' . $child->id,
-            'payment_method' => $child->payment_method ?? 'online',
-            'status' => 'paid',
-            'payment_date' => $paymentDate,
-        ]);
-
-        $output .= "✅ Created payment record for {$child->name} - {$payment->receipt_number}\n";
-        $created++;
-    }
-
-    $output .= "\nBackfill complete! Created {$created} payment records.";
-    return nl2br($output);
-});
-
 
 require __DIR__.'/auth.php';
