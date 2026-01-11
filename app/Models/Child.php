@@ -18,6 +18,28 @@ class Child extends Model
             // Delete associated student record using query builder to avoid infinite loop
             $child->student()->delete();
         });
+
+        // Automatically determine date of birth from IC number if missing
+        static::saving(function ($child) {
+            if ($child->ic_number && (empty($child->date_of_birth) || $child->isDirty('ic_number'))) {
+                $ic = preg_replace('/\D/', '', $child->ic_number);
+                if (strlen($ic) >= 6) {
+                    $yearStr = substr($ic, 0, 2);
+                    $monthStr = substr($ic, 2, 2);
+                    $dayStr = substr($ic, 4, 2);
+
+                    $currentYear = (int) date('Y');
+                    $yearPrefix = (int) $yearStr > ($currentYear % 100) ? '19' : '20';
+                    $fullYear = $yearPrefix . $yearStr;
+
+                    try {
+                        $child->date_of_birth = \Carbon\Carbon::create($fullYear, $monthStr, $dayStr)->startOfDay();
+                    } catch (\Exception $e) {
+                        // Keep current date_of_birth if IC is invalid
+                    }
+                }
+            }
+        });
     }
 
     protected $fillable = [
@@ -63,6 +85,8 @@ class Child extends Model
         'registration_fee' => 'decimal:2',
         'last_updated_year' => 'integer',
     ];
+
+    protected $appends = ['age', 'belt_level_malay'];
 
     /**
      * Get the parent (user) of this child
@@ -132,10 +156,27 @@ class Child extends Model
     }
 
     /**
-     * Get the age based on date of birth
+     * Get the age based on date of birth or IC number
      */
     public function getAgeAttribute()
     {
-        return $this->date_of_birth ? $this->date_of_birth->age : null;
+        if ($this->date_of_birth) {
+            return $this->date_of_birth->age;
+        }
+
+        if ($this->ic_number && strlen(preg_replace('/\D/', '', $this->ic_number)) >= 6) {
+            $ic = preg_replace('/\D/', '', $this->ic_number);
+            $yearStr = substr($ic, 0, 2);
+            $monthStr = substr($ic, 2, 2);
+            $dayStr = substr($ic, 4, 2);
+
+            $currentYear = (int) date('Y');
+            $yearPrefix = (int) $yearStr > ($currentYear % 100) ? '19' : '20';
+            $fullYear = (int) ($yearPrefix . $yearStr);
+
+            return $currentYear - $fullYear;
+        }
+
+        return null;
     }
 }
