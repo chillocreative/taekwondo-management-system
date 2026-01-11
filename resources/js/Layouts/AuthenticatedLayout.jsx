@@ -141,12 +141,6 @@ export default function AuthenticatedLayout({ header, children }) {
                 active: route().current('attendance.*'),
             },
             {
-                name: 'Yuran',
-                icon: '💰',
-                route: 'fees.index',
-                active: route().current('fees.*'),
-            },
-            {
                 name: 'Penyata Tahunan',
                 icon: '📊',
                 route: 'annual-statement.index',
