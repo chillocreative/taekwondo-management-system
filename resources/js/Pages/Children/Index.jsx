@@ -292,185 +292,266 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                             </button>
                         </div>
                     ) : (
-                        <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-zinc-200">
-                                    <thead className="bg-zinc-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                                                Nama
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                                                No. Siri
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                                                Pusat Latihan
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                                                No Kad Pengenalan
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                                                Kategori
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                                                Status
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                                                Status Pembayaran
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                                                Jenis
-                                            </th>
-                                            <th className="px-6 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                                                Tindakan
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-zinc-200">
-                                        {children.map((child) => (
-                                            <tr key={child.id} className="hover:bg-zinc-50 transition-colors">
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-zinc-900">{child.name}</div>
-                                                    <div className="text-xs text-zinc-500">{getBeltLevelLabel(child.belt_level)}</div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-zinc-900">
-                                                        {child.student ? child.student.no_siri : '-'}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-zinc-900">
-                                                        {child.training_center ? child.training_center.name : '-'}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-zinc-900">
-                                                        {child.ic_number || '-'}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-zinc-900">
-                                                        {(() => {
-                                                            if (!child.date_of_birth) return '-';
-                                                            const birthDate = new Date(child.date_of_birth);
-                                                            const today = new Date();
-                                                            let age = today.getFullYear() - birthDate.getFullYear();
-                                                            const monthDiff = today.getMonth() - birthDate.getMonth();
-                                                            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                                                                age--;
-                                                            }
-                                                            const kategori = age < 18 ? 'Pelajar' : 'Dewasa';
-                                                            return (
-                                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${age < 18
-                                                                    ? 'bg-purple-50 text-purple-600 border border-purple-100'
-                                                                    : 'bg-blue-50 text-blue-600 border border-blue-100'
-                                                                    }`}>
-                                                                    {kategori}
-                                                                </span>
-                                                            );
-                                                        })()}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {child.payment_completed ? (
-                                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-1 w-fit">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                            Aktif
-                                                        </span>
-                                                    ) : child.needs_update ? (
-                                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-50 text-red-600 border border-red-100 flex items-center gap-1 w-fit">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-                                                            Data ({new Date().getFullYear() - 1})
-                                                            {new Date().getFullYear() >= 2027 && <span className="text-[9px] opacity-70 ml-1">(Profil perlu dikemaskini)</span>}
-                                                        </span>
-                                                    ) : (
-                                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${child.is_active
-                                                            ? 'bg-zinc-100 text-zinc-600 border border-zinc-200'
-                                                            : 'bg-zinc-100 text-zinc-600 border border-zinc-200 opacity-50'
-                                                            }`}>
-                                                            {child.is_active ? 'Aktif' : 'Tidak Aktif'}
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {child.payment_completed ? (
-                                                        <div>
-                                                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
-                                                                Sudah Bayar
-                                                            </span>
-                                                        </div>
-                                                    ) : child.needs_update ? (
-                                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-rose-50 text-rose-500 border border-rose-100">
-                                                            Kemas kini data dahulu
-                                                        </span>
-                                                    ) : child.payment_method === 'offline' && child.payment_reference ? (
-                                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-600 border border-blue-100">
-                                                            Menunggu Pengesahan
-                                                        </span>
-                                                    ) : (
-                                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-amber-50 text-amber-600 border border-amber-100">
-                                                            Belum Bayar
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {(child.registration_type === 'renewal' || child.needs_update || (child.created_at && new Date(child.created_at).getFullYear() < new Date().getFullYear())) ? (
-                                                        <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-amber-50 text-amber-600 border border-amber-200 shadow-sm">
-                                                            🔄 Pembaharuan {new Date().getFullYear()}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-sm">
-                                                            ✨ Pendaftaran Baru
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <div className="flex justify-end gap-2">
-                                                        {child.belt_certificate && (
-                                                            <a
-                                                                href={`/storage/${child.belt_certificate}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="px-3 py-1.5 text-xs border border-green-300 bg-green-50 rounded-lg text-green-700 hover:bg-green-100 transition-colors"
-                                                                title="Lihat Sijil"
-                                                            >
-                                                                📄 Sijil
-                                                            </a>
-                                                        )}
-                                                        {child.payment_completed && (
-                                                            <a
-                                                                href={route('children.payment.receipt', child.id)}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="px-3 py-1.5 text-xs border border-purple-300 bg-purple-50 rounded-lg text-purple-700 hover:bg-purple-100 transition-colors"
-                                                                title="Muat Turun Resit"
-                                                            >
-                                                                🧾 Resit
-                                                            </a>
-                                                        )}
-                                                        <button
-                                                            onClick={() => openModal(child)}
-                                                            className={`px-3 py-1.5 text-xs border rounded-lg transition-colors ${child.needs_update
-                                                                ? 'border-amber-400 bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold'
-                                                                : 'border-zinc-300 text-zinc-700 hover:bg-zinc-50'
-                                                                }`}
-                                                        >
-                                                            {child.needs_update ? 'Kemas Kini' : 'Edit'}
-                                                        </button>
-                                                        {!child.payment_completed && !child.needs_update && (
-                                                            <button
-                                                                onClick={() => handlePayment(child.id)}
-                                                                className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                                            >
-                                                                Bayar
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </td>
+                        <div className="space-y-4">
+                            {/* Mobile Card View (Visible on Mobile Only) */}
+                            <div className="md:hidden space-y-4">
+                                {children.map((child) => (
+                                    <div key={child.id} className="bg-white rounded-xl border border-zinc-200 shadow-sm p-4 space-y-4">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <div className="text-sm font-bold text-zinc-900">{child.name}</div>
+                                                <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mt-1">
+                                                    {getBeltLevelLabel(child.belt_level)} • {child.student ? child.student.no_siri : 'TIADA NO SIRI'}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                {child.payment_completed ? (
+                                                    <span className="px-2 py-1 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">
+                                                        Aktif
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 py-1 text-[10px] font-bold rounded-full bg-amber-50 text-amber-600 border border-amber-100 uppercase">
+                                                        Belum Bayar
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4 text-[11px] py-3 border-y border-zinc-100">
+                                            <div>
+                                                <p className="text-zinc-400 uppercase font-bold tracking-tighter mb-1">Pusat Latihan</p>
+                                                <p className="text-zinc-800 font-medium truncate">{child.training_center ? child.training_center.name : '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-zinc-400 uppercase font-bold tracking-tighter mb-1">IC Number</p>
+                                                <p className="text-zinc-800 font-medium">{child.ic_number || '-'}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2 pt-2">
+                                            {child.belt_certificate && (
+                                                <a
+                                                    href={`/storage/${child.belt_certificate}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex-1 text-center px-3 py-2 text-[11px] font-bold border border-green-300 bg-green-50 rounded-lg text-green-700 active:bg-green-100"
+                                                >
+                                                    📄 Sijil
+                                                </a>
+                                            )}
+                                            {child.payment_completed && (
+                                                <a
+                                                    href={route('children.payment.receipt', child.id)}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex-1 text-center px-3 py-2 text-[11px] font-bold border border-purple-300 bg-purple-50 rounded-lg text-purple-700 active:bg-purple-100"
+                                                >
+                                                    🧾 Resit
+                                                </a>
+                                            )}
+                                            <button
+                                                onClick={() => openModal(child)}
+                                                className={`flex-1 px-3 py-2 text-[11px] font-bold border rounded-lg active:scale-95 transition-transform ${child.needs_update
+                                                    ? 'border-amber-400 bg-amber-50 text-amber-700'
+                                                    : 'border-zinc-300 text-zinc-700'
+                                                    }`}
+                                            >
+                                                {child.needs_update ? 'Kemas Kini' : 'Edit'}
+                                            </button>
+                                            {!child.payment_completed && !child.needs_update && (
+                                                <button
+                                                    onClick={() => handlePayment(child.id)}
+                                                    className="flex-1 px-3 py-2 text-[11px] font-bold bg-blue-600 text-white rounded-lg active:scale-95 active:bg-blue-700 transition-all shadow-md shadow-blue-100"
+                                                >
+                                                    Bayar Sekarang
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Desktop View (Visible on Tablet/Desktop Only) */}
+                            <div className="hidden md:block bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-zinc-200">
+                                        <thead className="bg-zinc-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                                                    Nama
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                                                    No. Siri
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                                                    Pusat Latihan
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                                                    No Kad Pengenalan
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                                                    Kategori
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                                                    Status
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                                                    Status Pembayaran
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                                                    Jenis
+                                                </th>
+                                                <th className="px-6 py-3 text-right text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                                                    Tindakan
+                                                </th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-zinc-200">
+                                            {children.map((child) => (
+                                                <tr key={child.id} className="hover:bg-zinc-50 transition-colors">
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm font-medium text-zinc-900">{child.name}</div>
+                                                        <div className="text-xs text-zinc-500">{getBeltLevelLabel(child.belt_level)}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-zinc-900">
+                                                            {child.student ? child.student.no_siri : '-'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-zinc-900">
+                                                            {child.training_center ? child.training_center.name : '-'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-zinc-900">
+                                                            {child.ic_number || '-'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-zinc-900">
+                                                            {(() => {
+                                                                if (!child.date_of_birth) return '-';
+                                                                const birthDate = new Date(child.date_of_birth);
+                                                                const today = new Date();
+                                                                let age = today.getFullYear() - birthDate.getFullYear();
+                                                                const monthDiff = today.getMonth() - birthDate.getMonth();
+                                                                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                                                                    age--;
+                                                                }
+                                                                const kategori = age < 18 ? 'Pelajar' : 'Dewasa';
+                                                                return (
+                                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${age < 18
+                                                                        ? 'bg-purple-50 text-purple-600 border border-purple-100'
+                                                                        : 'bg-blue-50 text-blue-600 border border-blue-100'
+                                                                        }`}>
+                                                                        {kategori}
+                                                                    </span>
+                                                                );
+                                                            })()}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        {child.payment_completed ? (
+                                                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-1 w-fit">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                                Aktif
+                                                            </span>
+                                                        ) : child.needs_update ? (
+                                                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-50 text-red-600 border border-red-100 flex items-center gap-1 w-fit">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                                                                Data ({new Date().getFullYear() - 1})
+                                                                {new Date().getFullYear() >= 2027 && <span className="text-[9px] opacity-70 ml-1">(Profil perlu dikemaskini)</span>}
+                                                            </span>
+                                                        ) : (
+                                                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${child.is_active
+                                                                ? 'bg-zinc-100 text-zinc-600 border border-zinc-200'
+                                                                : 'bg-zinc-100 text-zinc-600 border border-zinc-200 opacity-50'
+                                                                }`}>
+                                                                {child.is_active ? 'Aktif' : 'Tidak Aktif'}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        {child.payment_completed ? (
+                                                            <div>
+                                                                <span className="px-2 py-1 text-xs font-medium rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                                                    Sudah Bayar
+                                                                </span>
+                                                            </div>
+                                                        ) : child.needs_update ? (
+                                                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-rose-50 text-rose-500 border border-rose-100">
+                                                                Kemas kini data dahulu
+                                                            </span>
+                                                        ) : child.payment_method === 'offline' && child.payment_reference ? (
+                                                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                                                                Menunggu Pengesahan
+                                                            </span>
+                                                        ) : (
+                                                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-amber-50 text-amber-600 border border-amber-100">
+                                                                Belum Bayar
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        {(child.registration_type === 'renewal' || child.needs_update || (child.created_at && new Date(child.created_at).getFullYear() < new Date().getFullYear())) ? (
+                                                            <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-amber-50 text-amber-600 border border-amber-200 shadow-sm">
+                                                                🔄 Pembaharuan {new Date().getFullYear()}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-sm">
+                                                                ✨ Pendaftaran Baru
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        <div className="flex justify-end gap-2">
+                                                            {child.belt_certificate && (
+                                                                <a
+                                                                    href={`/storage/${child.belt_certificate}`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="px-3 py-1.5 text-xs border border-green-300 bg-green-50 rounded-lg text-green-700 hover:bg-green-100 transition-colors"
+                                                                    title="Lihat Sijil"
+                                                                >
+                                                                    📄 Sijil
+                                                                </a>
+                                                            )}
+                                                            {child.payment_completed && (
+                                                                <a
+                                                                    href={route('children.payment.receipt', child.id)}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="px-3 py-1.5 text-xs border border-purple-300 bg-purple-50 rounded-lg text-purple-700 hover:bg-purple-100 transition-colors"
+                                                                    title="Muat Turun Resit"
+                                                                >
+                                                                    🧾 Resit
+                                                                </a>
+                                                            )}
+                                                            <button
+                                                                onClick={() => openModal(child)}
+                                                                className={`px-3 py-1.5 text-xs border rounded-lg transition-colors ${child.needs_update
+                                                                    ? 'border-amber-400 bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold'
+                                                                    : 'border-zinc-300 text-zinc-700 hover:bg-zinc-50'
+                                                                    }`}
+                                                            >
+                                                                {child.needs_update ? 'Kemas Kini' : 'Edit'}
+                                                            </button>
+                                                            {!child.payment_completed && !child.needs_update && (
+                                                                <button
+                                                                    onClick={() => handlePayment(child.id)}
+                                                                    className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                                                >
+                                                                    Bayar
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     )}
