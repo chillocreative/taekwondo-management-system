@@ -391,15 +391,27 @@ class ChildController extends Controller
                 ->with('error', 'Peserta ini sudah membuat pembayaran.');
         }
 
-        // Calculate yearly fee based on age
+        // Calculate fee based on registration type and age
         $feeSettings = \App\Models\FeeSetting::current();
         
         if ($child->date_of_birth) {
-            $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+            if ($child->registration_type === 'renewal') {
+                $mainFee = $feeSettings->getRenewalFeeByBelt($child->belt_level);
+                $feeLabel = 'Yuran Pembaharuan Keahlian';
+            } else {
+                $mainFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+                $feeLabel = 'Yuran Pendaftaran (Tahunan)';
+            }
             $age = \Carbon\Carbon::parse($child->date_of_birth)->age;
             $ageCategory = $age < 18 ? 'Bawah 18 tahun' : '18 tahun ke atas';
         } else {
-            $yearlyFee = $feeSettings->yearly_fee_below_18;
+            if ($child->registration_type === 'renewal') {
+                $mainFee = $feeSettings->renewal_fee_gup;
+                $feeLabel = 'Yuran Pembaharuan Keahlian';
+            } else {
+                $mainFee = $feeSettings->yearly_fee_below_18;
+                $feeLabel = 'Yuran Pendaftaran (Tahunan)';
+            }
             $ageCategory = 'Bawah 18 tahun';
         }
 
@@ -408,7 +420,8 @@ class ChildController extends Controller
 
         return Inertia::render('Children/OfflinePayment', [
             'child' => $child->load('trainingCenter'),
-            'yearlyFee' => $yearlyFee,
+            'yearlyFee' => $mainFee,
+            'feeLabel' => $feeLabel,
             'outstandingAmount' => $outstandingAmount,
             'outstandingCount' => $outstandingFees->count(),
             'ageCategory' => $ageCategory,
@@ -435,13 +448,21 @@ class ChildController extends Controller
             'payment_slip' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB max
         ]);
 
-        // Calculate yearly fee based on age
+        // Calculate fee based on registration type and age
         $feeSettings = \App\Models\FeeSetting::current();
         
         if ($child->date_of_birth) {
-            $yearlyFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+            if ($child->registration_type === 'renewal') {
+                $mainFee = $feeSettings->getRenewalFeeByBelt($child->belt_level);
+            } else {
+                $mainFee = $feeSettings->getYearlyFeeByDob($child->date_of_birth);
+            }
         } else {
-            $yearlyFee = $feeSettings->yearly_fee_below_18;
+            if ($child->registration_type === 'renewal') {
+                $mainFee = $feeSettings->renewal_fee_gup;
+            } else {
+                $mainFee = $feeSettings->yearly_fee_below_18;
+            }
         }
 
         // Handle file upload
@@ -450,7 +471,7 @@ class ChildController extends Controller
         // Mark as offline payment pending
         $child->update([
             'payment_method' => 'offline',
-            'registration_fee' => $yearlyFee,
+            'registration_fee' => $mainFee,
             'payment_reference' => 'OFFLINE-' . $child->id . '-' . time(),
             'payment_slip' => $path,
         ]);
