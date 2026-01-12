@@ -146,6 +146,12 @@ export default function AuthenticatedLayout({ header, children }) {
                 route: 'annual-statement.index',
                 active: route().current('annual-statement.*'),
             },
+            {
+                name: 'Yuran & Invois',
+                icon: '💰',
+                route: 'fees.index',
+                active: route().current('fees.*'),
+            },
         ];
 
         if (user.role === 'admin') {
