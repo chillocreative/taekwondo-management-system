@@ -209,177 +209,273 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                         )}
                     </div>
 
-                    {/* Students Table Card */}
-                    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50/50">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedIds.length === students.data.length && students.data.length > 0}
-                                                onChange={handleSelectAll}
-                                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 h-5 w-5"
-                                            />
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">No. Siri</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Peserta</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Penjaga</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Kategori</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status Bayaran</th>
-                                        <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Tindakan</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-100">
-                                    {students.data.length > 0 ? (
-                                        students.data.map((student) => (
-                                            <tr key={student.id} className="hover:bg-blue-50/50 transition duration-150 group">
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedIds.includes(student.id)}
-                                                        onChange={() => handleSelectOne(student.id)}
-                                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 h-5 w-5"
-                                                    />
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <Link href={route('students.show', student.id)} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">
+                    {/* Students List */}
+                    {students.data.length === 0 ? (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                            <div className="flex flex-col items-center justify-center text-gray-500">
+                                <span className="text-4xl mb-3">🔍</span>
+                                <p className="text-lg font-medium">Tiada rekod pelajar dijumpai.</p>
+                                <p className="text-sm">Cuba ubah carian atau tapis kategori anda.</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {/* Mobile Card View (Visible on Mobile Only) */}
+                            <div className="md:hidden space-y-4">
+                                {students.data.map((student) => (
+                                    <div key={student.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-4">
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex gap-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.includes(student.id)}
+                                                    onChange={() => handleSelectOne(student.id)}
+                                                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 h-5 w-5 mt-0.5"
+                                                />
+                                                <div>
+                                                    <div className="text-sm font-bold text-gray-900 leading-tight">{student.child?.name || student.nama_pelajar}</div>
+                                                    <Link href={route('students.show', student.id)} className="text-[11px] font-bold text-blue-600 uppercase tracking-wider mt-1 block">
                                                         {student.no_siri}
                                                     </Link>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-gray-900">{student.child?.name || student.nama_pelajar}</div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-500">{student.child?.parent?.name || student.nama_penjaga}</div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${student.kategori === 'kanak-kanak'
-                                                        ? 'bg-green-100 text-green-800 border border-green-200'
-                                                        : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
-                                                        }`}>
-                                                        {student.kategori === 'kanak-kanak' ? 'Bawah 18 Tahun' : '18 Tahun ke atas'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex flex-col gap-1">
-                                                        {student.yuran_tahunan_paid ? (
-                                                            <div className="flex flex-col gap-1">
-                                                                <div className="flex items-center">
-                                                                    <div className={`h-2.5 w-2.5 rounded-full mr-2 ${student.status_bayaran >= 12 ? 'bg-green-500' :
-                                                                        student.status_bayaran >= 6 ? 'bg-yellow-500' :
-                                                                            'bg-red-500'
-                                                                        }`}></div>
-                                                                    <span className="text-sm font-medium text-gray-700">
-                                                                        {student.status_bayaran}/12 bulan
+                                                </div>
+                                            </div>
+                                            <span className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-full border ${student.kategori === 'kanak-kanak'
+                                                ? 'bg-green-50 text-green-700 border-green-100'
+                                                : 'bg-indigo-50 text-indigo-700 border-indigo-100'
+                                                }`}>
+                                                {student.kategori === 'kanak-kanak' ? 'Bawah 18' : 'Dewasa'}
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4 py-3 border-y border-gray-50">
+                                            <div>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight mb-0.5">Penjaga</p>
+                                                <p className="text-xs text-gray-700 font-medium truncate">{student.child?.parent?.name || student.nama_penjaga}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight mb-0.5">Status Bayaran</p>
+                                                <div className="flex flex-col">
+                                                    {student.yuran_tahunan_paid ? (
+                                                        <div className="flex items-center">
+                                                            <div className={`h-1.5 w-1.5 rounded-full mr-1 ${student.status_bayaran >= 12 ? 'bg-green-500' :
+                                                                student.status_bayaran >= 6 ? 'bg-yellow-500' :
+                                                                    'bg-red-500'
+                                                                }`}></div>
+                                                            <span className="text-[11px] font-bold text-gray-700">
+                                                                {student.status_bayaran}/12 Bulan
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-[10px] font-bold text-rose-500 uppercase">Menunggu Bayaran</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2 pt-1">
+                                            {!student.yuran_tahunan_paid && student.child?.payment_slip && (
+                                                <button
+                                                    onClick={() => {
+                                                        if (confirm(`Sahkan pembayaran untuk ${student.nama_pelajar}?`)) {
+                                                            router.post(route('students.approve', student.id));
+                                                        }
+                                                    }}
+                                                    className="flex-1 min-w-[80px] flex items-center justify-center gap-1 bg-green-600 text-white px-3 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all shadow-md shadow-green-100"
+                                                >
+                                                    ✅ Lulus
+                                                </button>
+                                            )}
+                                            {student.child?.payment_slip && (
+                                                <a
+                                                    href={`/storage/${student.child.payment_slip}`}
+                                                    target="_blank"
+                                                    className="flex-1 min-w-[44px] flex items-center justify-center p-2 bg-amber-50 text-amber-600 border border-amber-100 rounded-xl active:bg-amber-100"
+                                                >
+                                                    📄
+                                                </a>
+                                            )}
+                                            <Link
+                                                href={route('students.show', student.id)}
+                                                className="flex-1 min-w-[44px] flex items-center justify-center p-2 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl active:bg-blue-100"
+                                            >
+                                                👁️
+                                            </Link>
+                                            <Link
+                                                href={route('students.edit', student.id)}
+                                                className="flex-1 min-w-[44px] flex items-center justify-center p-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl active:bg-emerald-100"
+                                            >
+                                                ✏️
+                                            </Link>
+                                            <button
+                                                onClick={() => handleDelete(student.id)}
+                                                className="flex-1 min-w-[44px] flex items-center justify-center p-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl active:bg-rose-100"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Desktop View (Visible on Tablet/Desktop Only) */}
+                            <div className="hidden md:block bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50/50">
+                                            <tr>
+                                                <th className="px-6 py-4 text-left">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIds.length === students.data.length && students.data.length > 0}
+                                                        onChange={handleSelectAll}
+                                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 h-5 w-5"
+                                                    />
+                                                </th>
+                                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">No. Siri</th>
+                                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Peserta</th>
+                                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Penjaga</th>
+                                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Kategori</th>
+                                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status Bayaran</th>
+                                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Tindakan</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-100">
+                                            {students.data.map((student) => (
+                                                <tr key={student.id} className="hover:bg-blue-50/50 transition duration-150 group">
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedIds.includes(student.id)}
+                                                            onChange={() => handleSelectOne(student.id)}
+                                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 h-5 w-5"
+                                                        />
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <Link href={route('students.show', student.id)} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">
+                                                            {student.no_siri}
+                                                        </Link>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm font-medium text-gray-900">{student.child?.name || student.nama_pelajar}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-500">{student.child?.parent?.name || student.nama_penjaga}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${student.kategori === 'kanak-kanak'
+                                                            ? 'bg-green-100 text-green-800 border border-green-200'
+                                                            : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                                                            }`}>
+                                                            {student.kategori === 'kanak-kanak' ? 'Bawah 18 Tahun' : '18 Tahun ke atas'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex flex-col gap-1">
+                                                            {student.yuran_tahunan_paid ? (
+                                                                <div className="flex flex-col gap-1">
+                                                                    <div className="flex items-center">
+                                                                        <div className={`h-2.5 w-2.5 rounded-full mr-2 ${student.status_bayaran >= 12 ? 'bg-green-500' :
+                                                                            student.status_bayaran >= 6 ? 'bg-yellow-500' :
+                                                                                'bg-red-500'
+                                                                            }`}></div>
+                                                                        <span className="text-sm font-medium text-gray-700">
+                                                                            {student.status_bayaran}/12 bulan
+                                                                        </span>
+                                                                    </div>
+                                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 w-fit">
+                                                                        ✅ Yuran Tahunan
                                                                     </span>
                                                                 </div>
-                                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 w-fit">
-                                                                    ✅ Yuran Tahunan
-                                                                </span>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex flex-col gap-1">
-                                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-rose-100 text-rose-800 w-fit animate-pulse border border-rose-200">
-                                                                    ⏳ Menunggu Bayaran
-                                                                </span>
-                                                                {student.child?.payment_method === 'offline' && (
-                                                                    <span className="text-[10px] text-amber-600 font-bold uppercase tracking-tighter">
-                                                                        Pembayaran Offline
+                                                            ) : (
+                                                                <div className="flex flex-col gap-1">
+                                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-rose-100 text-rose-800 w-fit animate-pulse border border-rose-200">
+                                                                        ⏳ Menunggu Bayaran
                                                                     </span>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <div className="flex justify-end gap-2">
-                                                        {!student.yuran_tahunan_paid && student.child?.payment_slip && (
+                                                                    {student.child?.payment_method === 'offline' && (
+                                                                        <span className="text-[10px] text-amber-600 font-bold uppercase tracking-tighter">
+                                                                            Pembayaran Offline
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        <div className="flex justify-end gap-2">
+                                                            {!student.yuran_tahunan_paid && student.child?.payment_slip && (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        if (confirm(`Sahkan pembayaran untuk ${student.nama_pelajar}?`)) {
+                                                                            router.post(route('students.approve', student.id));
+                                                                        }
+                                                                    }}
+                                                                    className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg transition shadow-sm hover:shadow-green-200"
+                                                                    title="Luluskan Pendaftaran"
+                                                                >
+                                                                    <span>✅</span>
+                                                                    <span>Lulus</span>
+                                                                </button>
+                                                            )}
+                                                            {student.child?.payment_slip && (
+                                                                <a
+                                                                    href={`/storage/${student.child.payment_slip}`}
+                                                                    target="_blank"
+                                                                    className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition"
+                                                                    title="Lihat Resit"
+                                                                >
+                                                                    📄
+                                                                </a>
+                                                            )}
+                                                            <Link
+                                                                href={route('students.show', student.id)}
+                                                                className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
+                                                                title="Lihat"
+                                                            >
+                                                                👁️
+                                                            </Link>
+                                                            <Link
+                                                                href={route('students.edit', student.id)}
+                                                                className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
+                                                                title="Edit"
+                                                            >
+                                                                ✏️
+                                                            </Link>
                                                             <button
-                                                                onClick={() => {
-                                                                    if (confirm(`Sahkan pembayaran untuk ${student.nama_pelajar}?`)) {
-                                                                        router.post(route('students.approve', student.id));
-                                                                    }
-                                                                }}
-                                                                className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg transition shadow-sm hover:shadow-green-200"
-                                                                title="Luluskan Pendaftaran"
+                                                                onClick={() => handleDelete(student.id)}
+                                                                className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
+                                                                title="Padam"
                                                             >
-                                                                <span>✅</span>
-                                                                <span>Lulus</span>
+                                                                🗑️
                                                             </button>
-                                                        )}
-                                                        {student.child?.payment_slip && (
-                                                            <a
-                                                                href={`/storage/${student.child.payment_slip}`}
-                                                                target="_blank"
-                                                                className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition"
-                                                                title="Lihat Resit"
-                                                            >
-                                                                📄
-                                                            </a>
-                                                        )}
-                                                        <Link
-                                                            href={route('students.show', student.id)}
-                                                            className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
-                                                            title="Lihat"
-                                                        >
-                                                            👁️
-                                                        </Link>
-                                                        <Link
-                                                            href={route('students.edit', student.id)}
-                                                            className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
-                                                            title="Edit"
-                                                        >
-                                                            ✏️
-                                                        </Link>
-                                                        <button
-                                                            onClick={() => handleDelete(student.id)}
-                                                            className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
-                                                            title="Padam"
-                                                        >
-                                                            🗑️
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="7" className="px-6 py-12 text-center">
-                                                <div className="flex flex-col items-center justify-center text-gray-500">
-                                                    <span className="text-4xl mb-3">🔍</span>
-                                                    <p className="text-lg font-medium">Tiada rekod pelajar dijumpai.</p>
-                                                    <p className="text-sm">Cuba ubah carian atau tapis kategori anda.</p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Pagination */}
-                        {students.links.length > 3 && (
-                            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-center">
-                                <div className="flex gap-1">
-                                    {students.links.map((link, index) => (
-                                        <Link
-                                            key={index}
-                                            href={link.url || '#'}
-                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-150 ${link.active
-                                                ? 'bg-blue-600 text-white shadow-md'
-                                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-                                                } ${!link.url && 'opacity-50 cursor-not-allowed'}`}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    ))}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}      {/* Pagination */}
+                    {students.links.length > 3 && (
+                        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-center">
+                            <div className="flex gap-1">
+                                {students.links.map((link, index) => (
+                                    <Link
+                                        key={index}
+                                        href={link.url || '#'}
+                                        className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-150 ${link.active
+                                            ? 'bg-blue-600 text-white shadow-md'
+                                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                                            } ${!link.url && 'opacity-50 cursor-not-allowed'}`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
-            </div >
-        </AuthenticatedLayout >
+            </div>
+        </AuthenticatedLayout>
     );
 }
