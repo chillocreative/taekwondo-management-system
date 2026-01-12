@@ -845,6 +845,30 @@ class ChildController extends Controller
             }
         }
 
+        // SYNC FIX: Ensure MonthlyPayment also has this receipt number
+        if ($receiptNumber && $child->student) {
+            $monthName = \App\Models\MonthlyPayment::getMalayName(now()->month) . ' ' . now()->year;
+            
+            // Find monthly payment for the same month as the receipt
+            // If it's a registration/renewal receipt, it usually covers the current month if paid active
+            $mp = \App\Models\MonthlyPayment::where('child_id', $child->id)
+                ->where('year', now()->year)
+                ->where('month', now()->month)
+                ->where('is_paid', true)
+                ->first();
+                
+            if ($mp && !$mp->receipt_number) {
+                $mp->update(['receipt_number' => $receiptNumber]);
+            }
+            
+            // Also try to match by payment reference if possible
+            if ($child->payment_reference) {
+                \App\Models\MonthlyPayment::where('payment_reference', $child->payment_reference)
+                    ->whereNull('receipt_number')
+                    ->update(['receipt_number' => $receiptNumber]);
+            }
+        }
+
         $items = [
             'yearly_fee' => (float) $mainFee,
             'monthly_fee' => (float) $monthlyFee,
