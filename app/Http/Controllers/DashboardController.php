@@ -179,61 +179,43 @@ class DashboardController extends Controller
         $currentYear = Carbon::now()->year;
         $centerId = $user->training_center_id;
 
-        // Scopes for reuse - show paid & active students OR those from SRI Bahrul Ulum
-        $studentsQuery = Student::whereHas('child', function($q) {
-            $q->where(function($subQ) {
-                $subQ->where(function($activeQ) {
-                    $activeQ->where('payment_completed', true)
-                           ->where('is_active', true);
-                })->orWhereHas('trainingCenter', function($tcQ) {
-                    $tcQ->where('name', 'Sek Ren Islam Bahrul Ulum');
-                });
-            });
-        });
-
-        // 1. Student Stats
-        // Get all students associated with children who are registered under this coach's training center
-        $studentsQuery = Student::whereHas('child', function($q) use ($centerId) {
-            $q->where('training_center_id', $centerId);
-        });
-
-        $totalStudents = $studentsQuery->count();
-        $studentIds = (clone $studentsQuery)->pluck('id');
+        // 1. Peserta (Child) Stats - Count ALL children in this training center
+        $totalPeserta = Child::where('training_center_id', $centerId)->count();
         
         // Renewed = payment_completed AND is_active for CURRENT YEAR
-        // Check if child has payment_completed = true AND is_active = true
-        $renewedCount = (clone $studentsQuery)->whereHas('child', function($q) use ($currentYear) {
-            $q->where('payment_completed', true)
-              ->where('is_active', true)
-              ->where('last_updated_year', $currentYear);
-        })->count();
+        $renewedCount = Child::where('training_center_id', $centerId)
+            ->where('payment_completed', true)
+            ->where('is_active', true)
+            ->where('last_updated_year', $currentYear)
+            ->count();
 
         // Pending Renewal = those who are NOT renewed yet
         // Exclude special center (Sek Ren Islam Bahrul Ulum) from pending count
-        $pendingRenewalCount = (clone $studentsQuery)->whereHas('child', function($q) use ($currentYear) {
-            $q->where(function($subQ) use ($currentYear) {
+        $pendingRenewalCount = Child::where('training_center_id', $centerId)
+            ->where(function($q) use ($currentYear) {
                 // Not paid/active for current year
-                $subQ->where('payment_completed', false)
-                     ->orWhere('is_active', false)
-                     ->orWhere('last_updated_year', '<', $currentYear)
-                     ->orWhereNull('last_updated_year');
+                $q->where('payment_completed', false)
+                  ->orWhere('is_active', false)
+                  ->orWhere('last_updated_year', '<', $currentYear)
+                  ->orWhereNull('last_updated_year');
             })
             // Exclude special center
             ->whereDoesntHave('trainingCenter', function($tcQ) {
                 $tcQ->where('name', 'Sek Ren Islam Bahrul Ulum');
-            });
-        })->count();
+            })
+            ->count();
 
-        $newStudentsMonth = (clone $studentsQuery)->whereMonth('students.created_at', Carbon::now()->month)
-            ->whereYear('students.created_at', $currentYear)
+        $newPesertaMonth = Child::where('training_center_id', $centerId)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', $currentYear)
             ->count();
 
         // 2. Attendance Stats
-        $todayAttendance = Attendance::where('attendance_date', Carbon::today()->toDateString());
+        $todayAttendance = Attendance::where('attendance_date', Carbon::today()->toDateString())
+            ->where('training_center_id', $centerId);
         
         $presentToday = (clone $todayAttendance)->where('status', 'hadir')->count();
-        // Set totalToday to total students in this training center
-        $totalToday = $totalStudents;
+        $totalToday = $totalPeserta;
 
         // Monthly Attendance Rate (Sessions Held)
         $monthlySessionsQuery = Attendance::whereYear('attendance_date', $currentYear)
@@ -242,40 +224,40 @@ class DashboardController extends Controller
         
         $monthlySessions = $monthlySessionsQuery->distinct('attendance_date')->count();
 
-        // 3. Finance Stats - Count UNIQUE STUDENTS who paid for current month
-    $paidStudentIds = \App\Models\MonthlyPayment::whereHas('child', function($q) use ($centerId) {
-            $q->where('training_center_id', $centerId);
-        })
-        ->where('year', $currentYear)
-        ->where('month', $currentMonthNumeric)
-        ->where('is_paid', true)
-        ->distinct()
-        ->pluck('child_id');
-    
-    $paidCount = $paidStudentIds->count();
+        // 3. Finance Stats - Count UNIQUE CHILDREN who paid for current month
+        $paidChildIds = \App\Models\MonthlyPayment::whereHas('child', function($q) use ($centerId) {
+                $q->where('training_center_id', $centerId);
+            })
+            ->where('year', $currentYear)
+            ->where('month', $currentMonthNumeric)
+            ->where('is_paid', true)
+            ->distinct()
+            ->pluck('child_id');
+        
+        $paidCount = $paidChildIds->count();
 
-    // Unpaid = active students who haven't paid for current month
-    // (excluding special center students who don't pay monthly)
-    $unpaidCount = (clone $studentsQuery)->whereHas('child', function($q) use ($currentYear, $paidStudentIds, $currentMonthNumeric) {
-        $q->where('payment_completed', true)
-          ->where('is_active', true)
-          ->where('last_updated_year', $currentYear)
-          ->whereNotIn('id', $paidStudentIds)
-          // Exclude special center
-          ->whereDoesntHave('trainingCenter', function($tcQ) {
-              $tcQ->where('name', 'Sek Ren Islam Bahrul Ulum');
-          });
-    })->count();
+        // Unpaid = active children who haven't paid for current month
+        // (excluding special center students who don't pay monthly)
+        $unpaidCount = Child::where('training_center_id', $centerId)
+            ->where('payment_completed', true)
+            ->where('is_active', true)
+            ->where('last_updated_year', $currentYear)
+            ->whereNotIn('id', $paidChildIds)
+            // Exclude special center
+            ->whereDoesntHave('trainingCenter', function($tcQ) {
+                $tcQ->where('name', 'Sek Ren Islam Bahrul Ulum');
+            })
+            ->count();
 
         return Inertia::render('Dashboard', [
-            'studentCount' => $totalStudents, 
+            'studentCount' => $totalPeserta, 
             'renewedCount' => $renewedCount,
             'pendingRenewalCount' => $pendingRenewalCount,
             'stats' => [
-                'total_students' => $totalStudents,
+                'total_students' => $totalPeserta,
                 'renewed_students' => $renewedCount,
                 'pending_renewal' => $pendingRenewalCount,
-                'new_students' => $newStudentsMonth,
+                'new_students' => $newPesertaMonth,
                 'present_today' => $presentToday,
                 'total_today_marked' => $totalToday,
                 'monthly_sessions' => $monthlySessions,
@@ -285,8 +267,8 @@ class DashboardController extends Controller
                 'yearly_summary' => [
                     'renewed' => $renewedCount,
                     'pending' => $pendingRenewalCount,
-                    'new' => $newStudentsMonth,
-                    'total' => $totalStudents
+                    'new' => $newPesertaMonth,
+                    'total' => $totalPeserta
                 ]
             ]
         ]);
