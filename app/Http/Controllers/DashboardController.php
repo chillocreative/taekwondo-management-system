@@ -179,8 +179,18 @@ class DashboardController extends Controller
         $currentYear = Carbon::now()->year;
         $centerId = $user->training_center_id;
 
-        // 1. Peserta (Child) Stats - Count ALL children in this training center
-        $totalPeserta = Child::where('training_center_id', $centerId)->count();
+        // 1. Peserta (Child) Stats - Count ALL PAID/ACTIVE children in the SYSTEM (Global)
+        // Matches Coach/StudentController logic
+        $totalPesertaQuery = \App\Models\Child::query()->where(function($q) {
+            $q->where(function($subQ) {
+                $subQ->where('payment_completed', true)
+                     ->where('is_active', true);
+            })->orWhereHas('trainingCenter', function($tcQ) {
+                $tcQ->where('name', 'Sek Ren Islam Bahrul Ulum');
+            });
+        });
+        
+        $totalPeserta = $totalPesertaQuery->count();
         
         // Renewed = payment_completed AND is_active for CURRENT YEAR
         $renewedCount = Child::where('training_center_id', $centerId)
