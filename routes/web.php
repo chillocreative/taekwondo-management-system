@@ -578,6 +578,9 @@ Route::get('/audit-pending-payments', function () {
             } elseif ($statusId == '3') {
                  $apiStatus = '<span style="color:red;">FAILED / UNPAID</span>';
                  $action = "Confirmed Unpaid";
+            } elseif ($statusId == '4') {
+                 $apiStatus = '<span style="color:orange;">PENDING (Bill Created)</span>';
+                 $action = "User abandoned payment";
             } else {
                  $apiStatus = "Status ID: $statusId";
             }
