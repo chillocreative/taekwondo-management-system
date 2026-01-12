@@ -201,6 +201,13 @@ class FeeController extends Controller
             return back()->with('error', 'Yuran bulan ini sudah dibayar.');
         }
 
+        // Fix: Prevent monthly payment if annual fee/renewal (Child payment_completed) is pending
+        // This ensures they pay the Registration/Renewal Fee FIRST via the main flow.
+        if (!$child->payment_completed || $child->last_updated_year < now()->year) {
+             return redirect()->route('children.payment', $child->id)
+                 ->with('message', 'Sila jelaskan Yuran Pendaftaran/Pembaharuan Tahunan terlebih dahulu untuk mengaktifkan sesi tahun ini.');
+        }
+
         if (!$payment) {
             $payment = new StudentPayment([
                 'student_id' => $child->student->id,

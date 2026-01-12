@@ -276,10 +276,10 @@ class ChildController extends Controller
             abort(403);
         }
 
-        // Check if already paid
-        if ($child->payment_completed) {
+        // Check if already paid FOR CURRENT YEAR
+        if ($child->payment_completed && $child->last_updated_year == now()->year) {
             return redirect()->route('children.index')
-                ->with('error', 'Peserta ini sudah membuat pembayaran.');
+                ->with('error', 'Peserta ini sudah membuat pembayaran untuk sesi ' . now()->year . '.');
         }
 
         // Check if ToyyibPay is configured
