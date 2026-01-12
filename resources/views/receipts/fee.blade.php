@@ -132,30 +132,6 @@
     @php
         $child = $payment->student->child;
         
-        // Check if this is a registration/renewal payment
-        // It's a registration payment if:
-        // 1. The payment_reference matches the child's payment_reference (initial registration), OR
-        // 2. The payment was made in January (renewal month) AND child has registration_fee set
-        $isRegistrationPayment = false;
-        $yearlyFee = 0;
-        
-        if ($child) {
-            // Check if initial registration payment
-            if ($child->payment_reference === $payment->transaction_ref) {
-                $isRegistrationPayment = true;
-                $yearlyFee = (float) $child->registration_fee;
-            } 
-            // Check if renewal payment (January payment with registration_fee)
-            else if ($child->registration_fee > 0) {
-                // Parse the payment month to check if it's January
-                $paymentMonth = $payment->payment_date ? $payment->payment_date->month : null;
-                if ($paymentMonth == 1) { // January = renewal month
-                    $isRegistrationPayment = true;
-                    $yearlyFee = (float) $child->registration_fee;
-                }
-            }
-        }
-
         // Find linked monthly payments to show breakdown
         $monthlyPayments = \App\Models\MonthlyPayment::where('student_payment_id', $payment->id)->get();
         if ($monthlyPayments->isEmpty()) {
@@ -165,10 +141,35 @@
 
         $totalMonthly = $monthlyPayments->sum('amount');
         
-        // If it's a registration payment but no monthly records found (unlikely), 
-        // the remaining amount is treated as monthly fee
-        if ($isRegistrationPayment && $monthlyPayments->isEmpty()) {
-            $totalMonthly = (float)$payment->total - $yearlyFee;
+        // Detect if this is a registration/renewal or a surplus payment
+        // We consider it a registration payment if:
+        // 1. The transaction reference matches the child's registration reference, OR
+        // 2. There is a surplus (Total Paid > Sum of Monthly Payments) AND it's a 4-digit numeric receipt (from ChildController flow)
+        $isRegistrationPayment = false;
+        $yearlyFee = 0;
+        
+        if ($child) {
+            $surplus = (float)$payment->total - (float)$totalMonthly;
+            
+            // Case 1: Direct match with registration reference
+            if ($child->payment_reference === $payment->transaction_ref) {
+                $isRegistrationPayment = true;
+                $yearlyFee = (float) $child->registration_fee > 0 ? (float) $child->registration_fee : 0;
+                
+                // If yearly fee is not set on child but there's a surplus, use surplus
+                if ($yearlyFee <= 0 && $surplus > 0) {
+                    $yearlyFee = $surplus;
+                }
+            } 
+            // Case 2: Surplus detected in January (Renewal month)
+            else if ($surplus > 0) {
+                $paymentMonth = $payment->payment_date ? $payment->payment_date->month : null;
+                // If it's January AND there's a surplus, it's likely a renewal
+                if ($paymentMonth == 1) {
+                    $isRegistrationPayment = true;
+                    $yearlyFee = $surplus;
+                }
+            }
         }
     @endphp
 

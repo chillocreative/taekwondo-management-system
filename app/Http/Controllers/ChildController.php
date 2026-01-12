@@ -229,12 +229,25 @@ class ChildController extends Controller
         $outstandingFees = $this->getOutstandingFees($child);
         $outstandingAmount = $outstandingFees->sum('amount');
 
+        // Check if current month is already paid
+        $currentMonthNum = now()->month;
+        $currentYear = now()->year;
+        $isMonthPaid = \App\Models\MonthlyPayment::where('child_id', $child->id)
+            ->where('month', $currentMonthNum)
+            ->where('year', $currentYear)
+            ->where('is_paid', true)
+            ->exists();
+
+        if ($isMonthPaid) {
+            $monthlyFee = 0; // Don't charge if already paid
+        }
+
         if ($isSpecialCenter) {
             $monthlyFee = 0;
             $outstandingAmount = 0; // Don't charge outstanding for special center if any
             $totalAmount = $mainFee;
         } else {
-            $totalAmount = $mainFee + $monthlyFee + $outstandingAmount;
+            $totalAmount = $mainFee + (float)$monthlyFee + $outstandingAmount;
         }
 
         $currentMonth = \App\Models\MonthlyPayment::getMalayName(now()->month) . ' ' . now()->year;
@@ -306,17 +319,29 @@ class ChildController extends Controller
 
         // Calculate total payment
         $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
-        $currentMonth = \App\Models\MonthlyPayment::getMalayName(now()->month);
         
         $outstandingFees = $this->getOutstandingFees($child);
         $outstandingAmount = (float) $outstandingFees->sum('amount');
+
+        // Check if current month is already paid
+        $currentMonthNum = now()->month;
+        $currentYear = now()->year;
+        $isMonthPaid = \App\Models\MonthlyPayment::where('child_id', $child->id)
+            ->where('month', $currentMonthNum)
+            ->where('year', $currentYear)
+            ->where('is_paid', true)
+            ->exists();
+
+        if ($isMonthPaid) {
+            $monthlyFee = 0; // Don't charge if already paid
+        }
 
         if ($isSpecialCenter) {
             $monthlyFee = 0;
             $outstandingAmount = 0;
             $totalAmount = $mainFee;
         } else {
-            $totalAmount = $mainFee + $monthlyFee + $outstandingAmount;
+            $totalAmount = $mainFee + (float)$monthlyFee + $outstandingAmount;
         }
 
         // Create ToyyibPay bill
@@ -599,7 +624,7 @@ class ChildController extends Controller
                         ->where('year', $currentYear)
                         ->first();
 
-                    if ($monthlyPayment) {
+                    if ($monthlyPayment && !$monthlyPayment->is_paid) {
                         $monthlyPayment->update([
                             'is_paid' => true,
                             'paid_date' => now(),

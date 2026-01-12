@@ -192,12 +192,21 @@ class FeeController extends Controller
         $isSpecialCenter = $child->trainingCenter && $child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
         $amount = $isSpecialCenter ? 0 : $child->student->monthly_fee;
 
-        // Create Pending Payment Record
-        // Check if exists
-        $payment = StudentPayment::firstOrNew([
-            'student_id' => $child->student->id,
-            'month' => $request->month,
-        ]);
+        // Check if already paid
+        $payment = StudentPayment::where('student_id', $child->student->id)
+            ->where('month', $request->month)
+            ->first();
+
+        if ($payment && $payment->status === 'paid') {
+            return back()->with('error', 'Yuran bulan ini sudah dibayar.');
+        }
+
+        if (!$payment) {
+            $payment = new StudentPayment([
+                'student_id' => $child->student->id,
+                'month' => $request->month,
+            ]);
+        }
         
         $payment->kategori = $child->student->kategori ?? 'kanak-kanak';
         $payment->quantity = 1;
