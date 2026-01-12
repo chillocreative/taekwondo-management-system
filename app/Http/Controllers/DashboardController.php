@@ -242,17 +242,30 @@ class DashboardController extends Controller
         
         $monthlySessions = $monthlySessionsQuery->distinct('attendance_date')->count();
 
-        // 3. Finance Stats
-        $paidCount = \App\Models\MonthlyPayment::whereHas('child', function($q) use ($centerId) {
-                $q->where('training_center_id', $centerId);
-            })
-            ->where('year', $currentYear)
-            ->where('month', $currentMonthNumeric)
-            ->where('is_paid', true)
-            ->count();
+        // 3. Finance Stats - Count UNIQUE STUDENTS who paid for current month
+    $paidStudentIds = \App\Models\MonthlyPayment::whereHas('child', function($q) use ($centerId) {
+            $q->where('training_center_id', $centerId);
+        })
+        ->where('year', $currentYear)
+        ->where('month', $currentMonthNumeric)
+        ->where('is_paid', true)
+        ->distinct()
+        ->pluck('child_id');
+    
+    $paidCount = $paidStudentIds->count();
 
-        // Total expected is total renewed students (who are active for the year)
-        $unpaidCount = max(0, $renewedCount - $paidCount);
+    // Unpaid = active students who haven't paid for current month
+    // (excluding special center students who don't pay monthly)
+    $unpaidCount = (clone $studentsQuery)->whereHas('child', function($q) use ($currentYear, $paidStudentIds, $currentMonthNumeric) {
+        $q->where('payment_completed', true)
+          ->where('is_active', true)
+          ->where('last_updated_year', $currentYear)
+          ->whereNotIn('id', $paidStudentIds)
+          // Exclude special center
+          ->whereDoesntHave('trainingCenter', function($tcQ) {
+              $tcQ->where('name', 'Sek Ren Islam Bahrul Ulum');
+          });
+    })->count();
 
         return Inertia::render('Dashboard', [
             'studentCount' => $totalStudents, 
