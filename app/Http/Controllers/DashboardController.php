@@ -200,24 +200,27 @@ class DashboardController extends Controller
         $totalStudents = $studentsQuery->count();
         $studentIds = (clone $studentsQuery)->pluck('id');
         
-        // Renewed = payment_completed is true for CURRENT YEAR
+        // Renewed = payment_completed AND is_active for CURRENT YEAR
+        // Check if child has payment_completed = true AND is_active = true
         $renewedCount = (clone $studentsQuery)->whereHas('child', function($q) use ($currentYear) {
             $q->where('payment_completed', true)
-              ->whereNotNull('payment_date')
-              ->whereYear('payment_date', $currentYear);
+              ->where('is_active', true)
+              ->where('last_updated_year', $currentYear);
         })->count();
 
-        // Pending Renewal = those who haven't paid for current year OR haven't updated profile
+        // Pending Renewal = those who are NOT renewed yet
+        // Exclude special center (Sek Ren Islam Bahrul Ulum) from pending count
         $pendingRenewalCount = (clone $studentsQuery)->whereHas('child', function($q) use ($currentYear) {
             $q->where(function($subQ) use ($currentYear) {
-                // Not paid for current year
-                $subQ->where(function($pQ) use ($currentYear) {
-                    $pQ->where('payment_completed', false)
-                       ->orWhereNull('payment_date')
-                       ->orWhereYear('payment_date', '<', $currentYear);
-                })
-                // OR last_updated_year is old
-                ->orWhere('last_updated_year', '<', $currentYear);
+                // Not paid/active for current year
+                $subQ->where('payment_completed', false)
+                     ->orWhere('is_active', false)
+                     ->orWhere('last_updated_year', '<', $currentYear)
+                     ->orWhereNull('last_updated_year');
+            })
+            // Exclude special center
+            ->whereDoesntHave('trainingCenter', function($tcQ) {
+                $tcQ->where('name', 'Sek Ren Islam Bahrul Ulum');
             });
         })->count();
 
