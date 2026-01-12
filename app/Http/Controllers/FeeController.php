@@ -200,12 +200,35 @@ class FeeController extends Controller
             return back()->with('error', 'Yuran bulan ini sudah dibayar.');
         }
 
-        // Fix: Prevent monthly payment if annual fee/renewal (Child payment_completed) is pending
-        // This ensures they pay the Registration/Renewal Fee FIRST via the main flow.
+        // Check if Renewal/Annual Fee is needed
+        $additionalFee = 0;
+        $descriptionPrefix = "";
+        
         if (!$child->payment_completed || $child->last_updated_year < now()->year) {
-             return redirect()->route('children.payment', $child->id)
-                 ->with('message', 'Sila jelaskan Yuran Pendaftaran/Pembaharuan Tahunan terlebih dahulu untuk mengaktifkan sesi tahun ini.');
+             $feeSettings = \App\Models\FeeSetting::current();
+             $isRenewal = $child->registration_type === 'renewal' || $child->student; // Existing student implies renewal usually
+
+             if ($isRenewal) {
+                 $additionalFee = ($child->belt_level) 
+                    ? $feeSettings->getRenewalFeeByBelt($child->belt_level)
+                    : $feeSettings->renewal_fee_gup; // Default to Color Belt Fee if belt is missing/null but is renewal? Or GUP? 
+                    // Use GUP (RM 50) as safe default or specific logic. 
+                    // Logic in ChildController: getRenewalFeeByBelt uses mapping.
+                    // If belt is color_1 etc.
+                    $descriptionPrefix = "Yuran Pembaharuan + ";
+             } else {
+                 $additionalFee = $child->date_of_birth 
+                    ? $feeSettings->getYearlyFeeByDob($child->date_of_birth)
+                    : $feeSettings->yearly_fee_below_18;
+                 $descriptionPrefix = "Yuran Pendaftaran Tahunan + ";
+             }
+
+             if ($isSpecialCenter) {
+                 $additionalFee = 0;
+             }
         }
+
+        $totalBillAmount = $amount + $additionalFee;
 
         if (!$payment) {
             $payment = new StudentPayment([
@@ -217,7 +240,7 @@ class FeeController extends Controller
         $payment->kategori = $child->student->kategori ?? 'kanak-kanak';
         $payment->quantity = 1;
         $payment->amount = $amount;
-        $payment->total = $amount;
+        $payment->total = $totalBillAmount; // Save total transaction amount including renewal
         $payment->status = 'pending';
         $payment->save();
 
@@ -228,10 +251,12 @@ class FeeController extends Controller
         }
 
         // Initiate ToyyibPay
+        $billDesc = $descriptionPrefix ? ($descriptionPrefix . 'Yuran Bulanan ' . $request->month) : ('Pembayaran yuran untuk ' . $child->name);
+
         $result = $this->toyyibPayService->createBill([
             'billName' => 'Yuran ' . $request->month,
-            'billDescription' => 'Pembayaran yuran untuk ' . $child->name . ' (' . $child->student->no_siri . ')',
-            'billAmount' => $amount, // Service will convert to cents
+            'billDescription' => $billDesc . ' (' . $child->student->no_siri . ')',
+            'billAmount' => $totalBillAmount, // Service will convert to cents
             'billReturnUrl' => route('fees.payment.return'),
             'billCallbackUrl' => route('fees.payment.callback'),
             'billTo' => $child->parent->name ?? '',
@@ -269,6 +294,16 @@ class FeeController extends Controller
                 $payment->receipt_number = str_pad($payment->id, 4, '0', STR_PAD_LEFT);
                 $payment->save();
                 $this->updateMonthlyPaymentStatus($payment);
+
+                // Auto-Activate Child if Renewal Needed (Assumes fee logic covered it)
+                $child = $payment->student->child;
+                if ($child && (!$child->payment_completed || $child->last_updated_year < now()->year)) {
+                    $child->update([
+                        'payment_completed' => true,
+                        'payment_date' => now(),
+                        'last_updated_year' => now()->year,
+                    ]);
+                }
 
                 // Notify Admin & User via WhatsApp
                 $studentName = $payment->student->nama_pelajar ?? 'Unknown';
@@ -322,6 +357,16 @@ class FeeController extends Controller
                     $payment->save();
 
                     $this->updateMonthlyPaymentStatus($payment);
+
+                    // Auto-Activate Child if Renewal Needed
+                    $child = $payment->student->child;
+                    if ($child && (!$child->payment_completed || $child->last_updated_year < now()->year)) {
+                        $child->update([
+                            'payment_completed' => true,
+                            'payment_date' => now(),
+                            'last_updated_year' => now()->year,
+                        ]);
+                    }
 
                     // Notify Admin & User via WhatsApp
                     $studentName = $payment->student->nama_pelajar ?? 'Unknown';
