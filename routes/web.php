@@ -337,4 +337,102 @@ Route::get('/repair-pending-payments', function () {
     return $output;
 });
 
+// Sync Receipt Numbers - Fix missing receipt_number in monthly_payments
+Route::get('/sync-receipt-numbers', function () {
+    if (!auth()->check() || auth()->user()->role !== 'admin') {
+        return "❌ Akses ditolak. Sila log masuk sebagai Admin.";
+    }
+    
+    $output = "<h2>🔧 Sync Receipt Numbers</h2>";
+    $output .= "<p>Finding monthly payments with missing receipt numbers...</p>";
+    
+    // Find all paid monthly payments without receipt_number
+    $monthlyPayments = \App\Models\MonthlyPayment::where('is_paid', true)
+        ->where(function($q) {
+            $q->whereNull('receipt_number')
+              ->orWhere('receipt_number', '');
+        })
+        ->with('child.student')
+        ->get();
+    
+    $output .= "<p>Found <strong>" . $monthlyPayments->count() . "</strong> monthly payments without receipt numbers.</p>";
+    
+    if ($monthlyPayments->isEmpty()) {
+        return $output . "<p>✅ Semua rekod sudah mempunyai nombor resit.</p>";
+    }
+    
+    $fixed = 0;
+    $notFound = 0;
+    
+    $output .= "<table border='1' cellpadding='8' style='border-collapse: collapse; margin-top: 20px;'>";
+    $output .= "<tr style='background: #f0f0f0;'><th>#</th><th>Child ID</th><th>Month</th><th>Payment Ref</th><th>Receipt Found</th></tr>";
+    
+    foreach ($monthlyPayments as $index => $mp) {
+        $receiptNumber = null;
+        $rowColor = '#fff';
+        
+        // Try to find receipt from StudentPayment by payment_reference
+        if ($mp->payment_reference) {
+            $sp = \App\Models\StudentPayment::where('transaction_ref', $mp->payment_reference)->first();
+            if ($sp && $sp->receipt_number) {
+                $receiptNumber = $sp->receipt_number;
+            }
+        }
+        
+        // Try by child's student and month
+        if (!$receiptNumber && $mp->child && $mp->child->student) {
+            $monthName = \App\Models\MonthlyPayment::getMalayName($mp->month) . ' ' . $mp->year;
+            $sp = \App\Models\StudentPayment::where('student_id', $mp->child->student->id)
+                ->where('month', $monthName)
+                ->where('status', 'paid')
+                ->first();
+            if ($sp && $sp->receipt_number) {
+                $receiptNumber = $sp->receipt_number;
+            }
+        }
+        
+        // Try by child's payment_reference (registration payment)
+        if (!$receiptNumber && $mp->child && $mp->child->payment_reference && $mp->child->student) {
+            $sp = \App\Models\StudentPayment::where('transaction_ref', $mp->child->payment_reference)->first();
+            if ($sp && $sp->receipt_number) {
+                $receiptNumber = $sp->receipt_number;
+            }
+        }
+        
+        if ($receiptNumber) {
+            $mp->update([
+                'receipt_number' => $receiptNumber,
+                'student_payment_id' => $sp->id ?? null
+            ]);
+            $rowColor = '#d4edda';
+            $fixed++;
+        } else {
+            $rowColor = '#fff3cd';
+            $notFound++;
+        }
+        
+        $output .= "<tr style='background: {$rowColor};'>";
+        $output .= "<td>" . ($index + 1) . "</td>";
+        $output .= "<td>" . ($mp->child_id) . "</td>";
+        $output .= "<td>" . \App\Models\MonthlyPayment::getMalayName($mp->month) . " " . $mp->year . "</td>";
+        $output .= "<td><code>" . ($mp->payment_reference ?: '-') . "</code></td>";
+        $output .= "<td>" . ($receiptNumber ? "✅ " . $receiptNumber : "❌ Not found") . "</td>";
+        $output .= "</tr>";
+    }
+    
+    $output .= "</table>";
+    
+    $output .= "<h3 style='margin-top: 20px;'>📊 Ringkasan</h3>";
+    $output .= "<ul>";
+    $output .= "<li>✅ Berjaya disambung: <strong>{$fixed}</strong></li>";
+    $output .= "<li>⚠️ Tidak dijumpai: <strong>{$notFound}</strong></li>";
+    $output .= "</ul>";
+    
+    if ($fixed > 0) {
+        $output .= "<p style='color: green; font-weight: bold;'>🎉 {$fixed} rekod telah berjaya dikemaskini!</p>";
+    }
+    
+    return $output;
+});
+
 require __DIR__.'/auth.php';

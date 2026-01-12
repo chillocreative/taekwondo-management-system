@@ -775,15 +775,53 @@ class ChildController extends Controller
             $outstandingAmount = 0;
         }
 
-        // Get receipt number from student payment
+        // Get receipt number from student payment (with fallbacks)
         $receiptNumber = null;
         if ($child->student) {
-            $studentPayment = \App\Models\StudentPayment::where('student_id', $child->student->id)
-                ->where('transaction_ref', $child->payment_reference)
-                ->first();
+            // Try by transaction_ref first
+            $studentPayment = \App\Models\StudentPayment::where('transaction_ref', $child->payment_reference)->first();
+            
+            // Fallback: try by student_id and current month
+            if (!$studentPayment || !$studentPayment->receipt_number) {
+                $currentMonth = \App\Models\MonthlyPayment::getMalayName(now()->month) . ' ' . now()->year;
+                $studentPayment = \App\Models\StudentPayment::where('student_id', $child->student->id)
+                    ->where('month', $currentMonth)
+                    ->where('status', 'paid')
+                    ->first();
+            }
+            
+            // Fallback: try any paid payment for this student
+            if (!$studentPayment || !$studentPayment->receipt_number) {
+                $studentPayment = \App\Models\StudentPayment::where('student_id', $child->student->id)
+                    ->where('status', 'paid')
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+            }
+            
             if ($studentPayment) {
                 $receiptNumber = $studentPayment->receipt_number;
             }
+        }
+        
+        // Last resort: generate one if payment is complete but no receipt exists
+        if (!$receiptNumber && $child->payment_completed) {
+            // Create a payment record for this child
+            $currentMonth = \App\Models\MonthlyPayment::getMalayName(now()->month) . ' ' . now()->year;
+            $newPayment = \App\Models\StudentPayment::create([
+                'student_id' => $child->student->id,
+                'month' => $currentMonth,
+                'kategori' => $child->student->kategori ?? 'kanak-kanak',
+                'quantity' => 1,
+                'amount' => $mainFee + $monthlyFee + $outstandingAmount,
+                'total' => $mainFee + $monthlyFee + $outstandingAmount,
+                'transaction_ref' => $child->payment_reference ?? ('AUTO-' . $child->id),
+                'payment_method' => $child->payment_method ?? 'online',
+                'status' => 'paid',
+                'payment_date' => $child->payment_date ?? now(),
+            ]);
+            $newPayment->receipt_number = str_pad($newPayment->id, 4, '0', STR_PAD_LEFT);
+            $newPayment->save();
+            $receiptNumber = $newPayment->receipt_number;
         }
 
         $items = [
