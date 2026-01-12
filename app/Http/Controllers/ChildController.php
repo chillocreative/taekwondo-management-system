@@ -347,6 +347,8 @@ class ChildController extends Controller
         // Create ToyyibPay bill
         $toyyibPay = new \App\Services\ToyyibPayService();
         
+        $currentMonth = \Carbon\Carbon::now()->locale('ms')->monthName;
+        
         $billDescription = sprintf(
             '%s (RM%.2f) + Yuran Bulanan %s (RM%.2f)',
             $feeTitle,
