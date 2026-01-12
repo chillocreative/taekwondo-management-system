@@ -568,154 +568,6 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
 
                         <form onSubmit={handleSubmit}>
                             <div className="space-y-6">
-                                {/* MAKLUMAT WARIS */}
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-center border-b border-zinc-200 pb-2">
-                                        <h4 className="font-bold text-zinc-900">MAKLUMAT WARIS</h4>
-                                        <label className="flex items-center gap-2 cursor-pointer group">
-                                            <input
-                                                type="checkbox"
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        // 1. Try to get from previous child if exists
-                                                        if (children && children.length > 0) {
-                                                            const prev = children[0];
-                                                            setData(prevData => ({
-                                                                ...prevData,
-                                                                guardian_name: prev.guardian_name || '',
-                                                                guardian_occupation: prev.guardian_occupation || '',
-                                                                guardian_ic_number: prev.guardian_ic_number || '',
-                                                                guardian_age: prev.guardian_age || '',
-                                                                guardian_phone: prev.guardian_phone || '',
-                                                                address: prev.address || '',
-                                                                postcode: prev.postcode || '',
-                                                                city: prev.city || '',
-                                                                state: prev.state || '',
-                                                            }));
-                                                        } else {
-                                                            // 2. Fallback to auth user details
-                                                            setData(prevData => ({
-                                                                ...prevData,
-                                                                guardian_name: auth.user.name.toUpperCase(),
-                                                                guardian_phone: auth.user.phone || '',
-                                                            }));
-                                                        }
-                                                    } else {
-                                                        // Reset if unchecked (optional, but requested behavior is "copy on tick")
-                                                        setData(prevData => ({
-                                                            ...prevData,
-                                                            guardian_name: '',
-                                                            guardian_occupation: '',
-                                                            guardian_ic_number: '',
-                                                            guardian_age: '',
-                                                            guardian_phone: '',
-                                                        }));
-                                                    }
-                                                }}
-                                                className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
-                                            />
-                                            <span className="text-xs text-blue-600 group-hover:text-blue-700 transition-colors">Sama seperti profil/sebelumnya</span>
-                                        </label>
-                                    </div>
-
-                                    {/* Nama Waris */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                            Nama Waris
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={data.guardian_name}
-                                            onChange={(e) => setData('guardian_name', e.target.value.toUpperCase())}
-                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
-                                            required
-                                        />
-                                        {errors.guardian_name && <p className="text-red-500 text-xs mt-1">{errors.guardian_name}</p>}
-                                    </div>
-
-                                    {/* Pekerjaan */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                            Pekerjaan
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={data.guardian_occupation}
-                                            onChange={(e) => setData('guardian_occupation', e.target.value.toUpperCase())}
-                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* No Kad Pengenalan Waris */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                            No Kad Pengenalan
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={data.guardian_ic_number}
-                                            onChange={(e) => {
-                                                const value = e.target.value.replace(/\D/g, '').slice(0, 12);
-                                                let age = data.guardian_age;
-
-                                                if (value.length >= 2) {
-                                                    const year = parseInt(value.substring(0, 2));
-                                                    const currentYear = new Date().getFullYear();
-                                                    const currentYearLastTwo = currentYear % 100;
-                                                    const fullYear = year > currentYearLastTwo ? 1900 + year : 2000 + year;
-                                                    age = currentYear - fullYear;
-                                                }
-
-                                                setData(prev => ({
-                                                    ...prev,
-                                                    guardian_ic_number: value,
-                                                    guardian_age: age
-                                                }));
-                                            }}
-                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="Contoh: 811010011234"
-                                            maxLength="12"
-                                            required
-                                        />
-                                        <p className="text-xs text-zinc-500 mt-1">12 digit sahaja, tanpa simbol (Umur akan dikira automatik)</p>
-                                    </div>
-
-                                    {/* Umur */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                            Umur
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={data.guardian_age}
-                                            onChange={(e) => setData('guardian_age', e.target.value)}
-                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            readOnly
-                                        />
-                                    </div>
-
-                                    {/* No Telefon Waris */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                            No Telefon
-                                        </label>
-                                        <input
-                                            type="tel"
-                                            value={data.guardian_phone}
-                                            onChange={(e) => setData('guardian_phone', e.target.value.replace(/\D/g, '').slice(0, 11))}
-                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="Contoh: 0123456789"
-                                            maxLength="11"
-                                            required
-                                        />
-                                        <p className="text-xs text-zinc-500 mt-1">Nombor sahaja, maksimum 11 digit</p>
-                                    </div>
-                                </div>
-
-                                {/* Divider */}
-                                <hr className="border-4 border-zinc-100" />
-
                                 {/* MAKLUMAT PESERTA */}
                                 <div className="space-y-4">
                                     <h4 className="font-bold text-zinc-900 border-b border-zinc-200 pb-2">MAKLUMAT PESERTA</h4>
@@ -737,7 +589,6 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
 
                                     {/* No Kad Pengenalan & Umur & Tarikh Lahir */}
                                     <div className="grid grid-cols-1 gap-4">
-                                        {/* No Kad Pengenalan & Umur & Tarikh Lahir */}
                                         <div className="grid grid-cols-1 gap-4">
                                             <div className="grid grid-cols-4 gap-4">
                                                 <div className="col-span-3">
@@ -757,7 +608,6 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                                 const month = value.substring(2, 4);
                                                                 const day = value.substring(4, 6);
 
-                                                                // Determine century
                                                                 const currentYear = new Date().getFullYear();
                                                                 const currentYearLastTwo = currentYear % 100;
                                                                 const fullYear = year > currentYearLastTwo ? 1900 + year : 2000 + year;
@@ -811,28 +661,30 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                                 <p className="text-xs text-zinc-500 mt-1">automatik mengikut no kad pengenalan</p>
                                             </div>
                                         </div>
-
                                     </div>
+
                                     {/* No Telefon Child */}
                                     <div>
                                         <div className="flex justify-between items-center mb-1">
                                             <label className="block text-sm font-medium text-zinc-700">
                                                 No Telefon
                                             </label>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setData('phone_number', data.guardian_phone);
-                                                        } else {
-                                                            setData('phone_number', '');
-                                                        }
-                                                    }}
-                                                    className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
-                                                />
-                                                <span className="text-xs text-blue-600">Sama seperti waris</span>
-                                            </label>
+                                            {(!data.age || data.age < 18) && (
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setData('phone_number', data.guardian_phone);
+                                                            } else {
+                                                                setData('phone_number', '');
+                                                            }
+                                                        }}
+                                                        className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <span className="text-xs text-blue-600">Sama seperti waris</span>
+                                                </label>
+                                            )}
                                         </div>
                                         <input
                                             type="tel"
@@ -845,156 +697,439 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                         />
                                         <p className="text-xs text-zinc-500 mt-1">Nombor sahaja, maksimum 11 digit</p>
                                     </div>
+                                </div>
 
-                                    {/* Alamat Rumah */}
+
+                                {/* MAKLUMAT WARIS (Only for < 18 yo) */}
+                                {(!data.age || data.age < 18) && (
+                                    <div className="space-y-6 pt-4">
+                                        <hr className="border-2 border-zinc-100" />
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-center border-b border-zinc-200 pb-2">
+                                                <h4 className="font-bold text-zinc-900">MAKLUMAT WARIS</h4>
+                                                <label className="flex items-center gap-2 cursor-pointer group">
+                                                    <input
+                                                        type="checkbox"
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                if (children && children.length > 0) {
+                                                                    const prev = children[0];
+                                                                    setData(prevData => ({
+                                                                        ...prevData,
+                                                                        guardian_name: prev.guardian_name || '',
+                                                                        guardian_occupation: prev.guardian_occupation || '',
+                                                                        guardian_ic_number: prev.guardian_ic_number || '',
+                                                                        guardian_age: prev.guardian_age || '',
+                                                                        guardian_phone: prev.guardian_phone || '',
+                                                                        address: prev.address || '',
+                                                                        postcode: prev.postcode || '',
+                                                                        city: prev.city || '',
+                                                                        state: prev.state || '',
+                                                                    }));
+                                                                } else {
+                                                                    setData(prevData => ({
+                                                                        ...prevData,
+                                                                        guardian_name: auth.user.name.toUpperCase(),
+                                                                        guardian_phone: auth.user.phone || '',
+                                                                    }));
+                                                                }
+                                                            } else {
+                                                                setData(prevData => ({
+                                                                    ...prevData,
+                                                                    guardian_name: '',
+                                                                    guardian_occupation: '',
+                                                                    guardian_ic_number: '',
+                                                                    guardian_age: '',
+                                                                    guardian_phone: '',
+                                                                }));
+                                                            }
+                                                        }}
+                                                        className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <span className="text-xs text-blue-600 group-hover:text-blue-700 transition-colors">Sama seperti profil/sebelumnya</span>
+                                                </label>
+                                            </div>
+
+                                            {/* Nama Waris */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                    Nama Waris
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={data.guardian_name}
+                                                    onChange={(e) => setData('guardian_name', e.target.value.toUpperCase())}
+                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                                    required={!data.age || data.age < 18}
+                                                />
+                                                {errors.guardian_name && <p className="text-red-500 text-xs mt-1">{errors.guardian_name}</p>}
+                                            </div>
+
+                                            {/* Pekerjaan */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                    Pekerjaan
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={data.guardian_occupation}
+                                                    onChange={(e) => setData('guardian_occupation', e.target.value.toUpperCase())}
+                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                                    required={!data.age || data.age < 18}
+                                                />
+                                            </div>
+
+                                            {/* No Kad Pengenalan Waris */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                    No Kad Pengenalan
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={data.guardian_ic_number}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value.replace(/\D/g, '').slice(0, 12);
+                                                        let age = data.guardian_age;
+
+                                                        if (value.length >= 2) {
+                                                            const year = parseInt(value.substring(0, 2));
+                                                            const currentYear = new Date().getFullYear();
+                                                            const currentYearLastTwo = currentYear % 100;
+                                                            const fullYear = year > currentYearLastTwo ? 1900 + year : 2000 + year;
+                                                            age = currentYear - fullYear;
+                                                        }
+
+                                                        setData(prev => ({
+                                                            ...prev,
+                                                            guardian_ic_number: value,
+                                                            guardian_age: age
+                                                        }));
+                                                    }}
+                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    placeholder="Contoh: 811010011234"
+                                                    maxLength="12"
+                                                    required={!data.age || data.age < 18}
+                                                />
+                                                <p className="text-xs text-zinc-500 mt-1">12 digit sahaja, tanpa simbol (Umur akan dikira automatik)</p>
+                                            </div>
+
+                                            {/* Umur */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                    Umur
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    value={data.guardian_age}
+                                                    onChange={(e) => setData('guardian_age', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    readOnly
+                                                />
+                                            </div>
+
+                                            {/* No Telefon Waris */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                    No Telefon
+                                                </label>
+                                                <input
+                                                    type="tel"
+                                                    value={data.guardian_phone}
+                                                    onChange={(e) => setData('guardian_phone', e.target.value.replace(/\D/g, '').slice(0, 11))}
+                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    placeholder="Contoh: 0123456789"
+                                                    maxLength="11"
+                                                    required={!data.age || data.age < 18}
+                                                />
+                                                <p className="text-xs text-zinc-500 mt-1">Nombor sahaja, maksimum 11 digit</p>
+                                            </div>
+                                        </div>
+                                        <hr className="border-2 border-zinc-100" />
+                                    </div>
+                                )}
+
+                                {/* Alamat Rumah */}
+                                <div>
+                                    <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                        Alamat Rumah
+                                    </label>
+                                    <textarea
+                                        rows="2"
+                                        value={data.address}
+                                        onChange={(e) => setData('address', e.target.value.toUpperCase())}
+                                        className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none uppercase"
+                                        required
+                                    ></textarea>
+                                </div>
+
+                                {/* Postcode, City, State */}
+                                <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                            Alamat Rumah
+                                            Poskod
                                         </label>
-                                        <textarea
-                                            rows="2"
-                                            value={data.address}
-                                            onChange={(e) => setData('address', e.target.value.toUpperCase())}
-                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none uppercase"
-                                            required
-                                        ></textarea>
-                                    </div>
-
-                                    {/* Postcode, City, State */}
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                                Poskod
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={data.postcode}
-                                                onChange={(e) => setData('postcode', e.target.value.replace(/\D/g, '').slice(0, 5))}
-                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                placeholder="Contoh: 50480"
-                                                maxLength="5"
-                                                required
-                                            />
-                                            <p className="text-xs text-zinc-500 mt-1">Isi poskod untuk isi Bandar & Negeri secara automatik</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                                Bandar
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={data.city}
-                                                onChange={(e) => setData('city', e.target.value.toUpperCase())}
-                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                                Negeri
-                                            </label>
-                                            <select
-                                                value={data.state}
-                                                onChange={(e) => setData('state', e.target.value)}
-                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                required
-                                            >
-                                                <option value="">Pilih Negeri</option>
-                                                {states.map((state) => (
-                                                    <option key={state} value={state}>
-                                                        {state}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {/* Nama Sekolah */}
-                                    <div>
-                                        <div className="flex justify-between items-center mb-1">
-                                            <label className="block text-sm font-medium text-zinc-700">
-                                                Nama Sekolah
-                                            </label>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={data.school_name === 'TIDAK BERKENAAN'}
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setData('school_name', 'TIDAK BERKENAAN');
-                                                        } else {
-                                                            setData('school_name', '');
-                                                        }
-                                                    }}
-                                                    className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
-                                                />
-                                                <span className="text-xs text-blue-600 font-medium">Tidak Berkenaan</span>
-                                            </label>
-                                        </div>
                                         <input
                                             type="text"
-                                            value={data.school_name}
-                                            onChange={(e) => setData('school_name', e.target.value.toUpperCase())}
-                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                            value={data.postcode}
+                                            onChange={(e) => setData('postcode', e.target.value.replace(/\D/g, '').slice(0, 5))}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Contoh: 50480"
+                                            maxLength="5"
                                             required
                                         />
+                                        <p className="text-xs text-zinc-500 mt-1">Isi poskod untuk isi Bandar & Negeri secara automatik</p>
                                     </div>
-
-                                    {/* Kelas */}
-                                    <div>
-                                        <div className="flex justify-between items-center mb-1">
-                                            <label className="block text-sm font-medium text-zinc-700">
-                                                Kelas
-                                            </label>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={data.school_class === 'TIDAK BERKENAAN'}
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setData('school_class', 'TIDAK BERKENAAN');
-                                                        } else {
-                                                            setData('school_class', '');
-                                                        }
-                                                    }}
-                                                    className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
-                                                />
-                                                <span className="text-xs text-blue-600 font-medium">Tidak Berkenaan</span>
-                                            </label>
-                                        </div>
-                                        <input
-                                            type="text"
-                                            value={data.school_class}
-                                            onChange={(e) => setData('school_class', e.target.value.toUpperCase())}
-                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* Pusat Latihan */}
                                     <div>
                                         <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                            Pusat Latihan
+                                            Bandar
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.city}
+                                            onChange={(e) => setData('city', e.target.value.toUpperCase())}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                            Negeri
                                         </label>
                                         <select
-                                            value={data.training_center_id}
-                                            onChange={(e) => setData('training_center_id', e.target.value)}
+                                            value={data.state}
+                                            onChange={(e) => setData('state', e.target.value)}
                                             className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             required
                                         >
-                                            <option value="">Pilih Pusat Latihan</option>
-                                            {trainingCenters.map((center) => (
-                                                <option key={center.id} value={center.id}>
-                                                    {center.name}
+                                            <option value="">Pilih Negeri</option>
+                                            {states.map((state) => (
+                                                <option key={state} value={state}>
+                                                    {state}
                                                 </option>
                                             ))}
                                         </select>
-                                        {errors.training_center_id && <p className="text-red-500 text-xs mt-1">{errors.training_center_id}</p>}
                                     </div>
+                                </div>
 
-                                    {/* Tahap Tali Pinggang (Only for paid students here) */}
-                                    {(editingChild && editingChild.payment_completed) && (
-                                        <div className="p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+                                {/* Nama Sekolah & Kelas (Only for < 18 yo) */}
+                                {(!data.age || data.age < 18) && (
+                                    <>
+                                        {/* Nama Sekolah */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-1">
+                                                <label className="block text-sm font-medium text-zinc-700">
+                                                    Nama Sekolah
+                                                </label>
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={data.school_name === 'TIDAK BERKENAAN'}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setData('school_name', 'TIDAK BERKENAAN');
+                                                            } else {
+                                                                setData('school_name', '');
+                                                            }
+                                                        }}
+                                                        className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <span className="text-xs text-blue-600 font-medium">Tidak Berkenaan</span>
+                                                </label>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={data.school_name}
+                                                onChange={(e) => setData('school_name', e.target.value.toUpperCase())}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                                required={!data.age || data.age < 18}
+                                            />
+                                        </div>
+
+                                        {/* Kelas */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-1">
+                                                <label className="block text-sm font-medium text-zinc-700">
+                                                    Kelas
+                                                </label>
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={data.school_class === 'TIDAK BERKENAAN'}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setData('school_class', 'TIDAK BERKENAAN');
+                                                            } else {
+                                                                setData('school_class', '');
+                                                            }
+                                                        }}
+                                                        className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <span className="text-xs text-blue-600 font-medium">Tidak Berkenaan</span>
+                                                </label>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={data.school_class}
+                                                onChange={(e) => setData('school_class', e.target.value.toUpperCase())}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                                required={!data.age || data.age < 18}
+                                            />
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Pusat Latihan */}
+                                <div>
+                                    <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                        Pusat Latihan
+                                    </label>
+                                    <select
+                                        value={data.training_center_id}
+                                        onChange={(e) => setData('training_center_id', e.target.value)}
+                                        className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required
+                                    >
+                                        <option value="">Pilih Pusat Latihan</option>
+                                        {trainingCenters.map((center) => (
+                                            <option key={center.id} value={center.id}>
+                                                {center.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.training_center_id && <p className="text-red-500 text-xs mt-1">{errors.training_center_id}</p>}
+                                </div>
+
+                                {/* Tahap Tali Pinggang (Only for paid students here) */}
+                                {(editingChild && editingChild.payment_completed) && (
+                                    <div className="p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+                                        <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                            Tahap Tali Pinggang Terkini
+                                        </label>
+                                        <select
+                                            value={data.belt_level}
+                                            onChange={(e) => setData('belt_level', e.target.value)}
+                                            className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                            required
+                                        >
+                                            <option value="">Pilih Tahap Tali Pinggang</option>
+                                            {beltLevels.map((level) => (
+                                                <option key={level.value} value={level.value}>
+                                                    {level.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.belt_level && <p className="text-red-500 text-xs mt-1">{errors.belt_level}</p>}
+                                    </div>
+                                )}
+
+                                {/* Hide registration questions if already paid */}
+                                {(!editingChild || !editingChild.payment_completed) && (
+                                    <>
+                                        {/* From Other Club Section */}
+                                        <div className="pt-4 border-t border-zinc-200">
+                                            <label className="block text-sm font-medium text-zinc-700 mb-3">
+                                                Adakah anda dari kelab lain?
+                                            </label>
+                                            <div className="flex gap-4">
+                                                <label className="flex items-center">
+                                                    <input
+                                                        type="radio"
+                                                        name="from_other_club"
+                                                        checked={data.from_other_club === true}
+                                                        onChange={() => setData('from_other_club', true)}
+                                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
+                                                    />
+                                                    <span className="ml-2 text-sm text-zinc-700">Ya</span>
+                                                </label>
+                                                <label className="flex items-center">
+                                                    <input
+                                                        type="radio"
+                                                        name="from_other_club"
+                                                        checked={data.from_other_club === false}
+                                                        onChange={() => {
+                                                            setData(prev => ({ ...prev, from_other_club: false, belt_level: 'white' }));
+                                                        }}
+                                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
+                                                    />
+                                                    <span className="ml-2 text-sm text-zinc-700">Tidak</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {/* Registration Type Section */}
+                                        <div className="pt-4 border-t border-zinc-200">
+                                            <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                                Sila Pilih:
+                                            </label>
+                                            <div className="space-y-3">
+                                                <label className="flex items-center">
+                                                    <input
+                                                        type="radio"
+                                                        name="registration_type"
+                                                        checked={data.registration_type === 'new'}
+                                                        onChange={() => setData('registration_type', 'new')}
+                                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
+                                                    />
+                                                    <span className="ml-2 text-sm text-zinc-700">Pendaftaran Baru</span>
+                                                </label>
+                                                <label className="flex flex-col">
+                                                    <div className="flex items-center">
+                                                        <input
+                                                            type="radio"
+                                                            name="registration_type"
+                                                            checked={data.registration_type === 'renewal'}
+                                                            onChange={() => setData('registration_type', 'renewal')}
+                                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
+                                                        />
+                                                        <span className="ml-2 text-sm text-zinc-700">Pembaharuan Keahlian</span>
+                                                    </div>
+                                                    {data.registration_type === 'renewal' && (
+                                                        <div className="mt-3 p-4 bg-zinc-50 rounded-lg border border-zinc-200 ml-6">
+                                                            <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                                Tahap Tali Pinggang Terkini
+                                                            </label>
+                                                            <select
+                                                                value={data.belt_level}
+                                                                onChange={(e) => setData('belt_level', e.target.value)}
+                                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                                                required
+                                                            >
+                                                                <option value="">Pilih Tahap Tali Pinggang</option>
+                                                                {beltLevels.map((level) => (
+                                                                    <option key={level.value} value={level.value}>
+                                                                        {level.label}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                            {errors.belt_level && <p className="text-red-500 text-xs mt-1">{errors.belt_level}</p>}
+
+                                                            <div className="mt-4">
+                                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                                    Isikan No. TM
+                                                                </label>
+                                                                <p className="text-xs text-zinc-500 mb-2">(Sila rujuk sijil ujian kenaikan tali pinggang)</p>
+                                                                <input
+                                                                    type="text"
+                                                                    value={data.tm_number || ''}
+                                                                    onChange={(e) => setData('tm_number', e.target.value.toUpperCase())}
+                                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                                                                />
+                                                                {errors.tm_number && <p className="text-red-500 text-xs mt-1">{errors.tm_number}</p>}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+
+
+                                {/* Conditional fields when from other club */}
+                                {data.from_other_club && (
+                                    <div className="space-y-4 pl-4 border-l-2 border-blue-200 bg-blue-50 p-4 rounded-r-lg">
+                                        <div>
                                             <label className="block text-sm font-medium text-zinc-700 mb-1">
                                                 Tahap Tali Pinggang Terkini
                                             </label>
@@ -1013,212 +1148,83 @@ export default function ChildrenIndex({ auth, children, trainingCenters }) {
                                             </select>
                                             {errors.belt_level && <p className="text-red-500 text-xs mt-1">{errors.belt_level}</p>}
                                         </div>
-                                    )}
 
-                                    {/* Hide registration questions if already paid */}
-                                    {(!editingChild || !editingChild.payment_completed) && (
-                                        <>
-                                            {/* From Other Club Section */}
-                                            <div className="pt-4 border-t border-zinc-200">
-                                                <label className="block text-sm font-medium text-zinc-700 mb-3">
-                                                    Adakah anda dari kelab lain?
-                                                </label>
-                                                <div className="flex gap-4">
-                                                    <label className="flex items-center">
-                                                        <input
-                                                            type="radio"
-                                                            name="from_other_club"
-                                                            checked={data.from_other_club === true}
-                                                            onChange={() => setData('from_other_club', true)}
-                                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
-                                                        />
-                                                        <span className="ml-2 text-sm text-zinc-700">Ya</span>
-                                                    </label>
-                                                    <label className="flex items-center">
-                                                        <input
-                                                            type="radio"
-                                                            name="from_other_club"
-                                                            checked={data.from_other_club === false}
-                                                            onChange={() => {
-                                                                setData(prev => ({ ...prev, from_other_club: false, belt_level: 'white' }));
-                                                            }}
-                                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
-                                                        />
-                                                        <span className="ml-2 text-sm text-zinc-700">Tidak</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            {/* Registration Type Section */}
-                                            <div className="pt-4 border-t border-zinc-200">
-                                                <label className="block text-sm font-medium text-zinc-700 mb-2">
-                                                    Sila Pilih:
-                                                </label>
-                                                <div className="space-y-3">
-                                                    <label className="flex items-center">
-                                                        <input
-                                                            type="radio"
-                                                            name="registration_type"
-                                                            checked={data.registration_type === 'new'}
-                                                            onChange={() => setData('registration_type', 'new')}
-                                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
-                                                        />
-                                                        <span className="ml-2 text-sm text-zinc-700">Pendaftaran Baru</span>
-                                                    </label>
-                                                    <label className="flex flex-col">
-                                                        <div className="flex items-center">
-                                                            <input
-                                                                type="radio"
-                                                                name="registration_type"
-                                                                checked={data.registration_type === 'renewal'}
-                                                                onChange={() => setData('registration_type', 'renewal')}
-                                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300"
-                                                            />
-                                                            <span className="ml-2 text-sm text-zinc-700">Pembaharuan Keahlian</span>
-                                                        </div>
-                                                        {data.registration_type === 'renewal' && (
-                                                            <div className="mt-3 p-4 bg-zinc-50 rounded-lg border border-zinc-200 ml-6">
-                                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                                                    Tahap Tali Pinggang Terkini
-                                                                </label>
-                                                                <select
-                                                                    value={data.belt_level}
-                                                                    onChange={(e) => setData('belt_level', e.target.value)}
-                                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                                                                    required
-                                                                >
-                                                                    <option value="">Pilih Tahap Tali Pinggang</option>
-                                                                    {beltLevels.map((level) => (
-                                                                        <option key={level.value} value={level.value}>
-                                                                            {level.label}
-                                                                        </option>
-                                                                    ))}
-                                                                </select>
-                                                                {errors.belt_level && <p className="text-red-500 text-xs mt-1">{errors.belt_level}</p>}
-
-                                                                <div className="mt-4">
-                                                                    <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                                                        Isikan No. TM
-                                                                    </label>
-                                                                    <p className="text-xs text-zinc-500 mb-2">(Sila rujuk sijil ujian kenaikan tali pinggang)</p>
-                                                                    <input
-                                                                        type="text"
-                                                                        value={data.tm_number || ''}
-                                                                        onChange={(e) => setData('tm_number', e.target.value.toUpperCase())}
-                                                                        className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
-                                                                    />
-                                                                    {errors.tm_number && <p className="text-red-500 text-xs mt-1">{errors.tm_number}</p>}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-
-
-
-                                    {/* Conditional fields when from other club */}
-                                    {data.from_other_club && (
-                                        <div className="space-y-4 pl-4 border-l-2 border-blue-200 bg-blue-50 p-4 rounded-r-lg">
-                                            <div>
-                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                                    Tahap Tali Pinggang Terkini
-                                                </label>
-                                                <select
-                                                    value={data.belt_level}
-                                                    onChange={(e) => setData('belt_level', e.target.value)}
-                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                                                    required
-                                                >
-                                                    <option value="">Pilih Tahap Tali Pinggang</option>
-                                                    {beltLevels.map((level) => (
-                                                        <option key={level.value} value={level.value}>
-                                                            {level.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {errors.belt_level && <p className="text-red-500 text-xs mt-1">{errors.belt_level}</p>}
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                                    Isikan No. TM
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={data.tm_number}
-                                                    onChange={(e) => setData('tm_number', e.target.value)}
-                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                                                    placeholder="Masukkan No. TM"
-                                                    required
-                                                />
-                                                {errors.tm_number && <p className="text-red-500 text-xs mt-1">{errors.tm_number}</p>}
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-zinc-700 mb-2">
-                                                    Upload sijil ujian tali pinggang terkini
-                                                </label>
-
-                                                {editingChild && editingChild.belt_certificate && (
-                                                    <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-green-600">📄</span>
-                                                                <span className="text-sm text-green-700 font-medium">Sijil Sedia Ada</span>
-                                                            </div>
-                                                            <a
-                                                                href={`/storage/${editingChild.belt_certificate}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-                                                            >
-                                                                Lihat Sijil
-                                                            </a>
-                                                        </div>
-                                                        <p className="text-xs text-green-600 mt-1">Upload fail baru untuk menggantikan sijil sedia ada</p>
-                                                    </div>
-                                                )}
-
-                                                <input
-                                                    type="file"
-                                                    onChange={(e) => setData('belt_certificate', e.target.files[0])}
-                                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                                    accept="image/*,.pdf"
-                                                    required={!editingChild || !editingChild.belt_certificate}
-                                                />
-                                                <p className="text-xs text-zinc-500 mt-1">Format: JPG, PNG, atau PDF (Maks: 2MB)</p>
-                                                {errors.belt_certificate && <p className="text-red-500 text-xs mt-1">{errors.belt_certificate}</p>}
-                                            </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-700 mb-1">
+                                                Isikan No. TM
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={data.tm_number}
+                                                onChange={(e) => setData('tm_number', e.target.value)}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                                placeholder="Masukkan No. TM"
+                                                required
+                                            />
+                                            {errors.tm_number && <p className="text-red-500 text-xs mt-1">{errors.tm_number}</p>}
                                         </div>
-                                    )}
-                                </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                                Upload sijil ujian tali pinggang terkini
+                                            </label>
+
+                                            {editingChild && editingChild.belt_certificate && (
+                                                <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-green-600">📄</span>
+                                                            <span className="text-sm text-green-700 font-medium">Sijil Sedia Ada</span>
+                                                        </div>
+                                                        <a
+                                                            href={`/storage/${editingChild.belt_certificate}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                                                        >
+                                                            Lihat Sijil
+                                                        </a>
+                                                    </div>
+                                                    <p className="text-xs text-green-600 mt-1">Upload fail baru untuk menggantikan sijil sedia ada</p>
+                                                </div>
+                                            )}
+
+                                            <input
+                                                type="file"
+                                                onChange={(e) => setData('belt_certificate', e.target.files[0])}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                                accept="image/*,.pdf"
+                                                required={!editingChild || !editingChild.belt_certificate}
+                                            />
+                                            <p className="text-xs text-zinc-500 mt-1">Format: JPG, PNG, atau PDF (Maks: 2MB)</p>
+                                            {errors.belt_certificate && <p className="text-red-500 text-xs mt-1">{errors.belt_certificate}</p>}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
 
 
-                                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
-                                    <button
-                                        type="button"
-                                        onClick={closeModal}
-                                        className="px-4 py-2 border border-zinc-300 rounded-lg text-zinc-700 hover:bg-zinc-50 transition-colors"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="px-4 py-2 bg-black text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50"
-                                    >
-                                        {processing ? 'Menyimpan...' : 'Simpan'}
-                                    </button>
-                                </div>
+                            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={closeModal}
+                                    className="px-4 py-2 border border-zinc-300 rounded-lg text-zinc-700 hover:bg-zinc-50 transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="px-4 py-2 bg-black text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                                >
+                                    {processing ? 'Menyimpan...' : 'Simpan'}
+                                </button>
                             </div>
                         </form>
                     </div>
-                </div >
-            )
-            }
+                </div>
+            )}
+
             {/* Notification Popup */}
             {
                 popupState.show && (
