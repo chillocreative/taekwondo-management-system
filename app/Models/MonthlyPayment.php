@@ -21,6 +21,7 @@ class MonthlyPayment extends Model
         'payment_method',
         'payment_reference',
         'receipt_number',
+        'student_payment_id',
     ];
 
     protected $casts = [
