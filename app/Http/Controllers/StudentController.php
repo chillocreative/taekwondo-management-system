@@ -168,6 +168,13 @@ class StudentController extends Controller
             'child.trainingCenter'
         ]);
 
+        // Find the registration/renewal receipt number
+        $registrationReceiptNumber = null;
+        if ($student->child && $student->child->payment_completed && $student->child->payment_reference) {
+            $regPayment = $student->payments->where('transaction_ref', $student->child->payment_reference)->first();
+            $registrationReceiptNumber = $regPayment ? $regPayment->receipt_number : null;
+        }
+
         // Map receipt IDs to monthly payments for the frontend
         if ($student->child && $student->child->monthlyPayments) {
             $student->child->monthlyPayments->map(function ($mp) use ($student) {
@@ -184,6 +191,7 @@ class StudentController extends Controller
         
         return Inertia::render('Students/Show', [
             'student' => $student,
+            'registrationReceiptNumber' => $registrationReceiptNumber,
             'currentYear' => now()->year,
         ]);
     }

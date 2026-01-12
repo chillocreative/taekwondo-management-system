@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function Show({ auth, student, currentYear }) {
+export default function Show({ auth, student, currentYear, registrationReceiptNumber }) {
     const months = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
 
     const beltLevels = {
@@ -264,7 +264,7 @@ export default function Show({ auth, student, currentYear }) {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center text-gray-700 font-mono text-xs font-bold uppercase">
                                                         <div className="flex items-center justify-center gap-2">
-                                                            <span>{student.child?.payment_reference || '-'}</span>
+                                                            <span>{registrationReceiptNumber || student.child?.payment_reference || '-'}</span>
                                                             {student.child?.payment_completed && (
                                                                 <a
                                                                     href={route('children.payment.receipt', student.child.id)}
