@@ -131,11 +131,29 @@
 
     @php
         $child = $payment->student->child;
-        $isRegistrationPayment = $child && $child->payment_reference === $payment->transaction_ref;
         
+        // Check if this is a registration/renewal payment
+        // It's a registration payment if:
+        // 1. The payment_reference matches the child's payment_reference (initial registration), OR
+        // 2. The payment was made in January (renewal month) AND child has registration_fee set
+        $isRegistrationPayment = false;
         $yearlyFee = 0;
-        if ($isRegistrationPayment) {
-            $yearlyFee = (float) $child->registration_fee;
+        
+        if ($child) {
+            // Check if initial registration payment
+            if ($child->payment_reference === $payment->transaction_ref) {
+                $isRegistrationPayment = true;
+                $yearlyFee = (float) $child->registration_fee;
+            } 
+            // Check if renewal payment (January payment with registration_fee)
+            else if ($child->registration_fee > 0) {
+                // Parse the payment month to check if it's January
+                $paymentMonth = $payment->payment_date ? $payment->payment_date->month : null;
+                if ($paymentMonth == 1) { // January = renewal month
+                    $isRegistrationPayment = true;
+                    $yearlyFee = (float) $child->registration_fee;
+                }
+            }
         }
 
         // Find linked monthly payments to show breakdown
