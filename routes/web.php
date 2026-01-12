@@ -207,4 +207,127 @@ Route::get('/reset-receipts', function () {
     return "✅ Semua rekod pembayaran telah direset. Nombor resit baru akan bermula dari 0001.";
 });
 
+// Repair Pending Payments - Re-verify with ToyyibPay and fix stuck records
+Route::get('/repair-pending-payments', function () {
+    if (!auth()->check() || auth()->user()->role !== 'admin') {
+        return "❌ Akses ditolak. Sila log masuk sebagai Admin.";
+    }
+    
+    $output = "<h2>🔧 Repair Pending Payments</h2>";
+    $output .= "<p>Scanning for children with payment_reference but not payment_completed...</p>";
+    
+    // Find all children with a payment reference but not marked as completed
+    $pendingChildren = \App\Models\Child::whereNotNull('payment_reference')
+        ->where('payment_reference', '!=', '')
+        ->where(function($q) {
+            $q->where('payment_completed', false)
+              ->orWhereNull('payment_completed');
+        })
+        ->with(['student', 'trainingCenter', 'parent'])
+        ->get();
+    
+    $output .= "<p>Found <strong>" . $pendingChildren->count() . "</strong> pending records to verify.</p>";
+    
+    if ($pendingChildren->isEmpty()) {
+        return $output . "<p>✅ Tiada rekod yang perlu diperbaiki.</p>";
+    }
+    
+    $toyyibPay = new \App\Services\ToyyibPayService();
+    $repaired = 0;
+    $failed = 0;
+    $alreadyPaid = 0;
+    
+    $output .= "<table border='1' cellpadding='8' style='border-collapse: collapse; margin-top: 20px;'>";
+    $output .= "<tr style='background: #f0f0f0;'><th>#</th><th>Nama</th><th>BillCode</th><th>Status ToyyibPay</th><th>Action</th></tr>";
+    
+    foreach ($pendingChildren as $index => $child) {
+        $billCode = $child->payment_reference;
+        $transactions = $toyyibPay->getBillTransactions($billCode);
+        
+        $status = 'Unknown';
+        $action = '-';
+        $rowColor = '#fff';
+        
+        if ($transactions && isset($transactions[0])) {
+            $paymentStatus = $transactions[0]['billpaymentStatus'] ?? 'N/A';
+            
+            if ($paymentStatus == '1') {
+                $status = '✅ PAID';
+                $rowColor = '#d4edda';
+                
+                // Update child record
+                $child->update([
+                    'payment_completed' => true,
+                    'payment_method' => 'online',  
+                    'payment_date' => now(),
+                    'is_active' => true,
+                ]);
+                
+                // Sync student record
+                $studentService = new \App\Services\StudentService();
+                $studentService->syncChildToStudent($child);
+                $child->refresh();
+                
+                // Create StudentPayment if not exists
+                if ($child->student) {
+                    $existingPayment = \App\Models\StudentPayment::where('transaction_ref', $billCode)->first();
+                    
+                    if (!$existingPayment) {
+                        $currentMonth = \App\Models\MonthlyPayment::getMalayName(now()->month) . ' ' . now()->year;
+                        $payment = \App\Models\StudentPayment::create([
+                            'student_id' => $child->student->id,
+                            'month' => $currentMonth,
+                            'kategori' => $child->student->kategori ?? 'kanak-kanak',
+                            'quantity' => 1,
+                            'amount' => $child->registration_fee ?? 0,
+                            'total' => $child->registration_fee ?? 0,
+                            'transaction_ref' => $billCode,
+                            'payment_method' => 'online',
+                            'status' => 'paid',
+                            'payment_date' => now(),
+                        ]);
+                        $payment->receipt_number = str_pad($payment->id, 4, '0', STR_PAD_LEFT);
+                        $payment->save();
+                    }
+                }
+                
+                $action = '🔧 REPAIRED';
+                $repaired++;
+            } else {
+                $status = '❌ NOT PAID (Status: ' . $paymentStatus . ')';
+                $rowColor = '#f8d7da';
+                $action = 'No action needed';
+                $failed++;
+            }
+        } else {
+            $status = '⚠️ API Error / No Data';
+            $rowColor = '#fff3cd';
+            $action = 'Manual check needed';
+            $failed++;
+        }
+        
+        $output .= "<tr style='background: {$rowColor};'>";
+        $output .= "<td>" . ($index + 1) . "</td>";
+        $output .= "<td>" . e($child->name) . "</td>";
+        $output .= "<td><code>" . e($billCode) . "</code></td>";
+        $output .= "<td>{$status}</td>";
+        $output .= "<td><strong>{$action}</strong></td>";
+        $output .= "</tr>";
+    }
+    
+    $output .= "</table>";
+    
+    $output .= "<h3 style='margin-top: 20px;'>📊 Ringkasan</h3>";
+    $output .= "<ul>";
+    $output .= "<li>✅ Berjaya diperbaiki: <strong>{$repaired}</strong></li>";
+    $output .= "<li>❌ Tidak dibayar / Gagal: <strong>{$failed}</strong></li>";
+    $output .= "</ul>";
+    
+    if ($repaired > 0) {
+        $output .= "<p style='color: green; font-weight: bold;'>🎉 {$repaired} rekod telah berjaya diperbaiki!</p>";
+    }
+    
+    return $output;
+});
+
 require __DIR__.'/auth.php';

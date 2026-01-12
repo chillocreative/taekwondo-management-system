@@ -79,24 +79,29 @@ class StudentController extends Controller
      */
     public function approvePayment(Student $student)
     {
-        if (!$student->child) {
+        $child = $student->child;
+        if (!$child) {
             return back()->with('error', 'Rekod profil tidak dijumpai.');
         }
 
+        if ($child->payment_completed) {
+            return back()->with('info', 'Pembayaran sudah disahkan sebelumnya.');
+        }
+
         // Calculate fee if not already set (fallback)
-        if (!$student->child->registration_fee) {
+        if (!$child->registration_fee) {
             $feeSettings = \App\Models\FeeSetting::current();
             $registrationFee = $student->kategori === 'kanak-kanak' 
                 ? $feeSettings->yearly_fee_below_18 
                 : $feeSettings->yearly_fee_above_18;
         } else {
-            $registrationFee = $student->child->registration_fee;
+            $registrationFee = $child->registration_fee;
         }
 
         // Update child record
-        $student->child->update([
+        $child->update([
             'payment_completed' => true,
-            'payment_method' => $student->child->payment_method ?? 'offline',
+            'payment_method' => $child->payment_method ?? 'offline',
             'payment_date' => now(),
             'is_active' => true,
             'registration_fee' => $registrationFee,
@@ -104,7 +109,29 @@ class StudentController extends Controller
 
         // Sync and ensure monthly records exist
         $studentService = new \App\Services\StudentService();
-        $studentService->syncChildToStudent($student->child);
+        $studentService->syncChildToStudent($child);
+
+        // Create StudentPayment record for history if not exists
+        $currentMonth = \App\Models\MonthlyPayment::getMalayName(now()->month) . ' ' . now()->year;
+        $existingPayment = \App\Models\StudentPayment::where('transaction_ref', $child->payment_reference)->first();
+        
+        if (!$existingPayment) {
+            $payment = \App\Models\StudentPayment::create([
+                'student_id' => $student->id,
+                'month' => $currentMonth,
+                'kategori' => $student->kategori ?? 'kanak-kanak',
+                'quantity' => 1,
+                'amount' => $registrationFee,
+                'total' => $registrationFee,
+                'transaction_ref' => $child->payment_reference ?? ('OFFLINE-' . $child->id),
+                'payment_method' => $child->payment_method ?? 'offline',
+                'status' => 'paid',
+                'payment_date' => now(),
+            ]);
+
+            $payment->receipt_number = str_pad($payment->id, 4, '0', STR_PAD_LEFT);
+            $payment->save();
+        }
 
         return back()->with('success', "Pendaftaran untuk {$student->nama_pelajar} telah berjaya diluluskan.");
     }
