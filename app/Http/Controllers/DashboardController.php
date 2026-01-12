@@ -217,14 +217,19 @@ class DashboardController extends Controller
             ->whereYear('created_at', $currentYear)
             ->count();
 
-        // 2. Attendance Stats (Keep Local per Center as per previous logic usually, but user asked to sync stats cards)
-        // CHECKPOINT: Usually attendance is center-specific, but if "Jumlah Peserta" is global, attendance rate might look weird if only local.
-        // However, user specifically asked about "Status Pendaftaran" and "Yuran Bulanan". I will keep attendance local for now unless asked, 
-        // as a coach surely only marks attendance for their own center. 
-        // WAIT: The "Jumlah Peserta" card says "Daripada 26 aktif". If total is 26, present today 0.
-        // I will keep attendance local because marking attendance is operationally local.
+        // 2. Attendance Stats (Local per Center)
+        $todayAttendance = Attendance::where('attendance_date', Carbon::today()->toDateString())
+            ->where('training_center_id', $centerId);
+        
+        $presentToday = (clone $todayAttendance)->where('status', 'hadir')->count();
+        $totalToday = $totalPeserta; // Using global count as denominator
 
-        // ... [Attendance logic remains local] ...
+        // Monthly Attendance Rate (Sessions Held)
+        $monthlySessionsQuery = Attendance::whereYear('attendance_date', $currentYear)
+            ->whereMonth('attendance_date', Carbon::now()->month)
+            ->where('training_center_id', $centerId);
+        
+        $monthlySessions = $monthlySessionsQuery->distinct('attendance_date')->count();
 
         // 3. Finance Stats - Count UNIQUE CHILDREN who paid for current month (Global)
         $paidChildIds = \App\Models\MonthlyPayment::where('year', $currentYear)
