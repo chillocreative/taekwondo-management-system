@@ -327,7 +327,7 @@ export default function Show({ auth, student, currentYear, registrationReceiptNu
                             </div>
                         </div>
 
-                        <div className="mt-10 pt-6 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
+                        <div className="mt-10 pt-6 pb-8 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
                             <Link
                                 href={route('students.index')}
                                 className="font-bold text-gray-600 hover:text-gray-900 flex items-center gap-2"
