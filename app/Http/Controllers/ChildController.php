@@ -835,14 +835,25 @@ class ChildController extends Controller
                 $newPayment->receipt_number = str_pad($newPayment->id, 4, '0', STR_PAD_LEFT);
                 $newPayment->save();
                 $receiptNumber = $newPayment->receipt_number;
+                $receiptNumber = $newPayment->receipt_number;
             } else {
                 // Payment exists, just use it or update its receipt
                 if (!$checkAgain->receipt_number) {
                     $checkAgain->receipt_number = str_pad($checkAgain->id, 4, '0', STR_PAD_LEFT);
-                    $checkAgain->save();
                 }
+                // Ensure status is paid
+                if ($checkAgain->status !== 'paid') {
+                    $checkAgain->status = 'paid';
+                }
+                $checkAgain->save();
                 $receiptNumber = $checkAgain->receipt_number;
             }
+        } else if ($existingPayment) {
+             // Also ensure existing payment found earlier is marked as paid if it has a receipt
+             if ($existingPayment->status !== 'paid') {
+                 $existingPayment->status = 'paid';
+                 $existingPayment->save();
+             }
         }
 
         // SYNC FIX: Ensure MonthlyPayment also has this receipt number

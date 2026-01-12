@@ -435,4 +435,57 @@ Route::get('/sync-receipt-numbers', function () {
     return $output;
 });
 
+// Fix Pending Payments with Receipts
+Route::get('/fix-pending-with-receipts', function () {
+    if (!auth()->check() || auth()->user()->role !== 'admin') {
+        return "❌ Akses ditolak. Sila log masuk sebagai Admin.";
+    }
+    
+    $output = "<h2>🔧 Fix Pending Payments with Receipts</h2>";
+    $output .= "<p>Scanning for payments with receipt numbers but status 'pending'...</p>";
+    
+    // Find all pending payments that actually have a receipt number
+    $stuckPayments = \App\Models\StudentPayment::where(function($q) {
+            $q->where('status', '!=', 'paid')
+              ->orWhereNull('status');
+        })
+        ->whereNotNull('receipt_number')
+        ->where('receipt_number', '!=', '')
+        ->get();
+    
+    $output .= "<p>Found <strong>" . $stuckPayments->count() . "</strong> records to fix.</p>";
+    
+    if ($stuckPayments->isEmpty()) {
+        return $output . "<p>✅ Tiada rekod yang perlu diperbaiki.</p>";
+    }
+    
+    $fixed = 0;
+    
+    $output .= "<table border='1' cellpadding='8' style='border-collapse: collapse; margin-top: 20px;'>";
+    $output .= "<tr style='background: #f0f0f0;'><th>#</th><th>Receipt No</th><th>Student</th><th>Old Status</th><th>Action</th></tr>";
+    
+    foreach ($stuckPayments as $index => $payment) {
+        $oldStatus = $payment->status ?? 'NULL';
+        
+        $payment->update(['status' => 'paid']);
+        $fixed++;
+        
+        $output .= "<tr style='background: #d4edda;'>";
+        $output .= "<td>" . ($index + 1) . "</td>";
+        $output .= "<td><strong>" . ($payment->receipt_number) . "</strong></td>";
+        $output .= "<td>" . ($payment->student ? $payment->student->nama_pelajar : 'Unknown') . "</td>";
+        $output .= "<td>{$oldStatus}</td>";
+        $output .= "<td>✅ Auto-fixed to PAID</td>";
+        $output .= "</tr>";
+    }
+    
+    $output .= "</table>";
+    
+    if ($fixed > 0) {
+        $output .= "<p style='color: green; font-weight: bold; margin-top: 20px;'>🎉 {$fixed} rekod telah berjaya ditukar status kepada PAID!</p>";
+    }
+    
+    return $output;
+});
+
 require __DIR__.'/auth.php';

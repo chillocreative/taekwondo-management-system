@@ -249,7 +249,7 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${payment?.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                                                         }`}>
-                                                        {payment?.status === 'paid' ? 'BERJAYA' : (payment?.status ? String(payment.status).toUpperCase() : 'PENDING')}
+                                                        {payment?.status === 'paid' ? 'BERJAYA' : (payment?.status === 'pending' ? 'MENUNGGU' : (payment?.status ? String(payment.status).toUpperCase() : 'MENUNGGU'))}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
