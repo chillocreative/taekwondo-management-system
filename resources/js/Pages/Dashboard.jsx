@@ -309,11 +309,8 @@ export default function Dashboard({ auth, pesertaData, stats, yearlyReset }) {
                                 <div className="bg-white p-6 rounded-3xl shadow-lg border border-zinc-100 flex flex-col justify-between relative overflow-hidden group">
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                                     <div>
-                                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider relative z-10">Jumlah Pelajar</p>
-                                        <div className="flex items-baseline gap-2">
-                                            <h3 className="text-4xl font-black text-zinc-900 mt-2 relative z-10">{stats?.total_students || 0}</h3>
-                                            <span className="text-xs font-bold text-zinc-400 mt-2">Daripada {new Date().getFullYear() - 1}</span>
-                                        </div>
+                                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider relative z-10">Jumlah Peserta</p>
+                                        <h3 className="text-4xl font-black text-zinc-900 mt-2 relative z-10">{stats?.total_students || 0}</h3>
                                     </div>
                                     <div className="mt-4 flex flex-col gap-2 relative z-10">
                                         <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-100">
