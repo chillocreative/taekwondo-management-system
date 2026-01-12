@@ -108,6 +108,33 @@ export default function Dashboard({ auth, pesertaData, stats, yearlyReset }) {
 
                     {user.role === 'user' && (
                         <>
+                            {/* Urgent Renewal Alert for Incomplete Registrations */}
+                            {pesertaData.filter(child => child.missed_renewal).map(child => (
+                                <div key={child.id} className="mb-8 relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 rounded-3xl p-1 shadow-2xl">
+                                    <div className="bg-white rounded-[20px] p-6 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-bl-full -mr-8 -mt-8"></div>
+                                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                                            <div className="flex items-start gap-4">
+                                                <div className="p-3 bg-amber-100 text-amber-600 rounded-2xl shrink-0">
+                                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-xl font-black text-amber-900 mb-1">Perhatian: Pembaharuan Tertunggak ({child.name})</h4>
+                                                    <p className="text-amber-800 text-sm font-medium leading-relaxed max-w-2xl">
+                                                        Kami mengesan anda telah membuat bayaran bulanan, namun <span className="underline decoration-2 decoration-amber-500 font-bold">Yuran Pendaftaran/Pembaharuan Tahunan</span> masih belum dijelaskan untuk sesi ini. Sila jelaskan segera untuk mengelakkan gangguan status keaktifan pelajar.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <Link
+                                                href={route('children.payment', child.id)}
+                                                className="shrink-0 px-8 py-3 bg-amber-600 hover:bg-amber-700 text-white font-black uppercase tracking-widest text-sm rounded-xl shadow-lg shadow-amber-200 transition-all transform hover:scale-105"
+                                            >
+                                                Jelaskan Sekarang
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                             {/* Parent Stats Summary */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-100 flex flex-col justify-between">

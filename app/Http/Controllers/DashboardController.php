@@ -305,6 +305,10 @@ class DashboardController extends Controller
             $isPaidForCurrentYear = $child->payment_completed && 
                                    $child->payment_date && 
                                    $child->payment_date->year === $currentYear;
+            
+            // Check for Loophole Case: Paid monthly fee but missed renewal
+            $hasPaidMonthly = $monthlyPayments->where('is_paid', true)->isNotEmpty();
+            $missedRenewal = !$isPaidForCurrentYear && $hasPaidMonthly;
 
             return [
                 'id' => $child->id,
@@ -319,7 +323,10 @@ class DashboardController extends Controller
                 'status_bayaran' => $isPaidForCurrentYear ? 'Aktif' : 'Menunggu Bayaran',
                 'needs_update' => $child->last_updated_year < $currentYear,
                 'payment_completed' => $isPaidForCurrentYear,
+                'missed_renewal' => $missedRenewal, // Flag for frontend alert
             ];
+
+
         });
 
         return Inertia::render('Dashboard', [
