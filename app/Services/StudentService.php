@@ -33,12 +33,12 @@ class StudentService
         if ($parent) {
             $student->nama_penjaga = $parent->name;
             $student->no_tel = $parent->phone_number ?? '-';
-            // User model does not have address field, so we use placeholder or handle if extended later
-            $student->alamat = '-'; 
+            // Use child's address if available, otherwise use parent's address
+            $student->alamat = $child->address ?: ($parent->address ?: '-'); 
         } else {
             $student->nama_penjaga = 'Unknown';
             $student->no_tel = '-';
-            $student->alamat = '-';
+            $student->alamat = $child->address ?: '-';
         }
 
         // Determine category based on age

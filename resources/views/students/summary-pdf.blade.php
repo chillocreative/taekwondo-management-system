@@ -171,25 +171,53 @@
         <table class="payment-table">
             <thead>
                 <tr>
-                    <th style="width: 30%;">BULAN</th>
-                    <th style="width: 25%;" class="text-center">STATUS</th>
+                    <th style="width: 35%;">BULAN / KETERANGAN</th>
+                    <th style="width: 20%;" class="text-center">STATUS</th>
                     <th style="width: 20%;" class="text-right">TARIKH BAYARAN</th>
                     <th style="width: 25%;" class="text-center">NO. RESIT</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($monthlyPayments as $item)
-                <tr>
-                    <td class="bold">{{ $item['month'] }}</td>
-                    <td class="text-center">
-                        <span class="{{ $item['is_paid'] ? 'status-paid' : 'status-unpaid' }}">
-                            {{ $item['status'] }}
-                        </span>
-                    </td>
-                    <td class="text-right">{{ $item['date'] }}</td>
-                    <td class="text-center font-mono" style="font-family: monospace;">{{ $item['receipt'] }}</td>
-                </tr>
-                @endforeach
+                @php
+                    $isBahrulUlum = ($student->child->trainingCenter->name ?? '') === 'Sek Ren Islam Bahrul Ulum';
+                @endphp
+
+                @if($isBahrulUlum)
+                    <tr>
+                        <td class="bold">
+                            {{ ($student->child->registration_type ?? '') === 'renewal' ? 'YURAN PEMBAHARUAN' : 'YURAN PENDAFTARAN' }} TAHUNAN ({{ $year }})
+                        </td>
+                        <td class="text-center">
+                            <span class="{{ ($student->child->payment_completed ?? false) ? 'status-paid' : 'status-unpaid' }}">
+                                {{ ($student->child->payment_completed ?? false) ? 'SUDAH DIBAYAR' : 'BELUM DIBAYAR' }}
+                            </span>
+                        </td>
+                        <td class="text-right">{{ ($student->child->payment_date ?? false) ? $student->child->payment_date->format('d/m/Y') : '-' }}</td>
+                        <td class="text-center font-mono" style="font-family: monospace;">
+                            @php
+                                $receiptNo = '-';
+                                if ($student->child && $student->child->payment_completed) {
+                                    $regPayment = $student->payments->where('transaction_ref', $student->child->payment_reference)->first();
+                                    $receiptNo = $regPayment ? $regPayment->receipt_number : ($student->child->payment_reference ?: '-');
+                                }
+                            @endphp
+                            {{ $receiptNo }}
+                        </td>
+                    </tr>
+                @else
+                    @foreach($monthlyPayments as $item)
+                    <tr>
+                        <td class="bold">{{ $item['month'] }}</td>
+                        <td class="text-center">
+                            <span class="{{ $item['is_paid'] ? 'status-paid' : 'status-unpaid' }}">
+                                {{ $item['status'] }}
+                            </span>
+                        </td>
+                        <td class="text-right">{{ $item['date'] }}</td>
+                        <td class="text-center font-mono" style="font-family: monospace;">{{ $item['receipt'] }}</td>
+                    </tr>
+                    @endforeach
+                @endif
             </tbody>
         </table>
 
