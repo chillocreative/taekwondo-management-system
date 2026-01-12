@@ -121,7 +121,7 @@
         <div class="meta-right">
             <div class="receipt-box">
                 <div><strong>No. Resit:</strong> {{ $payment->receipt_number }}</div>
-                <div><strong>Tarikh:</strong> {{ $payment->payment_date->format('d/m/Y') }}</div>
+                <div><strong>Tarikh:</strong> {{ $payment->payment_date ? $payment->payment_date->format('d/m/Y') : ($payment->created_at ? $payment->created_at->format('d/m/Y') : date('d/m/Y')) }}</div>
             </div>
             <div style="margin-top: 10px;">
                 <span class="status-paid">TELAH DIBAYAR</span>
