@@ -65,15 +65,30 @@ class FeeController extends Controller
                  });
                  
                  if ($regMonthPayment && !$regMonthPayment->is_paid) {
+                     // Get proper receipt number from StudentPayment
+                     $receiptNumber = null;
+                     $studentPaymentId = null;
+                     if ($child->student) {
+                         $sp = StudentPayment::where('student_id', $child->student->id)
+                             ->where('transaction_ref', $child->payment_reference)
+                             ->first();
+                         if ($sp && $sp->receipt_number) {
+                             $receiptNumber = $sp->receipt_number;
+                             $studentPaymentId = $sp->id;
+                         }
+                     }
+
                      $regMonthPayment->update([
                         'is_paid' => true,
                         'paid_date' => $pDate,
                         'payment_method' => $child->payment_method,
                         'payment_reference' => $child->payment_reference,
-                        'receipt_number' => $child->payment_reference,
+                        'receipt_number' => $receiptNumber,
+                        'student_payment_id' => $studentPaymentId,
                      ]);
                      $regMonthPayment->refresh();
                  }
+
             }
 
             $fees = $child->monthlyPayments->map(function ($monthlyPayment) use ($child) {

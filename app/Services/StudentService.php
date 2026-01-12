@@ -72,14 +72,27 @@ class StudentService
                 ->first();
 
             if ($monthlyPayment && !$monthlyPayment->is_paid) {
+                // Get receipt number from StudentPayment if exists
+                $receiptNumber = null;
+                $studentPaymentId = null;
+                $studentPayment = \App\Models\StudentPayment::where('student_id', $student->id)
+                    ->where('transaction_ref', $child->payment_reference)
+                    ->first();
+                if ($studentPayment && $studentPayment->receipt_number) {
+                    $receiptNumber = $studentPayment->receipt_number;
+                    $studentPaymentId = $studentPayment->id;
+                }
+
                 $monthlyPayment->update([
                     'is_paid' => true,
                     'paid_date' => $paymentDate,
                     'payment_method' => $child->payment_method ?? 'manual',
                     'payment_reference' => $child->payment_reference,
-                    'receipt_number' => $child->payment_reference,
+                    'receipt_number' => $receiptNumber,
+                    'student_payment_id' => $studentPaymentId,
                 ]);
             }
+
         }
 
         return $student;
