@@ -488,4 +488,128 @@ Route::get('/fix-pending-with-receipts', function () {
     return $output;
 });
 
+// Audit & Fix Pending Payments (Deep Check with API)
+Route::get('/audit-pending-payments', function () {
+    if (!auth()->check() || auth()->user()->role !== 'admin') {
+        return "❌ Akses ditolak. Sila log masuk sebagai Admin.";
+    }
+    
+    $toyyibpay = new \App\Services\ToyyibPayService();
+    $output = "<h2>🕵️ Audit & Fix Pending Payments</h2>";
+    $output .= "<p>Checking pending payments directly with ToyyibPay API...</p>";
+    
+    // Find 'pending' payments (or null status) that DON'T have a receipt number yet
+    // Only check for current year to avoid checking ancient records
+    $pendingPayments = \App\Models\StudentPayment::where(function($q) {
+            $q->where('status', '!=', 'paid')
+              ->orWhereNull('status');
+        })
+        ->where(function($q) {
+            $q->whereNull('receipt_number')
+              ->orWhere('receipt_number', '')
+              ->orWhere('receipt_number', '-');
+        })
+        ->where('created_at', '>=', now()->startOfYear()) 
+        ->orderBy('created_at', 'desc')
+        ->get();
+        
+    $output .= "<p>Found <strong>" . $pendingPayments->count() . "</strong> pending transactions to check.</p>";
+    
+    $output .= "<table border='1' cellpadding='5' style='border-collapse: collapse; font-size: 14px;'>";
+    $output .= "<tr style='background: #f0f0f0;'>
+        <th>ID</th>
+        <th>Student</th>
+        <th>Bill Code (Ref)</th>
+        <th>Amount</th>
+        <th>Current Status</th>
+        <th>API Result</th>
+        <th>Action</th>
+    </tr>";
+    
+    $fixedCount = 0;
+    
+    foreach ($pendingPayments as $payment) {
+        $billCode = $payment->transaction_ref;
+        
+        // Skip if reference doesn't look like a bill code (too short)
+        if (strlen($billCode) < 5) {
+             $output .= "<tr><td>{$payment->id}</td><td>{$payment->student->nama_pelajar}</td><td>{$billCode}</td><td>RM {$payment->total}</td><td>{$payment->status}</td><td>Skipped (Invalid Ref)</td><td>-</td></tr>";
+             continue;
+        }
+        
+        $apiResult = $toyyibpay->getBillTransactions($billCode);
+        $apiStatus = 'Unknown';
+        $apiMsg = '-';
+        $action = 'None';
+        $rowColor = '#fff';
+        
+        // Check API response structure
+        // ToyyibPay returns a list of transactions. Status 1 = Success, 2 = Pending, 3 = Fail
+        if (is_array($apiResult) && !empty($apiResult) && isset($apiResult[0]['billpaymentStatus'])) {
+            $statusId = $apiResult[0]['billpaymentStatus'];
+            
+            if ($statusId == '1') {
+                $apiStatus = '<span style="color:green; font-weight:bold;">SUCCESS (PAID)</span>';
+                $apiMsg = "Paid at " . $apiResult[0]['billpaymentDate'];
+                
+                // FIX IT!
+                $payment->status = 'paid';
+                $payment->receipt_number = str_pad($payment->id, 4, '0', STR_PAD_LEFT);
+                $payment->payment_date = $apiResult[0]['billpaymentDate'];
+                $payment->save();
+                
+                // Also update MonthlyPayment if applicable
+                $mp = \App\Models\MonthlyPayment::where('child_id', $payment->student->child->id ?? 0)
+                    ->where('payment_reference', $billCode)
+                    ->first();
+                if ($mp) {
+                    $mp->status = 'paid'; // or is_paid = true depending on model
+                    $mp->is_paid = true;
+                    $mp->receipt_number = $payment->receipt_number;
+                    $mp->save();
+                }
+                
+                $action = "✅ fixed: Set to PAID & generated receipt {$payment->receipt_number}";
+                $rowColor = '#d4edda';
+                $fixedCount++;
+            } elseif ($statusId == '2') {
+                 $apiStatus = '<span style="color:orange;">PENDING at Bank</span>';
+                 $action = "Wait (User hasn't paid)";
+            } elseif ($statusId == '3') {
+                 $apiStatus = '<span style="color:red;">FAILED / UNPAID</span>';
+                 $action = "Confirmed Unpaid";
+            } else {
+                 $apiStatus = "Status ID: $statusId";
+            }
+        } elseif (is_array($apiResult) && empty($apiResult)) {
+            $apiStatus = 'No Transactions Found';
+            $action = 'Probable Abandoned Checkout';
+        } else {
+            $apiStatus = 'API Error / Not Found';
+        }
+        
+        $output .= "<tr style='background: {$rowColor};'>
+            <td>{$payment->id}</td>
+            <td>" . ($payment->student->nama_pelajar ?? '?') . "</td>
+            <td>{$billCode}</td>
+            <td>{$payment->total}</td>
+            <td>{$payment->status}</td>
+            <td>{$apiStatus}<br><small>{$apiMsg}</small></td>
+            <td>{$action}</td>
+        </tr>";
+    }
+    
+    $output .= "</table>";
+    
+    if ($fixedCount > 0) {
+        $output .= "<h3>Summary</h3>";
+        $output .= "<p style='color:green; font-weight:bold;'>Successfully repaired {$fixedCount} records that were actually paid!</p>";
+    } else {
+        $output .= "<h3>Summary</h3>";
+        $output .= "<p>All pending records are genuinely unpaid/pending at the bank.</p>";
+    }
+    
+    return $output;
+});
+
 require __DIR__.'/auth.php';
