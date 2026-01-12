@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export default function Index({ auth, students, filters, stats, trainingCenters }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -8,6 +8,47 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
     const [trainingCenterId, setTrainingCenterId] = useState(filters.training_center_id || '');
     const [selectedIds, setSelectedIds] = useState([]);
     const isFirstRender = useRef(true);
+
+    // Drag to scroll state for desktop table
+    const tableContainerRef = useRef(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [startX, setStartX] = useState(0);
+    const [scrollLeft, setScrollLeft] = useState(0);
+
+    // Mouse event handlers for drag-to-scroll
+    const handleMouseDown = useCallback((e) => {
+        if (!tableContainerRef.current) return;
+        setIsDragging(true);
+        setStartX(e.pageX - tableContainerRef.current.offsetLeft);
+        setScrollLeft(tableContainerRef.current.scrollLeft);
+        tableContainerRef.current.style.cursor = 'grabbing';
+        tableContainerRef.current.style.userSelect = 'none';
+    }, []);
+
+    const handleMouseLeave = useCallback(() => {
+        if (!isDragging) return;
+        setIsDragging(false);
+        if (tableContainerRef.current) {
+            tableContainerRef.current.style.cursor = 'grab';
+            tableContainerRef.current.style.userSelect = 'auto';
+        }
+    }, [isDragging]);
+
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+        if (tableContainerRef.current) {
+            tableContainerRef.current.style.cursor = 'grab';
+            tableContainerRef.current.style.userSelect = 'auto';
+        }
+    }, []);
+
+    const handleMouseMove = useCallback((e) => {
+        if (!isDragging || !tableContainerRef.current) return;
+        e.preventDefault();
+        const x = e.pageX - tableContainerRef.current.offsetLeft;
+        const walk = (x - startX) * 1.5; // Scroll speed multiplier
+        tableContainerRef.current.scrollLeft = scrollLeft - walk;
+    }, [isDragging, startX, scrollLeft]);
 
     // Auto-filter effect
     useEffect(() => {
@@ -319,7 +360,25 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
 
                             {/* Desktop View (Visible on Tablet/Desktop Only) */}
                             <div className="hidden md:block bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                                <div className="overflow-x-auto">
+                                {/* Drag hint indicator */}
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-2 border-b border-gray-100 flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                        <span className="animate-pulse">↔️</span>
+                                        <span>Klik dan seret untuk skrol ke kiri/kanan</span>
+                                    </div>
+                                    <div className="text-xs text-gray-400">
+                                        {students.data.length} rekod
+                                    </div>
+                                </div>
+                                <div
+                                    ref={tableContainerRef}
+                                    className="overflow-x-auto"
+                                    style={{ cursor: 'grab' }}
+                                    onMouseDown={handleMouseDown}
+                                    onMouseLeave={handleMouseLeave}
+                                    onMouseUp={handleMouseUp}
+                                    onMouseMove={handleMouseMove}
+                                >
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50/50">
                                             <tr>
