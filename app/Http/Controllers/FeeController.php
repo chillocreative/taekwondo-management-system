@@ -84,7 +84,6 @@ class FeeController extends Controller
                         'payment_method' => $child->payment_method,
                         'payment_reference' => $child->payment_reference,
                         'receipt_number' => $receiptNumber,
-                        'student_payment_id' => $studentPaymentId,
                      ]);
                      $regMonthPayment->refresh();
                  }
