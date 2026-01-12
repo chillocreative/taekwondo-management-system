@@ -270,10 +270,17 @@ Route::get('/repair-pending-payments', function () {
                 
                 // Create StudentPayment if not exists
                 if ($child->student) {
-                    $existingPayment = \App\Models\StudentPayment::where('transaction_ref', $billCode)->first();
+                    $currentMonth = \App\Models\MonthlyPayment::getMalayName(now()->month) . ' ' . now()->year;
+                    
+                    // Check by transaction_ref OR by student_id + month
+                    $existingPayment = \App\Models\StudentPayment::where('transaction_ref', $billCode)
+                        ->orWhere(function($q) use ($child, $currentMonth) {
+                            $q->where('student_id', $child->student->id)
+                              ->where('month', $currentMonth);
+                        })
+                        ->first();
                     
                     if (!$existingPayment) {
-                        $currentMonth = \App\Models\MonthlyPayment::getMalayName(now()->month) . ' ' . now()->year;
                         $payment = \App\Models\StudentPayment::create([
                             'student_id' => $child->student->id,
                             'month' => $currentMonth,
