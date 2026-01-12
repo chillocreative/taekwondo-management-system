@@ -41,10 +41,12 @@
         .meta-left {
             display: table-cell;
             text-align: left;
+            vertical-align: top;
         }
         .meta-right {
             display: table-cell;
             text-align: right;
+            vertical-align: top;
         }
         .receipt-box {
             background-color: #f8f9fa;
@@ -85,30 +87,36 @@
             padding-top: 20px;
         }
         .status-paid {
-            color: green;
+            color: #2e7d32;
             font-weight: bold;
-            border: 2px solid green;
-            padding: 5px 10px;
-            border-radius: 5px;
-            transform: rotate(-10deg);
+            border: 3px solid #2e7d32;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transform: rotate(-8deg);
             display: inline-block;
-            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 15px;
+            font-size: 16px;
+            opacity: 0.8;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <img src="{{ public_path('images/logo.png') }}" class="logo" alt="Logo">
+        @if(file_exists(public_path('images/logo.png')))
+            <img src="{{ public_path('images/logo.png') }}" class="logo" alt="Logo" style="max-height: 80px;">
+        @endif
         <h1 class="title">Taekwondo A&Z</h1>
-        <p class="subtitle">Pusat Latihan Utama, Permatang Sintok, Pulau Pinang</p>
+        <p class="subtitle">Resit Rasmi Pembayaran Yuran</p>
     </div>
 
     <div class="meta-info">
         <div class="meta-left">
             <strong>Kepada:</strong><br>
-            {{ $payment->student->nama_pelajar }}<br>
+            {{ strtoupper($payment->student->nama_pelajar) }}<br>
             {{ $payment->student->no_siri }}<br>
-            {{ $payment->student->nama_penjaga }}
+            Penjaga: {{ strtoupper($payment->student->nama_penjaga ?? '-') }}
         </div>
         <div class="meta-right">
             <div class="receipt-box">
@@ -116,10 +124,35 @@
                 <div><strong>Tarikh:</strong> {{ $payment->payment_date->format('d/m/Y') }}</div>
             </div>
             <div style="margin-top: 10px;">
-                <span class="status-paid">BERJAYA DIBAYAR</span>
+                <span class="status-paid">TELAH DIBAYAR</span>
             </div>
         </div>
     </div>
+
+    @php
+        $child = $payment->student->child;
+        $isRegistrationPayment = $child && $child->payment_reference === $payment->transaction_ref;
+        
+        $yearlyFee = 0;
+        if ($isRegistrationPayment) {
+            $yearlyFee = (float) $child->registration_fee;
+        }
+
+        // Find linked monthly payments to show breakdown
+        $monthlyPayments = \App\Models\MonthlyPayment::where('student_payment_id', $payment->id)->get();
+        if ($monthlyPayments->isEmpty()) {
+            // Fallback: If not linked via ID, maybe it's just a single month fee
+            $monthlyPayments = \App\Models\MonthlyPayment::where('payment_reference', $payment->transaction_ref)->get();
+        }
+
+        $totalMonthly = $monthlyPayments->sum('amount');
+        
+        // If it's a registration payment but no monthly records found (unlikely), 
+        // the remaining amount is treated as monthly fee
+        if ($isRegistrationPayment && $monthlyPayments->isEmpty()) {
+            $totalMonthly = (float)$payment->total - $yearlyFee;
+        }
+    @endphp
 
     <table class="content-table">
         <thead>
@@ -129,26 +162,53 @@
             </tr>
         </thead>
         <tbody>
+            @if($isRegistrationPayment)
             <tr>
                 <td>
-                    @php
-                        $isSRIBahrulUlum = $payment->student->child && 
-                                          $payment->student->child->trainingCenter && 
-                                          $payment->student->child->trainingCenter->name === 'Sek Ren Islam Bahrul Ulum';
-                        $year = $payment->payment_date ? $payment->payment_date->format('Y') : date('Y');
-                    @endphp
-                    
-                    @if($isSRIBahrulUlum)
-                        <strong>Yuran Tahunan Taekwondo - {{ $year }}</strong><br>
-                        <span style="font-size: 12px; color: #666;">Kategori: {{ ucfirst($payment->kategori) }}</span>
+                    @if($child->registration_type === 'renewal')
+                        <strong>Yuran Pembaharuan Keahlian ({{ $payment->payment_date->year }})</strong><br>
+                        <span style="font-size: 12px; color: #666;">Pembaharuan keahlian tahunan.</span>
                     @else
-                        <strong>Yuran Bulanan Taekwondo - {{ $payment->month }}</strong><br>
-                        <span style="font-size: 12px; color: #666;">Kategori: {{ ucfirst($payment->kategori) }}</span>
+                        <strong>Yuran Pendaftaran / Tahunan ({{ $payment->payment_date->year }})</strong><br>
+                        <span style="font-size: 12px; color: #666;">Pendaftaran ahli baru dan pembaharuan tahunan.</span>
                     @endif
                 </td>
-                <td style="text-align: right;">{{ number_format($payment->amount, 2) }}</td>
+                <td style="text-align: right;">
+                    {{ number_format($yearlyFee, 2) }}
+                </td>
             </tr>
-            <!-- Add logic related to registration fee if merged? For now handling monthly fee only -->
+            @endif
+
+            @if(!$monthlyPayments->isEmpty())
+                @foreach($monthlyPayments as $mp)
+                    @php
+                        $isPreYear = $mp->year < $payment->payment_date->year;
+                    @endphp
+                    <tr>
+                        <td>
+                            @if($isPreYear)
+                                <strong>Tunggakan Yuran Bulanan ({{ $mp->month_name }} {{ $mp->year }})</strong><br>
+                                <span style="font-size: 12px; color: #666;">Tunggakan yuran dari sesi sebelum ini.</span>
+                            @else
+                                <strong>Yuran Bulanan ({{ $mp->month_name }} {{ $mp->year }})</strong><br>
+                                <span style="font-size: 12px; color: #666;">Yuran latihan bulanan.</span>
+                            @endif
+                        </td>
+                        <td style="text-align: right;">
+                            {{ number_format($mp->amount, 2) }}
+                        </td>
+                    </tr>
+                @endforeach
+            @elseif(!$isRegistrationPayment)
+                {{-- Fallback for older records or simple fee records --}}
+                <tr>
+                    <td>
+                        <strong>Yuran Bulanan Taekwondo - {{ $payment->month }}</strong><br>
+                        <span style="font-size: 12px; color: #666;">Kategori: {{ ucfirst($payment->kategori) }}</span>
+                    </td>
+                    <td style="text-align: right;">{{ number_format($payment->amount, 2) }}</td>
+                </tr>
+            @endif
             
             <tr class="total-row">
                 <td style="text-align: right;">Jumlah Keseluruhan</td>
@@ -163,3 +223,4 @@
     </div>
 </body>
 </html>
+
