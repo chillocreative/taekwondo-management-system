@@ -1,12 +1,53 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export default function AdminPaymentsIndex({ auth, payments, filters, trainingCenters }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [tcId, setTcId] = useState(filters?.training_center_id || '');
     const [selectedIds, setSelectedIds] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Drag to scroll state for desktop table
+    const tableContainerRef = useRef(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [startX, setStartX] = useState(0);
+    const [scrollLeft, setScrollLeft] = useState(0);
+
+    // Mouse event handlers for drag-to-scroll
+    const handleMouseDown = useCallback((e) => {
+        if (!tableContainerRef.current) return;
+        setIsDragging(true);
+        setStartX(e.pageX - tableContainerRef.current.offsetLeft);
+        setScrollLeft(tableContainerRef.current.scrollLeft);
+        tableContainerRef.current.style.cursor = 'grabbing';
+        tableContainerRef.current.style.userSelect = 'none';
+    }, []);
+
+    const handleMouseLeave = useCallback(() => {
+        if (!isDragging) return;
+        setIsDragging(false);
+        if (tableContainerRef.current) {
+            tableContainerRef.current.style.cursor = 'grab';
+            tableContainerRef.current.style.userSelect = 'auto';
+        }
+    }, [isDragging]);
+
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+        if (tableContainerRef.current) {
+            tableContainerRef.current.style.cursor = 'grab';
+            tableContainerRef.current.style.userSelect = 'auto';
+        }
+    }, []);
+
+    const handleMouseMove = useCallback((e) => {
+        if (!isDragging || !tableContainerRef.current) return;
+        e.preventDefault();
+        const x = e.pageX - tableContainerRef.current.offsetLeft;
+        const walk = (x - startX) * 1.5; // Scroll speed multiplier
+        tableContainerRef.current.scrollLeft = scrollLeft - walk;
+    }, [isDragging, startX, scrollLeft]);
 
     // Master checkbox logic
     const handleSelectAll = (e) => {
@@ -120,7 +161,25 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
 
                     {/* Table */}
                     <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                        <div className="overflow-x-auto">
+                        {/* Drag hint indicator - Desktop only */}
+                        <div className="hidden md:flex bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-2 border-b border-gray-100 items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <span className="animate-pulse">↔️</span>
+                                <span>Klik dan seret untuk skrol ke kiri/kanan</span>
+                            </div>
+                            <div className="text-xs text-gray-400">
+                                {payments?.data?.length || 0} rekod
+                            </div>
+                        </div>
+                        <div
+                            ref={tableContainerRef}
+                            className="overflow-x-auto hidden md:block"
+                            style={{ cursor: 'grab' }}
+                            onMouseDown={handleMouseDown}
+                            onMouseLeave={handleMouseLeave}
+                            onMouseUp={handleMouseUp}
+                            onMouseMove={handleMouseMove}
+                        >
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
@@ -234,6 +293,78 @@ export default function AdminPaymentsIndex({ auth, payments, filters, trainingCe
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* Mobile Card View */}
+                        <div className="md:hidden divide-y divide-gray-100">
+                            {payments?.data && payments.data.length > 0 ? (
+                                payments.data.map((payment) => (
+                                    <div key={payment?.id || Math.random()} className="p-4 space-y-3">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <div className="font-bold text-gray-900">{payment?.student?.nama_pelajar || '-'}</div>
+                                                <div className="text-xs text-gray-500">{payment?.student?.no_siri || '-'}</div>
+                                            </div>
+                                            <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${payment?.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                                {payment?.status === 'paid' ? 'BERJAYA' : 'PENDING'}
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3 text-xs">
+                                            <div>
+                                                <p className="text-gray-400 uppercase font-bold tracking-tight">Tarikh</p>
+                                                <p className="text-gray-700">
+                                                    {(() => {
+                                                        const dateVal = payment?.payment_date || payment?.created_at;
+                                                        if (!dateVal) return '-';
+                                                        try { return new Date(dateVal).toLocaleDateString('ms-MY'); } catch (e) { return '-'; }
+                                                    })()}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-400 uppercase font-bold tracking-tight">No. Resit</p>
+                                                <p className="text-gray-700 font-medium">{payment?.receipt_number || '-'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-400 uppercase font-bold tracking-tight">Keterangan</p>
+                                                <p className="text-gray-700">
+                                                    {payment?.month?.includes('Januari') || payment?.month?.includes('Februari') || payment?.month?.includes('Mac') || payment?.month?.includes('April') || payment?.month?.includes('Mei') || payment?.month?.includes('Jun') || payment?.month?.includes('Julai') || payment?.month?.includes('Ogos') || payment?.month?.includes('September') || payment?.month?.includes('Oktober') || payment?.month?.includes('November') || payment?.month?.includes('Disember') ? (
+                                                        `Yuran ${payment?.month || '-'}`
+                                                    ) : (
+                                                        payment?.student?.child?.registration_type === 'renewal' ? 'Pembaharuan' : 'Pendaftaran'
+                                                    )}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-400 uppercase font-bold tracking-tight">Jumlah</p>
+                                                <p className="text-gray-900 font-bold">RM {parseFloat(payment?.total || 0).toFixed(2)}</p>
+                                            </div>
+                                        </div>
+                                        {payment?.status === 'paid' && (
+                                            <div className="flex gap-2 pt-2">
+                                                <a
+                                                    href={payment?.id ? route('receipts.stream', payment.id) : '#'}
+                                                    target="_blank"
+                                                    className="flex-1 text-center px-3 py-2 text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100 rounded-lg"
+                                                >
+                                                    👁️ Lihat Resit
+                                                </a>
+                                                <a
+                                                    href={payment?.id ? route('receipts.download', payment.id) : '#'}
+                                                    target="_blank"
+                                                    className="flex-1 text-center px-3 py-2 text-xs font-bold bg-green-50 text-green-600 border border-green-100 rounded-lg"
+                                                >
+                                                    ⬇️ Muat Turun
+                                                </a>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="px-6 py-12 text-center text-gray-500">
+                                    Tiada rekod pembayaran dijumpai.
+                                </div>
+                            )}
+                        </div>
+
                         {/* Pagination if needed */}
                         {payments?.links && payments?.links?.length > 3 && (
                             <div className="px-6 py-4 border-t border-gray-200">
