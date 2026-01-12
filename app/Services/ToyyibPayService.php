@@ -80,6 +80,7 @@ class ToyyibPayService
         try {
             $response = Http::asForm()->post("{$this->baseUrl}/index.php/api/getBillTransactions", [
                 'billCode' => $billCode,
+                'userSecretKey' => $this->secretKey,
             ]);
 
             return $response->json();

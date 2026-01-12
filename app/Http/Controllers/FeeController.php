@@ -285,34 +285,67 @@ class FeeController extends Controller
 
     public function paymentCallback(Request $request)
     {
-        // ... (Similar logic but backend only)
-        // Usually handles backend updates if return page is skipped
-        $status = $request->input('status'); // 1=success
-        $billcode = $request->input('billcode');
-        
-        if ($status == '1') {
-             $payment = StudentPayment::where('transaction_ref', $billcode)->first();
-             if ($payment && $payment->status !== 'paid') {
-                $payment->status = 'paid';
-                $payment->payment_date = now();
-                $payment->receipt_number = str_pad($payment->id, 4, '0', STR_PAD_LEFT);
-                $payment->save();
-                $this->updateMonthlyPaymentStatus($payment);
+        Log::info('Fee Callback Received', [
+            'method' => $request->method(),
+            'params' => $request->all(),
+            'ip' => $request->ip()
+        ]);
 
-                // Notify Admin & User via WhatsApp
-                $studentName = $payment->student->nama_pelajar ?? 'Unknown';
-                \App\Models\Notification::createMonthlyFeeNotification($studentName, $payment->month);
-                
-                $parentPhone = $payment->student->child->parent->phone_number ?? null;
-                $msg = "*[PEMBAYARAN YURAN BERJAYA]*\n\nPelajar: {$studentName}\nBulan: {$payment->month}\nJumlah: RM{$payment->total}\nNo. Resit: {$payment->receipt_number}\n\nTerima kasih atas pembayaran anda.";
-                
-                \App\Services\WhatsappService::send($parentPhone, $msg);
-                \App\Services\WhatsappService::notifyAdmin("Pembayaran Yuran Baru (Callback):\nPelajar: {$studentName}\nBulan: {$payment->month}\nJumlah: RM{$payment->total}");
-                
-                // Send PDF Receipt
-                $this->sendReceiptViaWhatsapp($payment);
+        $status = $request->input('status_id') ?? $request->input('status');
+        $billcode = $request->input('billcode') ?? $request->input('refno');
+        $isSuccess = false;
+
+        if ($status !== null) {
+            $isSuccess = ($status == '1');
+        } else if ($billcode) {
+            // Fallback to API check
+            $toyyibPay = new \App\Services\ToyyibPayService();
+            $transactions = $toyyibPay->getBillTransactions($billcode);
+            if ($transactions && isset($transactions[0])) {
+                $isSuccess = ($transactions[0]['billpaymentStatus'] == '1');
             }
         }
+        
+        if ($isSuccess && $billcode) {
+             $payment = StudentPayment::where('transaction_ref', $billcode)->first();
+             if ($payment && $payment->status !== 'paid') {
+                try {
+                    $payment->status = 'paid';
+                    $payment->payment_date = now();
+                    $payment->receipt_number = str_pad($payment->id, 4, '0', STR_PAD_LEFT);
+                    $payment->save();
+
+                    $this->updateMonthlyPaymentStatus($payment);
+
+                    // Notify Admin & User via WhatsApp
+                    $studentName = $payment->student->nama_pelajar ?? 'Unknown';
+                    \App\Models\Notification::createMonthlyFeeNotification($studentName, $payment->month);
+                    
+                    $parentPhone = $payment->student->child->parent->phone_number ?? null;
+                    $msg = "*[PEMBAYARAN YURAN BERJAYA]*\n\nPelajar: {$studentName}\nBulan: {$payment->month}\nJumlah: RM{$payment->total}\nNo. Resit: {$payment->receipt_number}\n\nTerima kasih atas pembayaran anda.";
+                    
+                    try {
+                        \App\Services\WhatsappService::send($parentPhone, $msg);
+                        \App\Services\WhatsappService::notifyAdmin("Pembayaran Yuran Baru (Callback):\nPelajar: {$studentName}\nBulan: {$payment->month}\nJumlah: RM{$payment->total}");
+                        
+                        // Send PDF Receipt
+                        $this->sendReceiptViaWhatsapp($payment);
+                    } catch (\Exception $e) {
+                        Log::error('Fee Callback Notification Error: ' . $e->getMessage());
+                    }
+
+                    if ($request->isMethod('post')) return response('OK');
+
+                } catch (\Exception $e) {
+                    Log::error('Fee Callback Processing Error: ' . $e->getMessage());
+                    if ($request->isMethod('post')) return response('Processing error', 500);
+                }
+            } else if ($payment && $payment->status === 'paid') {
+                if ($request->isMethod('post')) return response('OK');
+            }
+        }
+
+        if ($request->isMethod('post')) return response('Not processed', 400);
     }
 
     public function streamReceipt(StudentPayment $payment)

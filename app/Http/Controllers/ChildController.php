@@ -513,44 +513,75 @@ class ChildController extends Controller
      */
     public function paymentCallback(Request $request)
     {
-        // Get bill code from request
-        $billCode = $request->input('billcode') ?? $request->input('billCode');
+        // Log the incoming callback for debugging
+        Log::info('ToyyibPay Callback Received', [
+            'method' => $request->method(),
+            'params' => $request->all(),
+            'ip' => $request->ip()
+        ]);
+
+        // Get bill code from request (supports both GET and POST formats)
+        $billCode = $request->input('billcode') ?? $request->input('billCode') ?? $request->input('refno');
         
         if (!$billCode) {
-            return redirect()->route('children.index')
-                ->with('error', 'Kod bil tidak sah.');
+            Log::warning('ToyyibPay Callback: Missing billCode');
+            if ($request->isMethod('post')) return response('No billcode', 400);
+            return redirect()->route('children.index')->with('error', 'Kod bil tidak sah.');
         }
 
         // Find child by payment reference
         $child = Child::where('payment_reference', $billCode)->first();
 
         if (!$child) {
-            return redirect()->route('children.index')
-                ->with('error', 'Rekod pembayaran tidak dijumpai.');
+            Log::warning('ToyyibPay Callback: Child not found for billCode: ' . $billCode);
+            if ($request->isMethod('post')) return response('Child not found', 404);
+            return redirect()->route('children.index')->with('error', 'Rekod pembayaran tidak dijumpai.');
         }
 
-        // Get bill status from ToyyibPay
-        $toyyibPay = new \App\Services\ToyyibPayService();
-        $transactions = $toyyibPay->getBillTransactions($billCode);
+        // Check if already processed to avoid double execution
+        if ($child->payment_completed) {
+            Log::info('ToyyibPay Callback: Already processed for ' . $child->name);
+            if ($request->isMethod('post')) return response('OK');
+            return redirect()->route('children.index')->with('payment_success', 'Pembayaran sudah diproses.');
+        }
 
-        if ($transactions && isset($transactions[0])) {
-            $transaction = $transactions[0];
+        // Get status from request or API
+        $status = $request->input('status_id') ?? $request->input('status');
+        $isSuccess = false;
+
+        if ($status !== null) {
+            // Status 1 means success in ToyyibPay
+            $isSuccess = ($status == '1');
+            Log::info("ToyyibPay Callback: Status from request is $status (Success: " . ($isSuccess ? 'YES' : 'NO') . ")");
+        } else {
+            // Fallback to API check if status not in request
+            Log::info('ToyyibPay Callback: Status not in request, falling back to API verification');
+            $toyyibPay = new \App\Services\ToyyibPayService();
+            $transactions = $toyyibPay->getBillTransactions($billCode);
+
+            if ($transactions && isset($transactions[0])) {
+                $transaction = $transactions[0];
+                $isSuccess = ($transaction['billpaymentStatus'] == '1');
+                Log::info("ToyyibPay Callback: Status from API is " . ($transaction['billpaymentStatus'] ?? 'unknown'));
+            }
+        }
+
+        if ($isSuccess) {
+            Log::info('ToyyibPay Callback: Processing successful payment for ' . $child->name);
             
-            // Check if payment is successful
-            if ($transaction['billpaymentStatus'] == '1') {
+            try {
                 // Update child record
                 $child->update([
                     'payment_completed' => true,
                     'payment_method' => 'online',
                     'payment_date' => now(),
-                    'is_active' => true, // Auto-activate after successful payment
+                    'is_active' => true,
                 ]);
 
-                // Create/Sync Student Record (Generate No Siri)
+                // Create/Sync Student Record
                 $studentService = new \App\Services\StudentService();
                 $studentService->syncChildToStudent($child);
                 
-                // Reload child to get student relation
                 $child->refresh();
 
                 // Create StudentPayment record so it appears on admin payments page
@@ -614,7 +645,11 @@ class ChildController extends Controller
                     $payment->save();
 
                     // Send PDF Receipt to Parent
-                    $this->sendReceiptViaWhatsapp($child, $mainFee, $monthlyFee, $payment->receipt_number, $outstandingAmount);
+                    try {
+                        $this->sendReceiptViaWhatsapp($child, $mainFee, $monthlyFee, $payment->receipt_number, $outstandingAmount);
+                    } catch (\Exception $e) {
+                        Log::error('Callback (Receipt) Error: ' . $e->getMessage());
+                    }
 
                     // Update monthly payment record for current month
                     $currentMonthNum = \Carbon\Carbon::now()->month;
@@ -648,7 +683,11 @@ class ChildController extends Controller
                     }
 
                     // Send WhatsApp Notification to Admin
-                    \App\Services\WhatsappService::notifyAdminNewPaidPeserta($child->name, $totalAmount);
+                    try {
+                        \App\Services\WhatsappService::notifyAdminNewPaidPeserta($child->name, $totalAmount);
+                    } catch (\Exception $e) {
+                         Log::error('Callback (Admin Notify) Error: ' . $e->getMessage());
+                    }
                 }
 
                 // Notify Admin & User via WhatsApp
@@ -657,12 +696,35 @@ class ChildController extends Controller
                 $parentPhone = $child->parent->phone_number ?? null;
                 $msg = "*[PENDAFTARAN BERJAYA]*\n\nPelajar: {$child->name}\nNo Siri: " . ($child->student->no_siri ?? '-') . "\nJumlah: RM{$totalAmount}\n\nSelamat datang ke Taekwondo A&Z! Pendaftaran anda telah diaktifkan.";
                 
-                \App\Services\WhatsappService::send($parentPhone, $msg);
-                \App\Services\WhatsappService::notifyAdmin("Pendaftaran & Pembayaran Baru:\nPelajar: {$child->name}\nJumlah: RM{$totalAmount}");
+                try {
+                    \App\Services\WhatsappService::send($parentPhone, $msg);
+                    \App\Services\WhatsappService::notifyAdmin("Pendaftaran & Pembayaran Baru:\nPelajar: {$child->name}\nJumlah: RM{$totalAmount}");
+                } catch (\Exception $e) {
+                    Log::error('Callback (WhatsApp notify) Error: ' . $e->getMessage());
+                }
+
+                if ($request->isMethod('post')) {
+                    return response('OK');
+                }
 
                 return redirect()->route('children.index')
                     ->with('payment_success', 'Pembayaran berjaya! Peserta telah diaktifkan.');
+            } catch (\Exception $e) {
+                Log::error('ToyyibPay Callback Processing Error: ' . $e->getMessage(), [
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                if ($request->isMethod('post')) {
+                    return response('Error processing payment logic', 500);
+                }
+                
+                return redirect()->route('children.index')
+                    ->with('payment_error', 'Pembayaran diterima tetapi ralat teknikal berlaku semasa mengaktifkan akaun. Sila hubungi urusetia.');
             }
+        }
+        
+        if ($request->isMethod('post')) {
+            return response('Payment failed or unverified', 400);
         }
 
         return redirect()->route('children.index')
