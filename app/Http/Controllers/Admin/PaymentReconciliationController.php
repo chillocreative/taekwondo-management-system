@@ -858,4 +858,107 @@ class PaymentReconciliationController extends Controller
             'message' => "{$fixed} pelajar telah dikemaskini."
         ]);
     }
+
+    /**
+     * Verify ToyyibPay payment status for all unpaid students
+     */
+    public function verifyToyyibPayStatus()
+    {
+        $toyyibPay = new ToyyibPayService();
+        
+        // Get all students marked as unpaid
+        $unpaidStudents = Child::with(['parent', 'student', 'trainingCenter'])
+            ->whereHas('student')
+            ->whereNotNull('payment_reference')
+            ->get()
+            ->filter(function($child) {
+                return !$child->isPaidForCurrentYear();
+            })
+            ->map(function($child) use ($toyyibPay) {
+                $billCode = $child->payment_reference;
+                $toyyibPayStatus = null;
+                $toyyibPayPaid = false;
+                $toyyibPayAmount = null;
+                $toyyibPayDate = null;
+                $apiError = null;
+
+                // Check ToyyibPay API
+                try {
+                    $transactions = $toyyibPay->getBillTransactions($billCode);
+                    
+                    if ($transactions && count($transactions) > 0) {
+                        $transaction = $transactions[0];
+                        $toyyibPayStatus = $transaction['billpaymentStatus'] ?? null;
+                        $toyyibPayPaid = ($toyyibPayStatus == '1');
+                        $toyyibPayAmount = $transaction['billpaymentAmount'] ?? null;
+                        $toyyibPayDate = $transaction['billpaymentDate'] ?? null;
+                    } else {
+                        $apiError = 'No transactions found';
+                    }
+                } catch (\Exception $e) {
+                    $apiError = $e->getMessage();
+                }
+
+                // Get local payment records
+                $localPayments = StudentPayment::where('student_id', $child->student->id)
+                    ->where('status', 'paid')
+                    ->whereYear('created_at', now()->year)
+                    ->get();
+
+                $hasLocalReceipt = $localPayments->whereNotNull('receipt_number')->count() > 0;
+
+                // Determine verification status
+                $verificationStatus = 'UNKNOWN';
+                if ($apiError) {
+                    $verificationStatus = 'API_ERROR';
+                } elseif ($toyyibPayPaid && $hasLocalReceipt) {
+                    $verificationStatus = 'VERIFIED_PAID';
+                } elseif ($toyyibPayPaid && !$hasLocalReceipt) {
+                    $verificationStatus = 'TOYYIBPAY_PAID_BUT_NO_LOCAL_RECORD';
+                } elseif (!$toyyibPayPaid && $hasLocalReceipt) {
+                    $verificationStatus = 'LOCAL_RECORD_BUT_TOYYIBPAY_UNPAID';
+                } else {
+                    $verificationStatus = 'CORRECTLY_UNPAID';
+                }
+
+                return [
+                    'child_id' => $child->id,
+                    'student_id' => $child->student->id,
+                    'no_siri' => $child->student->no_siri,
+                    'name' => $child->name,
+                    'parent_name' => $child->parent->name ?? '-',
+                    'training_center' => $child->trainingCenter->name ?? '-',
+                    'bill_code' => $billCode,
+                    'toyyibpay_status' => $toyyibPayStatus,
+                    'toyyibpay_paid' => $toyyibPayPaid,
+                    'toyyibpay_amount' => $toyyibPayAmount,
+                    'toyyibpay_date' => $toyyibPayDate,
+                    'has_local_receipt' => $hasLocalReceipt,
+                    'local_payment_count' => $localPayments->count(),
+                    'verification_status' => $verificationStatus,
+                    'api_error' => $apiError,
+                    'local_payments' => $localPayments->map(function($p) {
+                        return [
+                            'receipt_number' => $p->receipt_number,
+                            'total' => $p->total,
+                            'payment_date' => $p->payment_date ? $p->payment_date->format('Y-m-d H:i') : null,
+                        ];
+                    }),
+                ];
+            });
+
+        $stats = [
+            'total_checked' => $unpaidStudents->count(),
+            'verified_paid' => $unpaidStudents->where('verification_status', 'VERIFIED_PAID')->count(),
+            'toyyibpay_paid_no_local' => $unpaidStudents->where('verification_status', 'TOYYIBPAY_PAID_BUT_NO_LOCAL_RECORD')->count(),
+            'local_but_toyyibpay_unpaid' => $unpaidStudents->where('verification_status', 'LOCAL_RECORD_BUT_TOYYIBPAY_UNPAID')->count(),
+            'correctly_unpaid' => $unpaidStudents->where('verification_status', 'CORRECTLY_UNPAID')->count(),
+            'api_errors' => $unpaidStudents->where('verification_status', 'API_ERROR')->count(),
+        ];
+
+        return Inertia::render('Admin/ToyyibPayVerification', [
+            'students' => $unpaidStudents->values(),
+            'stats' => $stats,
+        ]);
+    }
 }
