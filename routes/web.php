@@ -122,6 +122,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/admin/payment-verification/bulk-mark-paid', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'bulkMarkAsPaid'])->name('admin.payment-verification.bulk-mark-paid');
     Route::get('/admin/toyyibpay-verification', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'verifyToyyibPayStatus'])->name('admin.toyyibpay-verification');
     Route::get('/admin/auto-fix-unpaid', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'autoFixUnpaidWithReceipts'])->name('admin.auto-fix-unpaid');
+    Route::get('/admin/deep-diagnostic', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'deepDiagnostic'])->name('admin.deep-diagnostic');
 
     // Coach Routes
     Route::get('/coach/attendance', [App\Http\Controllers\Coach\AttendanceController::class, 'index'])->name('coach.attendance.index');

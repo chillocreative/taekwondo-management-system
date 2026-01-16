@@ -1039,4 +1039,72 @@ class PaymentReconciliationController extends Controller
 
         return response()->json($results);
     }
+
+    /**
+     * Deep diagnostic - check ALL payment records for unpaid students
+     */
+    public function deepDiagnostic()
+    {
+        $results = [];
+
+        // Get ALL students marked as unpaid
+        $unpaidStudents = Child::with(['student', 'parent'])
+            ->whereHas('student')
+            ->get()
+            ->filter(function($child) {
+                return !$child->isPaidForCurrentYear();
+            });
+
+        foreach ($unpaidStudents as $child) {
+            // Get ALL payment records (including those without receipts)
+            $allPayments = StudentPayment::where('student_id', $child->student->id)
+                ->whereYear('created_at', now()->year)
+                ->get();
+
+            // Get monthly payments
+            $monthlyPayments = \App\Models\MonthlyPayment::where('child_id', $child->id)
+                ->where('year', now()->year)
+                ->where('is_paid', true)
+                ->get();
+
+            $results[] = [
+                'no_siri' => $child->student->no_siri,
+                'name' => $child->name,
+                'parent_name' => $child->parent->name ?? '-',
+                'payment_reference' => $child->payment_reference,
+                'payment_completed' => $child->payment_completed,
+                'payment_date' => $child->payment_date ? $child->payment_date->format('Y-m-d') : null,
+                'last_updated_year' => $child->last_updated_year,
+                'student_payments' => $allPayments->map(function($p) {
+                    return [
+                        'id' => $p->id,
+                        'receipt_number' => $p->receipt_number,
+                        'month' => $p->month,
+                        'amount' => $p->amount,
+                        'total' => $p->total,
+                        'status' => $p->status,
+                        'payment_date' => $p->payment_date ? $p->payment_date->format('Y-m-d H:i') : null,
+                        'created_at' => $p->created_at->format('Y-m-d H:i'),
+                        'transaction_ref' => $p->transaction_ref,
+                    ];
+                }),
+                'monthly_payments_paid' => $monthlyPayments->map(function($m) {
+                    return [
+                        'month' => $m->month,
+                        'amount' => $m->amount,
+                        'receipt_number' => $m->receipt_number,
+                        'paid_date' => $m->paid_date ? $m->paid_date->format('Y-m-d') : null,
+                    ];
+                }),
+                'total_student_payments' => $allPayments->count(),
+                'total_monthly_payments_paid' => $monthlyPayments->count(),
+                'has_any_payment_record' => $allPayments->count() > 0,
+            ];
+        }
+
+        return response()->json([
+            'total_unpaid' => $unpaidStudents->count(),
+            'students' => $results,
+        ]);
+    }
 }
