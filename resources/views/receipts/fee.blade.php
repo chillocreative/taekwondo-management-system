@@ -184,11 +184,14 @@
             @if($isRegistrationPayment)
             <tr>
                 <td>
+                    @php
+                        $paymentYear = $payment->payment_date ? $payment->payment_date->year : ($payment->created_at ? $payment->created_at->year : date('Y'));
+                    @endphp
                     @if($child->registration_type === 'renewal')
-                        <strong>Yuran Pembaharuan Keahlian ({{ $payment->payment_date->year }})</strong><br>
+                        <strong>Yuran Pembaharuan Keahlian ({{ $paymentYear }})</strong><br>
                         <span style="font-size: 12px; color: #666;">Pembaharuan keahlian tahunan.</span>
                     @else
-                        <strong>Yuran Pendaftaran / Tahunan ({{ $payment->payment_date->year }})</strong><br>
+                        <strong>Yuran Pendaftaran / Tahunan ({{ $paymentYear }})</strong><br>
                         <span style="font-size: 12px; color: #666;">Pendaftaran ahli baru dan pembaharuan tahunan.</span>
                     @endif
                 </td>
@@ -201,7 +204,8 @@
             @if(!$monthlyPayments->isEmpty())
                 @foreach($monthlyPayments as $mp)
                     @php
-                        $isPreYear = $mp->year < $payment->payment_date->year;
+                        $currentPaymentYear = $payment->payment_date ? $payment->payment_date->year : ($payment->created_at ? $payment->created_at->year : date('Y'));
+                        $isPreYear = $mp->year < $currentPaymentYear;
                     @endphp
                     <tr>
                         <td>

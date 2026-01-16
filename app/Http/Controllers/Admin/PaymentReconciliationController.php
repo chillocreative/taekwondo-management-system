@@ -606,4 +606,32 @@ class PaymentReconciliationController extends Controller
             ]
         ]);
     }
+
+    /**
+     * Fix null payment_date in StudentPayment records
+     */
+    public function fixPaymentDates()
+    {
+        $results = [
+            'checked' => 0,
+            'fixed' => 0,
+        ];
+
+        // Get all paid StudentPayments with null payment_date
+        $payments = StudentPayment::where('status', 'paid')
+            ->whereNull('payment_date')
+            ->get();
+
+        $results['checked'] = $payments->count();
+
+        foreach ($payments as $payment) {
+            // Use created_at as payment_date
+            $payment->update([
+                'payment_date' => $payment->created_at,
+            ]);
+            $results['fixed']++;
+        }
+
+        return response()->json($results);
+    }
 }
