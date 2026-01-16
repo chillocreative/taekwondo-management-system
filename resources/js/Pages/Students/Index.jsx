@@ -6,6 +6,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
     const [search, setSearch] = useState(filters.search || '');
     const [kategori, setKategori] = useState(filters.kategori || '');
     const [trainingCenterId, setTrainingCenterId] = useState(filters.training_center_id || '');
+    const [statusBayaran, setStatusBayaran] = useState(filters.status_bayaran || '');
     const [selectedIds, setSelectedIds] = useState([]);
     const isFirstRender = useRef(true);
 
@@ -61,7 +62,8 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
             router.get(route('students.index'), {
                 search,
                 kategori,
-                training_center_id: trainingCenterId
+                training_center_id: trainingCenterId,
+                status_bayaran: statusBayaran
             }, {
                 preserveState: true,
                 preserveScroll: true,
@@ -70,7 +72,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [search, kategori, trainingCenterId]);
+    }, [search, kategori, trainingCenterId, statusBayaran]);
 
     const handleDelete = (id) => {
         if (confirm('Adakah anda pasti untuk memadam rekod ini?')) {
@@ -180,7 +182,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                     {/* Search and Filter Card */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                            <div className="md:col-span-5">
+                            <div className="md:col-span-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Carian</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -195,7 +197,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                     />
                                 </div>
                             </div>
-                            <div className="md:col-span-4">
+                            <div className="md:col-span-3">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Pusat Latihan</label>
                                 <select
                                     value={trainingCenterId}
@@ -210,7 +212,7 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                     ))}
                                 </select>
                             </div>
-                            <div className="md:col-span-3">
+                            <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
                                 <select
                                     value={kategori}
@@ -220,6 +222,18 @@ export default function Index({ auth, students, filters, stats, trainingCenters 
                                     <option value="">Semua Kategori</option>
                                     <option value="kanak-kanak">Bawah 18 Tahun</option>
                                     <option value="dewasa">18 Tahun ke atas</option>
+                                </select>
+                            </div>
+                            <div className="md:col-span-3">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Status Bayaran</label>
+                                <select
+                                    value={statusBayaran}
+                                    onChange={(e) => setStatusBayaran(e.target.value)}
+                                    className="block w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition duration-200"
+                                >
+                                    <option value="">Semua Status</option>
+                                    <option value="paid">Sudah Bayar Tahunan</option>
+                                    <option value="unpaid">Belum Bayar Tahunan</option>
                                 </select>
                             </div>
                         </div>

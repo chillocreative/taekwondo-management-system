@@ -37,6 +37,24 @@ class StudentController extends Controller
             });
         }
 
+        // Apply status bayaran filter
+        if ($request->filled('status_bayaran')) {
+            $query->whereHas('child', function($q) use ($request) {
+                if ($request->status_bayaran === 'paid') {
+                    // Students who have paid for current year
+                    $q->where('payment_completed', true)
+                      ->whereYear('payment_date', now()->year);
+                } elseif ($request->status_bayaran === 'unpaid') {
+                    // Students who haven't paid for current year
+                    $q->where(function($subQ) {
+                        $subQ->where('payment_completed', false)
+                             ->orWhereNull('payment_completed')
+                             ->orWhereYear('payment_date', '<', now()->year);
+                    });
+                }
+            });
+        }
+
         // Sort by latest update
         $query->orderBy('tarikh_kemaskini', 'desc');
 
@@ -69,7 +87,7 @@ class StudentController extends Controller
         return Inertia::render('Students/Index', [
             'students' => $students,
             'trainingCenters' => $trainingCenters,
-            'filters' => $request->only(['search', 'kategori', 'training_center_id']),
+            'filters' => $request->only(['search', 'kategori', 'training_center_id', 'status_bayaran']),
             'stats' => $stats,
         ]);
     }
