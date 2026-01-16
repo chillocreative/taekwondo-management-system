@@ -692,4 +692,110 @@ class PaymentReconciliationController extends Controller
 
         return response()->json($results);
     }
+
+    /**
+     * Payment Verification Tool - Check students marked as unpaid
+     */
+    public function paymentVerification()
+    {
+        // Get all students marked as unpaid for current year
+        $unpaidStudents = Child::with(['parent', 'student.payments', 'trainingCenter'])
+            ->whereHas('student')
+            ->get()
+            ->filter(function($child) {
+                return !$child->isPaidForCurrentYear();
+            })
+            ->map(function($child) {
+                // Get all payments for this student in current year
+                $payments = StudentPayment::where('student_id', $child->student->id)
+                    ->where('status', 'paid')
+                    ->whereYear('created_at', now()->year)
+                    ->get();
+
+                $hasRenewalPayment = false;
+                $latestPayment = null;
+
+                foreach ($payments as $payment) {
+                    // Check if payment includes renewal (total > amount or total >= 100)
+                    if ((float)$payment->total > (float)$payment->amount || (float)$payment->total >= 100) {
+                        $hasRenewalPayment = true;
+                        $latestPayment = $payment;
+                        break;
+                    }
+                }
+
+                return [
+                    'child_id' => $child->id,
+                    'student_id' => $child->student->id,
+                    'no_siri' => $child->student->no_siri,
+                    'name' => $child->name,
+                    'parent_name' => $child->parent->name ?? '-',
+                    'training_center' => $child->trainingCenter->name ?? '-',
+                    'payment_completed' => $child->payment_completed,
+                    'payment_date' => $child->payment_date ? $child->payment_date->format('Y-m-d') : null,
+                    'last_updated_year' => $child->last_updated_year,
+                    'registration_type' => $child->registration_type,
+                    'total_payments_2026' => $payments->count(),
+                    'has_renewal_payment' => $hasRenewalPayment,
+                    'latest_receipt' => $latestPayment ? $latestPayment->receipt_number : null,
+                    'latest_amount' => $latestPayment ? $latestPayment->total : null,
+                    'payment_reference' => $child->payment_reference,
+                    'all_payments' => $payments->map(function($p) {
+                        return [
+                            'id' => $p->id,
+                            'receipt_number' => $p->receipt_number,
+                            'month' => $p->month,
+                            'amount' => $p->amount,
+                            'total' => $p->total,
+                            'payment_date' => $p->payment_date ? $p->payment_date->format('Y-m-d H:i') : null,
+                            'transaction_ref' => $p->transaction_ref,
+                        ];
+                    }),
+                    'discrepancy' => $hasRenewalPayment ? 'PAID_BUT_MARKED_UNPAID' : 'CORRECTLY_UNPAID',
+                ];
+            });
+
+        return Inertia::render('Admin/PaymentVerification', [
+            'students' => $unpaidStudents->values(),
+            'stats' => [
+                'total_unpaid' => $unpaidStudents->count(),
+                'has_discrepancy' => $unpaidStudents->where('discrepancy', 'PAID_BUT_MARKED_UNPAID')->count(),
+                'correctly_unpaid' => $unpaidStudents->where('discrepancy', 'CORRECTLY_UNPAID')->count(),
+            ]
+        ]);
+    }
+
+    /**
+     * Manually mark a student as paid for current year
+     */
+    public function markAsPaid(Request $request)
+    {
+        $validated = $request->validate([
+            'child_id' => 'required|exists:children,id',
+        ]);
+
+        $child = Child::find($validated['child_id']);
+        
+        if (!$child) {
+            return response()->json(['error' => 'Child not found'], 404);
+        }
+
+        // Update child payment status
+        $child->update([
+            'payment_completed' => true,
+            'payment_date' => now(),
+            'last_updated_year' => now()->year,
+        ]);
+
+        Log::info('Manual Payment Verification: Marked as paid', [
+            'child_id' => $child->id,
+            'child_name' => $child->name,
+            'admin' => auth()->user()->name,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Status pembayaran untuk {$child->name} telah dikemaskini."
+        ]);
+    }
 }

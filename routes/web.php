@@ -117,6 +117,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/admin/receipt-sync/sync', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'syncReceiptNumbers'])->name('admin.receipt-sync.sync');
     Route::post('/admin/fix-payment-dates', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'fixPaymentDates'])->name('admin.fix-payment-dates');
     Route::get('/admin/repair-missed-renewals', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'repairMissedRenewals'])->name('admin.repair-missed-renewals');
+    Route::get('/admin/payment-verification', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'paymentVerification'])->name('admin.payment-verification');
+    Route::post('/admin/payment-verification/mark-paid', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'markAsPaid'])->name('admin.payment-verification.mark-paid');
 
     // Coach Routes
     Route::get('/coach/attendance', [App\Http\Controllers\Coach\AttendanceController::class, 'index'])->name('coach.attendance.index');
