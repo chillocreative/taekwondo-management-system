@@ -443,12 +443,17 @@ class PaymentReconciliationController extends Controller
             'details' => [],
         ];
 
-        // Get all paid MonthlyPayments without receipt number
+        // Get all paid MonthlyPayments without receipt number OR with bill code in receipt_number
         $monthlyPayments = MonthlyPayment::where('is_paid', true)
             ->where(function($q) {
                 $q->whereNull('receipt_number')
                   ->orWhere('receipt_number', '')
-                  ->orWhere('receipt_number', '-');
+                  ->orWhere('receipt_number', '-')
+                  // Also fix records where receipt_number looks like a bill code (8 chars alphanumeric)
+                  ->orWhere(function($q2) {
+                      $q2->whereRaw('LENGTH(receipt_number) = 8')
+                         ->whereRaw('receipt_number REGEXP \'^[a-z0-9]{8}$\'');
+                  });
             })
             ->with(['child.student'])
             ->get();
@@ -547,7 +552,14 @@ class PaymentReconciliationController extends Controller
             ->orderBy('month', 'desc')
             ->get()
             ->map(function($mp) {
-                $hasReceiptNumber = $mp->receipt_number && $mp->receipt_number !== '-';
+                // Check if receipt_number looks like a bill code (8 chars alphanumeric)
+                $isBillCode = $mp->receipt_number && 
+                              strlen($mp->receipt_number) === 8 && 
+                              preg_match('/^[a-z0-9]{8}$/', $mp->receipt_number);
+                
+                $hasReceiptNumber = $mp->receipt_number && 
+                                   $mp->receipt_number !== '-' && 
+                                   !$isBillCode;
                 
                 // Try to find the actual receipt number from StudentPayment
                 $studentPaymentReceipt = null;
@@ -573,8 +585,9 @@ class PaymentReconciliationController extends Controller
                     'mp_receipt_number' => $mp->receipt_number,
                     'sp_receipt_number' => $studentPaymentReceipt,
                     'sp_id' => $studentPaymentId,
+                    'is_bill_code' => $isBillCode,
                     'is_synced' => $hasReceiptNumber && ($mp->receipt_number === $studentPaymentReceipt),
-                    'needs_fix' => !$hasReceiptNumber && $studentPaymentReceipt,
+                    'needs_fix' => (!$hasReceiptNumber || $isBillCode) && $studentPaymentReceipt,
                     'paid_date' => $mp->paid_date?->format('d/m/Y'),
                 ];
             });

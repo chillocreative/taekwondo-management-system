@@ -172,7 +172,14 @@ export default function ReceiptSync({ payments, stats }) {
                                                 <td className="p-4 text-zinc-600">{payment.month}</td>
                                                 <td className="p-4 text-center">
                                                     {payment.mp_receipt_number ? (
-                                                        <code className="bg-zinc-100 px-2 py-1 rounded text-xs">{payment.mp_receipt_number}</code>
+                                                        payment.is_bill_code ? (
+                                                            <div className="flex flex-col items-center gap-1">
+                                                                <code className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs line-through">{payment.mp_receipt_number}</code>
+                                                                <span className="text-xs text-red-600">⚠️ Bill Code</span>
+                                                            </div>
+                                                        ) : (
+                                                            <code className="bg-zinc-100 px-2 py-1 rounded text-xs">{payment.mp_receipt_number}</code>
+                                                        )
                                                     ) : (
                                                         <span className="text-red-500">-</span>
                                                     )}
