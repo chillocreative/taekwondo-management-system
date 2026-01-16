@@ -961,4 +961,82 @@ class PaymentReconciliationController extends Controller
             'stats' => $stats,
         ]);
     }
+
+    /**
+     * Automatically fix all students who have receipts but are marked as unpaid
+     */
+    public function autoFixUnpaidWithReceipts()
+    {
+        $results = [
+            'checked' => 0,
+            'fixed' => 0,
+            'skipped' => 0,
+            'details' => [],
+        ];
+
+        // Get ALL students marked as unpaid
+        $unpaidStudents = Child::with(['student', 'parent'])
+            ->whereHas('student')
+            ->get()
+            ->filter(function($child) {
+                return !$child->isPaidForCurrentYear();
+            });
+
+        $results['checked'] = $unpaidStudents->count();
+
+        foreach ($unpaidStudents as $child) {
+            // Check if they have ANY payment record with receipt in 2026
+            $hasReceipt = StudentPayment::where('student_id', $child->student->id)
+                ->where('status', 'paid')
+                ->whereYear('created_at', now()->year)
+                ->whereNotNull('receipt_number')
+                ->exists();
+
+            if ($hasReceipt) {
+                // Get the latest payment
+                $latestPayment = StudentPayment::where('student_id', $child->student->id)
+                    ->where('status', 'paid')
+                    ->whereYear('created_at', now()->year)
+                    ->whereNotNull('receipt_number')
+                    ->latest()
+                    ->first();
+
+                // Update child status
+                $child->update([
+                    'payment_completed' => true,
+                    'payment_date' => $latestPayment->payment_date ?? now(),
+                    'last_updated_year' => now()->year,
+                ]);
+
+                $results['fixed']++;
+                $results['details'][] = [
+                    'no_siri' => $child->student->no_siri,
+                    'name' => $child->name,
+                    'receipt_number' => $latestPayment->receipt_number,
+                    'amount' => $latestPayment->total,
+                    'payment_date' => $latestPayment->payment_date ? $latestPayment->payment_date->format('Y-m-d H:i') : null,
+                    'action' => 'FIXED',
+                ];
+            } else {
+                $results['skipped']++;
+                $results['details'][] = [
+                    'no_siri' => $child->student->no_siri,
+                    'name' => $child->name,
+                    'receipt_number' => null,
+                    'amount' => null,
+                    'payment_date' => null,
+                    'action' => 'SKIPPED - No receipt found',
+                ];
+            }
+        }
+
+        Log::info('Auto-fix unpaid students with receipts', [
+            'checked' => $results['checked'],
+            'fixed' => $results['fixed'],
+            'skipped' => $results['skipped'],
+            'admin' => auth()->user()->name,
+        ]);
+
+        return response()->json($results);
+    }
 }
