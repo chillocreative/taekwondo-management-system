@@ -83,7 +83,11 @@ export default function PaymentSettings({ auth, settings, flash }) {
 
                     {/* Main Settings Card */}
                     <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6 mb-6">
-                        <h3 className="text-lg font-bold text-zinc-900 mb-6">ToyyibPay Configuration</h3>
+                        <h3 className="text-lg font-bold text-zinc-900 mb-6">
+                            {data.provider === 'toyyibpay' && 'ToyyibPay Configuration'}
+                            {data.provider === 'bayarcash' && 'Bayarcash Configuration'}
+                            {data.provider === 'senangpay' && 'SenangPay Configuration'}
+                        </h3>
 
                         <form onSubmit={handleSubmit}>
                             <div className="space-y-6">
@@ -98,259 +102,265 @@ export default function PaymentSettings({ auth, settings, flash }) {
                                         className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     >
                                         <option value="toyyibpay">ToyyibPay</option>
+                                        <option value="bayarcash">Bayarcash</option>
+                                        <option value="senangpay">SenangPay</option>
                                     </select>
+                                    <p className="text-xs text-zinc-500 mt-1">
+                                        Select your preferred payment gateway
+                                    </p>
                                 </div>
 
-                                {/* Sandbox Mode */}
-                                <div className="flex items-center gap-3">
-                                    <input
-                                        type="checkbox"
-                                        checked={data.is_sandbox}
-                                        onChange={(e) => setData('is_sandbox', e.target.checked)}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
-                                    />
-                                    <label className="text-sm font-medium text-zinc-700">
-                                        Sandbox Mode (Development)
-                                    </label>
-                                </div>
+                                {/* ToyyibPay Fields */}
+                                {data.provider === 'toyyibpay' && (
+                                    <>
+                                        {/* Sandbox Mode */}
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.is_sandbox}
+                                                onChange={(e) => setData('is_sandbox', e.target.checked)}
+                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
+                                            />
+                                            <label className="text-sm font-medium text-zinc-700">
+                                                Sandbox Mode (Development)
+                                            </label>
+                                        </div>
 
-                                {data.is_sandbox && (
-                                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                                        <p className="text-sm text-amber-800">
-                                            <strong>Sandbox Mode:</strong> Register at{' '}
-                                            <a href="https://dev.toyyibpay.com" target="_blank" rel="noopener noreferrer" className="underline">
-                                                dev.toyyibpay.com
-                                            </a>{' '}
-                                            to get your sandbox credentials.
-                                        </p>
-                                    </div>
+                                        {data.is_sandbox && (
+                                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                                <p className="text-sm text-amber-800">
+                                                    <strong>Sandbox Mode:</strong> Register at{' '}
+                                                    <a href="https://dev.toyyibpay.com" target="_blank" rel="noopener noreferrer" className="underline">
+                                                        dev.toyyibpay.com
+                                                    </a>{' '}
+                                                    to get your sandbox credentials.
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Secret Key */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                                User Secret Key *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={data.secret_key}
+                                                onChange={(e) => setData('secret_key', e.target.value)}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                                placeholder="e.g., w5x7srq7-rx5r-3t89-2ou2-k7361x2jewhn"
+                                            />
+                                            {errors.secret_key && <p className="text-red-500 text-xs mt-1">{errors.secret_key}</p>}
+                                            <p className="text-xs text-zinc-500 mt-1">
+                                                Get this from your ToyyibPay account settings
+                                            </p>
+                                        </div>
+
+                                        {/* Category Code */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <label className="block text-sm font-medium text-zinc-700">
+                                                    Category Code
+                                                </label>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowCategoryModal(true)}
+                                                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                                >
+                                                    + Create Category
+                                                </button>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={data.category_code}
+                                                onChange={(e) => setData('category_code', e.target.value)}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                                placeholder="e.g., j0tzqhka"
+                                            />
+                                            {errors.category_code && <p className="text-red-500 text-xs mt-1">{errors.category_code}</p>}
+                                            <p className="text-xs text-zinc-500 mt-1">
+                                                Category groups your bills together
+                                            </p>
+                                        </div>
+
+                                        {/* Active Status */}
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.is_active}
+                                                onChange={(e) => setData('is_active', e.target.checked)}
+                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
+                                            />
+                                            <label className="text-sm font-medium text-zinc-700">
+                                                Enable Payment Gateway
+                                            </label>
+                                        </div>
+                                    </>
                                 )}
 
-                                {/* Secret Key */}
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                                        User Secret Key *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={data.secret_key}
-                                        onChange={(e) => setData('secret_key', e.target.value)}
-                                        className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                                        placeholder="e.g., w5x7srq7-rx5r-3t89-2ou2-k7361x2jewhn"
-                                        required
-                                    />
-                                    {errors.secret_key && <p className="text-red-500 text-xs mt-1">{errors.secret_key}</p>}
-                                    <p className="text-xs text-zinc-500 mt-1">
-                                        Get this from your ToyyibPay account settings
-                                    </p>
-                                </div>
+                                {/* Bayarcash Fields */}
+                                {data.provider === 'bayarcash' && (
+                                    <>
+                                        {/* Sandbox Mode */}
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.bayarcash_is_sandbox}
+                                                onChange={(e) => setData('bayarcash_is_sandbox', e.target.checked)}
+                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
+                                            />
+                                            <label className="text-sm font-medium text-zinc-700">
+                                                Sandbox Mode (Development)
+                                            </label>
+                                        </div>
 
-                                {/* Category Code */}
-                                <div>
-                                    <div className="flex justify-between items-center mb-2">
-                                        <label className="block text-sm font-medium text-zinc-700">
-                                            Category Code
-                                        </label>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowCategoryModal(true)}
-                                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                                        >
-                                            + Create Category
-                                        </button>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={data.category_code}
-                                        onChange={(e) => setData('category_code', e.target.value)}
-                                        className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                                        placeholder="e.g., j0tzqhka"
-                                    />
-                                    {errors.category_code && <p className="text-red-500 text-xs mt-1">{errors.category_code}</p>}
-                                    <p className="text-xs text-zinc-500 mt-1">
-                                        Category groups your bills together
-                                    </p>
-                                </div>
+                                        {data.bayarcash_is_sandbox && (
+                                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                                <p className="text-sm text-amber-800">
+                                                    <strong>Sandbox Mode:</strong> Register at{' '}
+                                                    <a href="https://console.bayarcash-sandbox.com" target="_blank" rel="noopener noreferrer" className="underline">
+                                                        console.bayarcash-sandbox.com
+                                                    </a>{' '}
+                                                    to get your sandbox credentials.
+                                                </p>
+                                            </div>
+                                        )}
 
-                                {/* Active Status */}
-                                <div className="flex items-center gap-3">
-                                    <input
-                                        type="checkbox"
-                                        checked={data.is_active}
-                                        onChange={(e) => setData('is_active', e.target.checked)}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
-                                    />
-                                    <label className="text-sm font-medium text-zinc-700">
-                                        Enable Payment Gateway
-                                    </label>
-                                </div>
+                                        {/* Access Token */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                                Personal Access Token *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={data.bayarcash_access_token}
+                                                onChange={(e) => setData('bayarcash_access_token', e.target.value)}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                                placeholder="e.g., your_personal_access_token"
+                                            />
+                                            {errors.bayarcash_access_token && <p className="text-red-500 text-xs mt-1">{errors.bayarcash_access_token}</p>}
+                                            <p className="text-xs text-zinc-500 mt-1">
+                                                Get this from your Bayarcash console settings
+                                            </p>
+                                        </div>
+
+                                        {/* Portal Key */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                                Portal Key *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={data.bayarcash_portal_key}
+                                                onChange={(e) => setData('bayarcash_portal_key', e.target.value)}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                                placeholder="e.g., your_portal_key"
+                                            />
+                                            {errors.bayarcash_portal_key && <p className="text-red-500 text-xs mt-1">{errors.bayarcash_portal_key}</p>}
+                                            <p className="text-xs text-zinc-500 mt-1">
+                                                Portal key from your Bayarcash portal settings
+                                            </p>
+                                        </div>
+
+                                        {/* Active Status */}
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.bayarcash_is_active}
+                                                onChange={(e) => setData('bayarcash_is_active', e.target.checked)}
+                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
+                                            />
+                                            <label className="text-sm font-medium text-zinc-700">
+                                                Enable Bayarcash Payment Gateway
+                                            </label>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* SenangPay Fields */}
+                                {data.provider === 'senangpay' && (
+                                    <>
+                                        {/* Sandbox Mode */}
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.senangpay_is_sandbox}
+                                                onChange={(e) => setData('senangpay_is_sandbox', e.target.checked)}
+                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
+                                            />
+                                            <label className="text-sm font-medium text-zinc-700">
+                                                Sandbox Mode (Development)
+                                            </label>
+                                        </div>
+
+                                        {data.senangpay_is_sandbox && (
+                                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                                <p className="text-sm text-amber-800">
+                                                    <strong>Sandbox Mode:</strong> Use sandbox credentials from{' '}
+                                                    <a href="https://app.senangpay.my" target="_blank" rel="noopener noreferrer" className="underline">
+                                                        app.senangpay.my
+                                                    </a>{' '}
+                                                    for testing.
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Merchant ID */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                                Merchant ID *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={data.senangpay_merchant_id}
+                                                onChange={(e) => setData('senangpay_merchant_id', e.target.value)}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                                placeholder="e.g., 123456789012345"
+                                            />
+                                            {errors.senangpay_merchant_id && <p className="text-red-500 text-xs mt-1">{errors.senangpay_merchant_id}</p>}
+                                            <p className="text-xs text-zinc-500 mt-1">
+                                                Get this from Menu → Settings → Profile in your SenangPay dashboard
+                                            </p>
+                                        </div>
+
+                                        {/* Secret Key */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                                Secret Key *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={data.senangpay_secret_key}
+                                                onChange={(e) => setData('senangpay_secret_key', e.target.value)}
+                                                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                                placeholder="e.g., your_secret_key"
+                                            />
+                                            {errors.senangpay_secret_key && <p className="text-red-500 text-xs mt-1">{errors.senangpay_secret_key}</p>}
+                                            <p className="text-xs text-zinc-500 mt-1">
+                                                Keep this secret! Used for hash generation and verification
+                                            </p>
+                                        </div>
+
+                                        {/* Active Status */}
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.senangpay_is_active}
+                                                onChange={(e) => setData('senangpay_is_active', e.target.checked)}
+                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
+                                            />
+                                            <label className="text-sm font-medium text-zinc-700">
+                                                Enable SenangPay Payment Gateway
+                                            </label>
+                                        </div>
+                                    </>
+                                )}
+
                             </div>
                         </form>
                     </div>
 
-                    {/* Bayarcash Configuration Card */}
-                    <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6 mb-6">
-                        <h3 className="text-lg font-bold text-zinc-900 mb-6">Bayarcash Configuration</h3>
-
-                        <div className="space-y-6">
-                            {/* Sandbox Mode */}
-                            <div className="flex items-center gap-3">
-                                <input
-                                    type="checkbox"
-                                    checked={data.bayarcash_is_sandbox}
-                                    onChange={(e) => setData('bayarcash_is_sandbox', e.target.checked)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
-                                />
-                                <label className="text-sm font-medium text-zinc-700">
-                                    Sandbox Mode (Development)
-                                </label>
-                            </div>
-
-                            {data.bayarcash_is_sandbox && (
-                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                                    <p className="text-sm text-amber-800">
-                                        <strong>Sandbox Mode:</strong> Register at{' '}
-                                        <a href="https://console.bayarcash-sandbox.com" target="_blank" rel="noopener noreferrer" className="underline">
-                                            console.bayarcash-sandbox.com
-                                        </a>{' '}
-                                        to get your sandbox credentials.
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Access Token */}
-                            <div>
-                                <label className="block text-sm font-medium text-zinc-700 mb-2">
-                                    Personal Access Token *
-                                </label>
-                                <input
-                                    type="text"
-                                    value={data.bayarcash_access_token}
-                                    onChange={(e) => setData('bayarcash_access_token', e.target.value)}
-                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                                    placeholder="e.g., your_personal_access_token"
-                                />
-                                {errors.bayarcash_access_token && <p className="text-red-500 text-xs mt-1">{errors.bayarcash_access_token}</p>}
-                                <p className="text-xs text-zinc-500 mt-1">
-                                    Get this from your Bayarcash console settings
-                                </p>
-                            </div>
-
-                            {/* Portal Key */}
-                            <div>
-                                <label className="block text-sm font-medium text-zinc-700 mb-2">
-                                    Portal Key *
-                                </label>
-                                <input
-                                    type="text"
-                                    value={data.bayarcash_portal_key}
-                                    onChange={(e) => setData('bayarcash_portal_key', e.target.value)}
-                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                                    placeholder="e.g., your_portal_key"
-                                />
-                                {errors.bayarcash_portal_key && <p className="text-red-500 text-xs mt-1">{errors.bayarcash_portal_key}</p>}
-                                <p className="text-xs text-zinc-500 mt-1">
-                                    Portal key from your Bayarcash portal settings
-                                </p>
-                            </div>
-
-                            {/* Active Status */}
-                            <div className="flex items-center gap-3">
-                                <input
-                                    type="checkbox"
-                                    checked={data.bayarcash_is_active}
-                                    onChange={(e) => setData('bayarcash_is_active', e.target.checked)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
-                                />
-                                <label className="text-sm font-medium text-zinc-700">
-                                    Enable Bayarcash Payment Gateway
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* SenangPay Configuration Card */}
-                    <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6 mb-6">
-                        <h3 className="text-lg font-bold text-zinc-900 mb-6">SenangPay Configuration</h3>
-
-                        <div className="space-y-6">
-                            {/* Sandbox Mode */}
-                            <div className="flex items-center gap-3">
-                                <input
-                                    type="checkbox"
-                                    checked={data.senangpay_is_sandbox}
-                                    onChange={(e) => setData('senangpay_is_sandbox', e.target.checked)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
-                                />
-                                <label className="text-sm font-medium text-zinc-700">
-                                    Sandbox Mode (Development)
-                                </label>
-                            </div>
-
-                            {data.senangpay_is_sandbox && (
-                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                                    <p className="text-sm text-amber-800">
-                                        <strong>Sandbox Mode:</strong> Use sandbox credentials from{' '}
-                                        <a href="https://app.senangpay.my" target="_blank" rel="noopener noreferrer" className="underline">
-                                            app.senangpay.my
-                                        </a>{' '}
-                                        for testing.
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Merchant ID */}
-                            <div>
-                                <label className="block text-sm font-medium text-zinc-700 mb-2">
-                                    Merchant ID *
-                                </label>
-                                <input
-                                    type="text"
-                                    value={data.senangpay_merchant_id}
-                                    onChange={(e) => setData('senangpay_merchant_id', e.target.value)}
-                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                                    placeholder="e.g., 123456789012345"
-                                />
-                                {errors.senangpay_merchant_id && <p className="text-red-500 text-xs mt-1">{errors.senangpay_merchant_id}</p>}
-                                <p className="text-xs text-zinc-500 mt-1">
-                                    Get this from Menu → Settings → Profile in your SenangPay dashboard
-                                </p>
-                            </div>
-
-                            {/* Secret Key */}
-                            <div>
-                                <label className="block text-sm font-medium text-zinc-700 mb-2">
-                                    Secret Key *
-                                </label>
-                                <input
-                                    type="text"
-                                    value={data.senangpay_secret_key}
-                                    onChange={(e) => setData('senangpay_secret_key', e.target.value)}
-                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                                    placeholder="e.g., your_secret_key"
-                                />
-                                {errors.senangpay_secret_key && <p className="text-red-500 text-xs mt-1">{errors.senangpay_secret_key}</p>}
-                                <p className="text-xs text-zinc-500 mt-1">
-                                    Keep this secret! Used for hash generation and verification
-                                </p>
-                            </div>
-
-                            {/* Active Status */}
-                            <div className="flex items-center gap-3">
-                                <input
-                                    type="checkbox"
-                                    checked={data.senangpay_is_active}
-                                    onChange={(e) => setData('senangpay_is_active', e.target.checked)}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
-                                />
-                                <label className="text-sm font-medium text-zinc-700">
-                                    Enable SenangPay Payment Gateway
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Save Button */}
+                    {/* Action Buttons */}
                     <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
                         <div className="flex flex-col sm:flex-row gap-3">
                             <button
@@ -359,7 +369,7 @@ export default function PaymentSettings({ auth, settings, flash }) {
                                 disabled={processing}
                                 className="flex-1 px-4 py-2 bg-black text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 text-sm font-medium"
                             >
-                                {processing ? 'Saving...' : 'Save All Settings'}
+                                {processing ? 'Saving...' : 'Save Settings'}
                             </button>
                             <button
                                 type="button"
