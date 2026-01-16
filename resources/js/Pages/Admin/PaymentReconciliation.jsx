@@ -93,6 +93,38 @@ export default function PaymentReconciliation({ pendingPayments, paidPayments, s
         setBulkProcessing(false);
     };
 
+    const manualFix = async (childId, childName) => {
+        if (!confirm(`Anda pasti mahu MANUAL FIX pembayaran untuk ${childName}?\n\nIni akan menandakan pembayaran sebagai SELESAI walaupun API ToyyibPay tidak mengembalikan data.\n\nPastikan anda mempunyai bukti pembayaran (email/resit).`)) {
+            return;
+        }
+
+        setFix(prev => ({ ...prev, [childId]: true }));
+
+        try {
+            const response = await fetch(route('admin.payment-reconciliation.manual-fix'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify({ child_id: childId }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert('✅ ' + data.message);
+                router.reload();
+            } else {
+                setResults(prev => ({ ...prev, [childId]: { error: data.error } }));
+            }
+        } catch (error) {
+            setResults(prev => ({ ...prev, [childId]: { error: error.message } }));
+        }
+
+        setFix(prev => ({ ...prev, [childId]: false }));
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title="Payment Reconciliation" />
@@ -179,8 +211,8 @@ export default function PaymentReconciliation({ pendingPayments, paidPayments, s
                                 <button
                                     onClick={() => setActiveTab('pending')}
                                     className={`px-6 py-4 font-medium transition-colors ${activeTab === 'pending'
-                                            ? 'text-amber-700 border-b-2 border-amber-500 bg-amber-50'
-                                            : 'text-zinc-500 hover:text-zinc-900'
+                                        ? 'text-amber-700 border-b-2 border-amber-500 bg-amber-50'
+                                        : 'text-zinc-500 hover:text-zinc-900'
                                         }`}
                                 >
                                     ⏳ Menunggu Bayaran ({pendingPayments.length})
@@ -188,8 +220,8 @@ export default function PaymentReconciliation({ pendingPayments, paidPayments, s
                                 <button
                                     onClick={() => setActiveTab('paid')}
                                     className={`px-6 py-4 font-medium transition-colors ${activeTab === 'paid'
-                                            ? 'text-green-700 border-b-2 border-green-500 bg-green-50'
-                                            : 'text-zinc-500 hover:text-zinc-900'
+                                        ? 'text-green-700 border-b-2 border-green-500 bg-green-50'
+                                        : 'text-zinc-500 hover:text-zinc-900'
                                         }`}
                                 >
                                     ✅ Sudah Dibayar ({paidPayments.length})
@@ -257,7 +289,7 @@ export default function PaymentReconciliation({ pendingPayments, paidPayments, s
                                                             )}
                                                         </td>
                                                         <td className="p-3 text-right">
-                                                            <div className="flex gap-2 justify-end">
+                                                            <div className="flex gap-2 justify-end flex-wrap">
                                                                 <button
                                                                     onClick={() => checkStatus(payment.id)}
                                                                     disabled={checking[payment.id]}
@@ -274,6 +306,15 @@ export default function PaymentReconciliation({ pendingPayments, paidPayments, s
                                                                         {fixing[payment.id] ? '...' : '✅ Perbaiki'}
                                                                     </button>
                                                                 )}
+                                                                {/* Manual Fix button - always show for pending payments */}
+                                                                <button
+                                                                    onClick={() => manualFix(payment.id, payment.name)}
+                                                                    disabled={fixing[payment.id]}
+                                                                    className="px-3 py-1.5 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors text-sm disabled:opacity-50"
+                                                                    title="Manual fix dengan bukti pembayaran"
+                                                                >
+                                                                    {fixing[payment.id] ? '...' : '🔧 Manual Fix'}
+                                                                </button>
                                                             </div>
                                                         </td>
                                                     </tr>

@@ -192,6 +192,54 @@ class PaymentReconciliationController extends Controller
     }
 
     /**
+     * Manual fix payment status (for cases with proof but API returns no data)
+     */
+    public function manualFix(Request $request)
+    {
+        $childId = $request->input('child_id');
+        $child = Child::with(['parent', 'trainingCenter'])->find($childId);
+
+        if (!$child) {
+            return response()->json(['error' => 'Child not found'], 404);
+        }
+
+        Log::info('Payment Reconciliation: MANUAL FIX for ' . $child->name, [
+            'child_id' => $child->id,
+            'payment_reference' => $child->payment_reference,
+            'admin' => auth()->user()->name,
+        ]);
+
+        try {
+            // Update child record
+            $child->update([
+                'payment_completed' => true,
+                'payment_method' => 'online',
+                'payment_date' => now(),
+                'is_active' => true,
+            ]);
+
+            // Create/Sync Student Record
+            $studentService = new \App\Services\StudentService();
+            $studentService->syncChildToStudent($child);
+            
+            $child->refresh();
+
+            // Create StudentPayment record
+            if ($child->student) {
+                $this->createPaymentRecord($child);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment status manually updated for ' . $child->name,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Payment Reconciliation Manual Fix Error: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Bulk check and fix all pending payments
      */
     public function bulkReconcile()

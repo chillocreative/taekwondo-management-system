@@ -112,6 +112,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/admin/payment-reconciliation/check', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'checkStatus'])->name('admin.payment-reconciliation.check');
     Route::post('/admin/payment-reconciliation/fix', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'fixStatus'])->name('admin.payment-reconciliation.fix');
     Route::post('/admin/payment-reconciliation/bulk', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'bulkReconcile'])->name('admin.payment-reconciliation.bulk');
+    Route::post('/admin/payment-reconciliation/manual-fix', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'manualFix'])->name('admin.payment-reconciliation.manual-fix');
 
     // Coach Routes
     Route::get('/coach/attendance', [App\Http\Controllers\Coach\AttendanceController::class, 'index'])->name('coach.attendance.index');
