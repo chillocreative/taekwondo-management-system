@@ -255,12 +255,10 @@ class PaymentReconciliationController extends Controller
 
         // Get all pending payments with payment reference
         $pendingChildren = Child::whereNotNull('payment_reference')
-            ->where(function ($query) {
-                $query->where('payment_completed', false)
-                    ->orWhereNull('payment_completed');
-            })
-            ->with(['parent', 'trainingCenter'])
-            ->get();
+            ->get()
+            ->filter(function($child) {
+                return !$child->isPaidForCurrentYear();
+            });
 
         foreach ($pendingChildren as $child) {
             $results['checked']++;
@@ -413,6 +411,15 @@ class PaymentReconciliationController extends Controller
                 'payment_reference' => $child->payment_reference,
                 'receipt_number' => $payment->receipt_number,
                 'student_payment_id' => $payment->id,
+            ]);
+        }
+        
+        // Final activation check
+        if (!$child->isPaidForCurrentYear()) {
+            $child->update([
+                'payment_completed' => true,
+                'payment_date' => now(),
+                'last_updated_year' => now()->year,
             ]);
         }
 
@@ -630,6 +637,57 @@ class PaymentReconciliationController extends Controller
                 'payment_date' => $payment->created_at,
             ]);
             $results['fixed']++;
+        }
+
+        return response()->json($results);
+    }
+
+    /**
+     * Fix students who were incorrectly marked as paid for the year 
+     * but only paid a monthly fee in their latest 2026 transaction
+     */
+    public function repairMissedRenewals()
+    {
+        $results = [
+            'checked' => 0,
+            'fixed' => 0,
+        ];
+
+        // Find all students who have a 2026 payment but are "paid for current year"
+        // and check if they actually have a transaction that includes the renewal
+        $children = Child::where('payment_completed', true)
+            ->whereYear('payment_date', now()->year)
+            ->get();
+
+        foreach ($children as $child) {
+            $results['checked']++;
+            
+            if (!$child->student) continue;
+
+            // Find all paid payments for this year
+            $payments = StudentPayment::where('student_id', $child->student->id)
+                ->where('status', 'paid')
+                ->whereYear('payment_date', now()->year)
+                ->get();
+
+            $hasRenewal = false;
+            foreach ($payments as $payment) {
+                // If total > amount, it likely contains the renewal
+                // OR if it's a dedicated registration payment (amount is 100+)
+                if ((float)$payment->total > (float)$payment->amount || (float)$payment->total >= 100) {
+                    $hasRenewal = true;
+                    break;
+                }
+            }
+
+            if (!$hasRenewal && $payments->isNotEmpty()) {
+                // This student missed their renewal fee but was activated!
+                // Reset their payment_date so they are prompted to pay next time
+                $child->update([
+                    'payment_date' => $child->payment_date->subYear(), // Move status back to previous year
+                ]);
+                $results['fixed']++;
+            }
         }
 
         return response()->json($results);

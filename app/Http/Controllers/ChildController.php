@@ -189,10 +189,10 @@ class ChildController extends Controller
             abort(403);
         }
 
-        // Check if already paid
-        if ($child->payment_completed) {
+        // Check if already paid for this year
+        if ($child->isPaidForCurrentYear()) {
             return redirect()->route('children.index')
-                ->with('error', 'Peserta ini sudah membuat pembayaran.');
+                ->with('error', 'Peserta ini sudah membuat pembayaran untuk tahun ini.');
         }
 
         // Calculate fees

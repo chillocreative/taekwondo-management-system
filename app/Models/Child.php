@@ -179,4 +179,15 @@ class Child extends Model
 
         return null;
     }
+
+    /**
+     * Check if the child has completed registration/renewal for the current year
+     */
+    public function isPaidForCurrentYear()
+    {
+        $currentYear = now()->year;
+        return $this->payment_completed && 
+               $this->payment_date && 
+               $this->payment_date->year == $currentYear;
+    }
 }

@@ -52,7 +52,7 @@ class StudentController extends Controller
             $student->status_bayaran = $paidCount; 
             
             // Append Yuran Tahunan status
-            $student->yuran_tahunan_paid = $student->child ? $student->child->payment_completed : false;
+            $student->yuran_tahunan_paid = $student->child ? $student->child->isPaidForCurrentYear() : false;
             
             return $student;
         });
@@ -84,8 +84,8 @@ class StudentController extends Controller
             return back()->with('error', 'Rekod profil tidak dijumpai.');
         }
 
-        if ($child->payment_completed) {
-            return back()->with('info', 'Pembayaran sudah disahkan sebelumnya.');
+        if ($child->isPaidForCurrentYear()) {
+            return back()->with('info', 'Pembayaran tahunan sudah disahkan untuk tahun ini.');
         }
 
         // Calculate fee if not already set (fallback)
@@ -197,7 +197,7 @@ class StudentController extends Controller
 
         // Find the registration/renewal receipt number
         $registrationReceiptNumber = null;
-        if ($student->child && $student->child->payment_completed && $student->child->payment_reference) {
+        if ($student->child && $student->child->isPaidForCurrentYear() && $student->child->payment_reference) {
             $regPayment = $student->payments->where('transaction_ref', $student->child->payment_reference)->first();
             $registrationReceiptNumber = $regPayment ? $regPayment->receipt_number : null;
         }

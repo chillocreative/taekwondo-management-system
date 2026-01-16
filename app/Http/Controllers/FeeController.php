@@ -204,9 +204,9 @@ class FeeController extends Controller
         $additionalFee = 0;
         $descriptionPrefix = "";
         
-        if (!$child->payment_completed || $child->last_updated_year < now()->year) {
+        if (!$child->isPaidForCurrentYear()) {
              $feeSettings = \App\Models\FeeSetting::current();
-             $isRenewal = $child->registration_type === 'renewal' || $child->student; // Existing student implies renewal usually
+             $isRenewal = $child->registration_type === 'renewal'; 
 
              if ($isRenewal) {
                  $additionalFee = ($child->belt_level) 
@@ -295,14 +295,18 @@ class FeeController extends Controller
                 $payment->save();
                 $this->updateMonthlyPaymentStatus($payment);
 
-                // Auto-Activate Child if Renewal Needed (Assumes fee logic covered it)
+                // Auto-Activate Child if Renewal/Registration was included in this payment
                 $child = $payment->student->child;
-                if ($child && (!$child->payment_completed || $child->last_updated_year < now()->year)) {
-                    $child->update([
-                        'payment_completed' => true,
-                        'payment_date' => now(),
-                        'last_updated_year' => now()->year,
-                    ]);
+                if ($child && !$child->isPaidForCurrentYear()) {
+                    // Only update if total is greater than amount (means it includes renewal)
+                    // OR if registration_type is new (which means it's the registration payment)
+                    if ($payment->total > $payment->amount || $child->registration_type === 'new') {
+                        $child->update([
+                            'payment_completed' => true,
+                            'payment_date' => now(),
+                            'last_updated_year' => now()->year,
+                        ]);
+                    }
                 }
 
                 // Notify Admin & User via WhatsApp
@@ -358,14 +362,18 @@ class FeeController extends Controller
 
                     $this->updateMonthlyPaymentStatus($payment);
 
-                    // Auto-Activate Child if Renewal Needed
+                    // Auto-Activate Child if Renewal/Registration was included in this payment
                     $child = $payment->student->child;
-                    if ($child && (!$child->payment_completed || $child->last_updated_year < now()->year)) {
-                        $child->update([
-                            'payment_completed' => true,
-                            'payment_date' => now(),
-                            'last_updated_year' => now()->year,
-                        ]);
+                    if ($child && !$child->isPaidForCurrentYear()) {
+                        // Only update if total is greater than amount (means it includes renewal)
+                        // OR if registration_type is new (which means it's the registration payment)
+                        if ($payment->total > $payment->amount || $child->registration_type === 'new') {
+                            $child->update([
+                                'payment_completed' => true,
+                                'payment_date' => now(),
+                                'last_updated_year' => now()->year,
+                            ]);
+                        }
                     }
 
                     // Notify Admin & User via WhatsApp
