@@ -714,13 +714,21 @@ class PaymentReconciliationController extends Controller
 
                 $hasRenewalPayment = false;
                 $latestPayment = null;
+                $hasAnyReceipt = false;
 
                 foreach ($payments as $payment) {
-                    // Check if payment includes renewal (total > amount or total >= 100)
-                    if ((float)$payment->total > (float)$payment->amount || (float)$payment->total >= 100) {
-                        $hasRenewalPayment = true;
+                    // If payment has a receipt number, it's a valid payment
+                    if ($payment->receipt_number) {
+                        $hasAnyReceipt = true;
                         $latestPayment = $payment;
-                        break;
+                        
+                        // Check if payment includes renewal/registration fee
+                        // Registration: >= 100, Renewal GUP: >= 30, Renewal Black: >= 50
+                        if ((float)$payment->total >= 100 || 
+                            ((float)$payment->total >= 30 && (float)$payment->total < 100)) {
+                            $hasRenewalPayment = true;
+                            break;
+                        }
                     }
                 }
 
@@ -751,7 +759,8 @@ class PaymentReconciliationController extends Controller
                             'transaction_ref' => $p->transaction_ref,
                         ];
                     }),
-                    'discrepancy' => $hasRenewalPayment ? 'PAID_BUT_MARKED_UNPAID' : 'CORRECTLY_UNPAID',
+                    'discrepancy' => $hasAnyReceipt ? 'PAID_BUT_MARKED_UNPAID' : 'CORRECTLY_UNPAID',
+                    'has_renewal_in_payment' => $hasRenewalPayment,
                 ];
             });
 
@@ -796,6 +805,57 @@ class PaymentReconciliationController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Status pembayaran untuk {$child->name} telah dikemaskini."
+        ]);
+    }
+
+    /**
+     * Bulk mark all students with discrepancies as paid
+     */
+    public function bulkMarkAsPaid()
+    {
+        $fixed = 0;
+        $errors = [];
+
+        // Get all students with discrepancies
+        $unpaidStudents = Child::with(['student'])
+            ->whereHas('student')
+            ->get()
+            ->filter(function($child) {
+                if (!$child->isPaidForCurrentYear()) {
+                    // Check if they have any receipt
+                    $hasReceipt = StudentPayment::where('student_id', $child->student->id)
+                        ->where('status', 'paid')
+                        ->whereYear('created_at', now()->year)
+                        ->whereNotNull('receipt_number')
+                        ->exists();
+                    return $hasReceipt;
+                }
+                return false;
+            });
+
+        foreach ($unpaidStudents as $child) {
+            try {
+                $child->update([
+                    'payment_completed' => true,
+                    'payment_date' => now(),
+                    'last_updated_year' => now()->year,
+                ]);
+                $fixed++;
+            } catch (\Exception $e) {
+                $errors[] = "Failed to update {$child->name}: " . $e->getMessage();
+            }
+        }
+
+        Log::info('Bulk Payment Verification: Fixed discrepancies', [
+            'fixed_count' => $fixed,
+            'admin' => auth()->user()->name,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'fixed' => $fixed,
+            'errors' => $errors,
+            'message' => "{$fixed} pelajar telah dikemaskini."
         ]);
     }
 }

@@ -5,12 +5,44 @@ import { useState } from 'react';
 export default function PaymentVerification({ students, stats }) {
     const [filter, setFilter] = useState('all'); // all, discrepancy, correct
     const [expandedStudent, setExpandedStudent] = useState(null);
+    const [processing, setProcessing] = useState(false);
 
     const filteredStudents = students.filter(s => {
         if (filter === 'discrepancy') return s.discrepancy === 'PAID_BUT_MARKED_UNPAID';
         if (filter === 'correct') return s.discrepancy === 'CORRECTLY_UNPAID';
         return true;
     });
+
+    const handleBulkFix = async () => {
+        if (!confirm(`Ini akan menandakan SEMUA ${stats.has_discrepancy} pelajar yang mempunyai resit sebagai SUDAH BAYAR. Teruskan?`)) {
+            return;
+        }
+
+        setProcessing(true);
+
+        try {
+            const response = await fetch(route('admin.payment-verification.bulk-mark-paid'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert(`✅ Berjaya! ${data.fixed} pelajar telah dikemaskini.`);
+                router.reload();
+            } else {
+                alert('Gagal: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        } finally {
+            setProcessing(false);
+        }
+    };
 
     const handleMarkAsPaid = async (childId, studentName) => {
         if (!confirm(`Tandakan ${studentName} sebagai SUDAH BAYAR untuk tahun 2026?`)) {
@@ -57,6 +89,15 @@ export default function PaymentVerification({ students, stats }) {
                                 <h1 className="text-2xl font-bold text-zinc-900">🔍 Payment Verification Tool</h1>
                                 <p className="text-zinc-500 mt-1">Semak dan sahkan status pembayaran pelajar</p>
                             </div>
+                            {stats.has_discrepancy > 0 && (
+                                <button
+                                    onClick={handleBulkFix}
+                                    disabled={processing}
+                                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 font-medium shadow-lg"
+                                >
+                                    {processing ? '⏳ Memproses...' : `✅ Baiki Semua (${stats.has_discrepancy})`}
+                                </button>
+                            )}
                         </div>
 
                         {/* Stats */}
