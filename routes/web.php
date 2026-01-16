@@ -107,6 +107,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('Admin/ComingSoon', ['title' => 'Tournament Management']);
     })->name('admin.tournament');
 
+    // Payment Reconciliation Routes
+    Route::get('/admin/payment-reconciliation', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'index'])->name('admin.payment-reconciliation');
+    Route::post('/admin/payment-reconciliation/check', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'checkStatus'])->name('admin.payment-reconciliation.check');
+    Route::post('/admin/payment-reconciliation/fix', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'fixStatus'])->name('admin.payment-reconciliation.fix');
+    Route::post('/admin/payment-reconciliation/bulk', [App\Http\Controllers\Admin\PaymentReconciliationController::class, 'bulkReconcile'])->name('admin.payment-reconciliation.bulk');
+
     // Coach Routes
     Route::get('/coach/attendance', [App\Http\Controllers\Coach\AttendanceController::class, 'index'])->name('coach.attendance.index');
     Route::get('/coach/attendance/sheet', [App\Http\Controllers\Coach\AttendanceController::class, 'show'])->name('coach.attendance.show');
