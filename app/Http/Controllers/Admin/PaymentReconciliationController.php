@@ -431,4 +431,166 @@ class PaymentReconciliationController extends Controller
 
         return $payment;
     }
+
+    /**
+     * Sync receipt numbers from StudentPayment to MonthlyPayment
+     */
+    public function syncReceiptNumbers()
+    {
+        $results = [
+            'checked' => 0,
+            'fixed' => 0,
+            'details' => [],
+        ];
+
+        // Get all paid MonthlyPayments without receipt number
+        $monthlyPayments = MonthlyPayment::where('is_paid', true)
+            ->where(function($q) {
+                $q->whereNull('receipt_number')
+                  ->orWhere('receipt_number', '')
+                  ->orWhere('receipt_number', '-');
+            })
+            ->with(['child.student'])
+            ->get();
+
+        foreach ($monthlyPayments as $mp) {
+            $results['checked']++;
+            
+            if (!$mp->child || !$mp->child->student) {
+                $results['details'][] = [
+                    'child_id' => $mp->child_id,
+                    'month' => MonthlyPayment::getMalayName($mp->month) . ' ' . $mp->year,
+                    'status' => 'No student linked',
+                    'action' => 'Skipped'
+                ];
+                continue;
+            }
+
+            $receiptNumber = null;
+            $studentPaymentId = null;
+
+            // Try to find StudentPayment by payment_reference
+            if ($mp->payment_reference) {
+                $sp = StudentPayment::where('transaction_ref', $mp->payment_reference)->first();
+                if ($sp && $sp->receipt_number) {
+                    $receiptNumber = $sp->receipt_number;
+                    $studentPaymentId = $sp->id;
+                }
+            }
+
+            // Try by student_id and month
+            if (!$receiptNumber) {
+                $monthStr = MonthlyPayment::getMalayName($mp->month) . ' ' . $mp->year;
+                $sp = StudentPayment::where('student_id', $mp->child->student->id)
+                    ->where('month', $monthStr)
+                    ->where('status', 'paid')
+                    ->first();
+                if ($sp && $sp->receipt_number) {
+                    $receiptNumber = $sp->receipt_number;
+                    $studentPaymentId = $sp->id;
+                }
+            }
+
+            // Try by child's registration payment
+            if (!$receiptNumber && $mp->child->payment_reference) {
+                $sp = StudentPayment::where('transaction_ref', $mp->child->payment_reference)->first();
+                if ($sp && $sp->receipt_number) {
+                    // Only use this if it matches the registration month
+                    if ($mp->child->payment_date) {
+                        $paymentMonth = $mp->child->payment_date->month;
+                        $paymentYear = $mp->child->payment_date->year;
+                        if ($mp->month == $paymentMonth && $mp->year == $paymentYear) {
+                            $receiptNumber = $sp->receipt_number;
+                            $studentPaymentId = $sp->id;
+                        }
+                    }
+                }
+            }
+
+            if ($receiptNumber) {
+                $mp->update([
+                    'receipt_number' => $receiptNumber,
+                    'student_payment_id' => $studentPaymentId,
+                ]);
+
+                $results['fixed']++;
+                $results['details'][] = [
+                    'child_id' => $mp->child_id,
+                    'child_name' => $mp->child->name ?? 'Unknown',
+                    'month' => MonthlyPayment::getMalayName($mp->month) . ' ' . $mp->year,
+                    'receipt_number' => $receiptNumber,
+                    'action' => 'Fixed'
+                ];
+            } else {
+                $results['details'][] = [
+                    'child_id' => $mp->child_id,
+                    'child_name' => $mp->child->name ?? 'Unknown',
+                    'month' => MonthlyPayment::getMalayName($mp->month) . ' ' . $mp->year,
+                    'status' => 'No matching StudentPayment found',
+                    'action' => 'Skipped'
+                ];
+            }
+        }
+
+        return response()->json($results);
+    }
+
+    /**
+     * Get detailed receipt sync status page
+     */
+    public function receiptSyncStatus()
+    {
+        // Get all paid MonthlyPayments with their receipt status
+        $allPaidMonthly = MonthlyPayment::where('is_paid', true)
+            ->with(['child.student'])
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get()
+            ->map(function($mp) {
+                $hasReceiptNumber = $mp->receipt_number && $mp->receipt_number !== '-';
+                
+                // Try to find the actual receipt number from StudentPayment
+                $studentPaymentReceipt = null;
+                $studentPaymentId = null;
+                if ($mp->child && $mp->child->student) {
+                    $monthStr = MonthlyPayment::getMalayName($mp->month) . ' ' . $mp->year;
+                    $sp = StudentPayment::where('student_id', $mp->child->student->id)
+                        ->where('month', $monthStr)
+                        ->where('status', 'paid')
+                        ->first();
+                    
+                    if ($sp) {
+                        $studentPaymentReceipt = $sp->receipt_number;
+                        $studentPaymentId = $sp->id;
+                    }
+                }
+
+                return [
+                    'id' => $mp->id,
+                    'child_id' => $mp->child_id,
+                    'child_name' => $mp->child->name ?? 'Unknown',
+                    'month' => MonthlyPayment::getMalayName($mp->month) . ' ' . $mp->year,
+                    'mp_receipt_number' => $mp->receipt_number,
+                    'sp_receipt_number' => $studentPaymentReceipt,
+                    'sp_id' => $studentPaymentId,
+                    'is_synced' => $hasReceiptNumber && ($mp->receipt_number === $studentPaymentReceipt),
+                    'needs_fix' => !$hasReceiptNumber && $studentPaymentReceipt,
+                    'paid_date' => $mp->paid_date?->format('d/m/Y'),
+                ];
+            });
+
+        $needsFix = $allPaidMonthly->filter(fn($p) => $p['needs_fix'])->count();
+        $synced = $allPaidMonthly->filter(fn($p) => $p['is_synced'])->count();
+        $noReceipt = $allPaidMonthly->filter(fn($p) => !$p['mp_receipt_number'] && !$p['sp_receipt_number'])->count();
+
+        return Inertia::render('Admin/ReceiptSync', [
+            'payments' => $allPaidMonthly->values(),
+            'stats' => [
+                'total' => $allPaidMonthly->count(),
+                'synced' => $synced,
+                'needs_fix' => $needsFix,
+                'no_receipt' => $noReceipt,
+            ]
+        ]);
+    }
 }
