@@ -7,6 +7,42 @@ export default function ReceiptSync({ payments, stats }) {
     const [syncResults, setSyncResults] = useState(null);
     const [filter, setFilter] = useState('all'); // all, needs_fix, synced, no_receipt
 
+    const handleRepairMissedRenewals = async () => {
+        if (!confirm('Ini akan membaiki status pelajar yang terlepas bayaran renewal tetapi sudah diaktifkan. Pelajar terbabit akan diminta membayar semula renewal pada bulan depan. Teruskan?')) {
+            return;
+        }
+
+        setSyncing(true);
+        setSyncResults(null);
+
+        try {
+            const response = await fetch(route('admin.repair-missed-renewals'), {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+            setSyncResults({
+                title: '📊 Hasil Baik Pulih Renewal',
+                checked: data.checked,
+                fixed: data.fixed,
+                message: `${data.fixed} pelajar telah dibaiki status renewal mereka.`
+            });
+
+            if (data.fixed > 0) {
+                setTimeout(() => {
+                    router.reload();
+                }, 3000);
+            }
+        } catch (error) {
+            setSyncResults({ error: error.message });
+        }
+
+        setSyncing(false);
+    };
+
     const handleSync = async () => {
         if (!confirm('Ini akan menyegerakkan semua nombor resit dari StudentPayment ke MonthlyPayment. Teruskan?')) {
             return;
@@ -60,13 +96,22 @@ export default function ReceiptSync({ payments, stats }) {
                                 <p className="text-zinc-500 mt-1">Segerakkan nombor resit antara StudentPayment dan MonthlyPayment</p>
                             </div>
 
-                            <button
-                                onClick={handleSync}
-                                disabled={syncing || stats.needs_fix === 0}
-                                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 font-medium"
-                            >
-                                {syncing ? 'Menyegerak...' : `🔄 Sync All (${stats.needs_fix} items)`}
-                            </button>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                                <button
+                                    onClick={handleRepairMissedRenewals}
+                                    disabled={syncing}
+                                    className="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 font-medium"
+                                >
+                                    🛠️ Repair Missed Renewals
+                                </button>
+                                <button
+                                    onClick={handleSync}
+                                    disabled={syncing || stats.needs_fix === 0}
+                                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 font-medium"
+                                >
+                                    {syncing ? 'Menyegerak...' : `🔄 Sync All (${stats.needs_fix} items)`}
+                                </button>
+                            </div>
                         </div>
 
                         {/* Stats */}
@@ -97,17 +142,22 @@ export default function ReceiptSync({ payments, stats }) {
                                 <p className="text-red-700">{syncResults.error}</p>
                             ) : (
                                 <>
-                                    <h3 className="font-bold text-lg mb-3">📊 Hasil Sync</h3>
+                                    <h3 className="font-bold text-lg mb-3">{syncResults.title || '📊 Hasil Sync'}</h3>
                                     <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div className="text-center">
                                             <p className="text-zinc-600 text-sm">Disemak</p>
                                             <p className="text-2xl font-bold">{syncResults.checked}</p>
                                         </div>
                                         <div className="text-center">
-                                            <p className="text-green-600 text-sm">Diperbaiki</p>
+                                            <p className="text-green-600 text-sm">{syncResults.fixed_label || 'Diperbaiki'}</p>
                                             <p className="text-2xl font-bold text-green-700">{syncResults.fixed}</p>
                                         </div>
                                     </div>
+                                    {syncResults.message && (
+                                        <p className="text-sm text-green-700 mt-2 bg-green-100/50 p-2 rounded text-center font-medium">
+                                            {syncResults.message}
+                                        </p>
+                                    )}
 
                                     {syncResults.details && syncResults.details.length > 0 && (
                                         <details className="mt-4">
