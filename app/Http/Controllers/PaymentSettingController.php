@@ -45,6 +45,16 @@ class PaymentSettingController extends Controller
             'secret_key' => 'required|string',
             'category_code' => 'nullable|string',
             'is_active' => 'required|boolean',
+            // Bayarcash
+            'bayarcash_access_token' => 'nullable|string',
+            'bayarcash_portal_key' => 'nullable|string',
+            'bayarcash_is_sandbox' => 'nullable|boolean',
+            'bayarcash_is_active' => 'nullable|boolean',
+            // SenangPay
+            'senangpay_merchant_id' => 'nullable|string',
+            'senangpay_secret_key' => 'nullable|string',
+            'senangpay_is_sandbox' => 'nullable|boolean',
+            'senangpay_is_active' => 'nullable|boolean',
         ]);
 
         $settings = PaymentSetting::first();

@@ -22,6 +22,16 @@ export default function PaymentSettings({ auth, settings, flash }) {
         secret_key: settings?.secret_key || '',
         category_code: settings?.category_code || '',
         is_active: settings?.is_active ?? false,
+        // Bayarcash
+        bayarcash_access_token: settings?.bayarcash_access_token || '',
+        bayarcash_portal_key: settings?.bayarcash_portal_key || '',
+        bayarcash_is_sandbox: settings?.bayarcash_is_sandbox ?? true,
+        bayarcash_is_active: settings?.bayarcash_is_active ?? false,
+        // SenangPay
+        senangpay_merchant_id: settings?.senangpay_merchant_id || '',
+        senangpay_secret_key: settings?.senangpay_secret_key || '',
+        senangpay_is_sandbox: settings?.senangpay_is_sandbox ?? true,
+        senangpay_is_active: settings?.senangpay_is_active ?? false,
     });
 
     const categoryForm = useForm({
@@ -174,26 +184,191 @@ export default function PaymentSettings({ auth, settings, flash }) {
                                         Enable Payment Gateway
                                     </label>
                                 </div>
-
-                                {/* Action Buttons */}
-                                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-zinc-200">
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="flex-1 px-4 py-2 bg-black text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 text-sm font-medium"
-                                    >
-                                        {processing ? 'Saving...' : 'Save Settings'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={testConnection}
-                                        className="px-4 py-2 border border-zinc-300 rounded-lg text-zinc-700 hover:bg-zinc-50 transition-colors text-sm font-medium"
-                                    >
-                                        Test Connection
-                                    </button>
-                                </div>
                             </div>
                         </form>
+                    </div>
+
+                    {/* Bayarcash Configuration Card */}
+                    <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6 mb-6">
+                        <h3 className="text-lg font-bold text-zinc-900 mb-6">Bayarcash Configuration</h3>
+
+                        <div className="space-y-6">
+                            {/* Sandbox Mode */}
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="checkbox"
+                                    checked={data.bayarcash_is_sandbox}
+                                    onChange={(e) => setData('bayarcash_is_sandbox', e.target.checked)}
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
+                                />
+                                <label className="text-sm font-medium text-zinc-700">
+                                    Sandbox Mode (Development)
+                                </label>
+                            </div>
+
+                            {data.bayarcash_is_sandbox && (
+                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                    <p className="text-sm text-amber-800">
+                                        <strong>Sandbox Mode:</strong> Register at{' '}
+                                        <a href="https://console.bayarcash-sandbox.com" target="_blank" rel="noopener noreferrer" className="underline">
+                                            console.bayarcash-sandbox.com
+                                        </a>{' '}
+                                        to get your sandbox credentials.
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Access Token */}
+                            <div>
+                                <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                    Personal Access Token *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.bayarcash_access_token}
+                                    onChange={(e) => setData('bayarcash_access_token', e.target.value)}
+                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                    placeholder="e.g., your_personal_access_token"
+                                />
+                                {errors.bayarcash_access_token && <p className="text-red-500 text-xs mt-1">{errors.bayarcash_access_token}</p>}
+                                <p className="text-xs text-zinc-500 mt-1">
+                                    Get this from your Bayarcash console settings
+                                </p>
+                            </div>
+
+                            {/* Portal Key */}
+                            <div>
+                                <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                    Portal Key *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.bayarcash_portal_key}
+                                    onChange={(e) => setData('bayarcash_portal_key', e.target.value)}
+                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                    placeholder="e.g., your_portal_key"
+                                />
+                                {errors.bayarcash_portal_key && <p className="text-red-500 text-xs mt-1">{errors.bayarcash_portal_key}</p>}
+                                <p className="text-xs text-zinc-500 mt-1">
+                                    Portal key from your Bayarcash portal settings
+                                </p>
+                            </div>
+
+                            {/* Active Status */}
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="checkbox"
+                                    checked={data.bayarcash_is_active}
+                                    onChange={(e) => setData('bayarcash_is_active', e.target.checked)}
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
+                                />
+                                <label className="text-sm font-medium text-zinc-700">
+                                    Enable Bayarcash Payment Gateway
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* SenangPay Configuration Card */}
+                    <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6 mb-6">
+                        <h3 className="text-lg font-bold text-zinc-900 mb-6">SenangPay Configuration</h3>
+
+                        <div className="space-y-6">
+                            {/* Sandbox Mode */}
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="checkbox"
+                                    checked={data.senangpay_is_sandbox}
+                                    onChange={(e) => setData('senangpay_is_sandbox', e.target.checked)}
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
+                                />
+                                <label className="text-sm font-medium text-zinc-700">
+                                    Sandbox Mode (Development)
+                                </label>
+                            </div>
+
+                            {data.senangpay_is_sandbox && (
+                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                    <p className="text-sm text-amber-800">
+                                        <strong>Sandbox Mode:</strong> Use sandbox credentials from{' '}
+                                        <a href="https://app.senangpay.my" target="_blank" rel="noopener noreferrer" className="underline">
+                                            app.senangpay.my
+                                        </a>{' '}
+                                        for testing.
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Merchant ID */}
+                            <div>
+                                <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                    Merchant ID *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.senangpay_merchant_id}
+                                    onChange={(e) => setData('senangpay_merchant_id', e.target.value)}
+                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                    placeholder="e.g., 123456789012345"
+                                />
+                                {errors.senangpay_merchant_id && <p className="text-red-500 text-xs mt-1">{errors.senangpay_merchant_id}</p>}
+                                <p className="text-xs text-zinc-500 mt-1">
+                                    Get this from Menu → Settings → Profile in your SenangPay dashboard
+                                </p>
+                            </div>
+
+                            {/* Secret Key */}
+                            <div>
+                                <label className="block text-sm font-medium text-zinc-700 mb-2">
+                                    Secret Key *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.senangpay_secret_key}
+                                    onChange={(e) => setData('senangpay_secret_key', e.target.value)}
+                                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                    placeholder="e.g., your_secret_key"
+                                />
+                                {errors.senangpay_secret_key && <p className="text-red-500 text-xs mt-1">{errors.senangpay_secret_key}</p>}
+                                <p className="text-xs text-zinc-500 mt-1">
+                                    Keep this secret! Used for hash generation and verification
+                                </p>
+                            </div>
+
+                            {/* Active Status */}
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="checkbox"
+                                    checked={data.senangpay_is_active}
+                                    onChange={(e) => setData('senangpay_is_active', e.target.checked)}
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 rounded"
+                                />
+                                <label className="text-sm font-medium text-zinc-700">
+                                    Enable SenangPay Payment Gateway
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Save Button */}
+                    <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button
+                                type="submit"
+                                onClick={handleSubmit}
+                                disabled={processing}
+                                className="flex-1 px-4 py-2 bg-black text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 text-sm font-medium"
+                            >
+                                {processing ? 'Saving...' : 'Save All Settings'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={testConnection}
+                                className="px-4 py-2 border border-zinc-300 rounded-lg text-zinc-700 hover:bg-zinc-50 transition-colors text-sm font-medium"
+                            >
+                                Test Connection
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
